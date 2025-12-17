@@ -173,6 +173,25 @@ allowed-tools: [Tool1, Tool2, ...]  # Claude Code用（オプション）
 .agents/sync/sync.sh copilot
 ```
 
+### 設定ファイルの検証
+
+同期前に `.agents/` の構造とコンテンツを検証できます：
+
+```bash
+# 設定ファイルを検証
+.agents/sync/sync.sh validate
+```
+
+**検証項目**:
+- ディレクトリ構造の確認（rules, skills, agents, commands の存在）
+- frontmatter の必須フィールド検証（name, description, agents など）
+- 値の妥当性チェック（agents フィールドが claude/cursor/copilot のいずれか、priority が数値など）
+- ファイル命名規則の確認
+- YAML 構文の検証（frontmatter の区切りが正しいか）
+- Skills の構造検証（SKILL.md の存在）
+
+エラーが見つかった場合は終了コード 1 で終了します。警告のみの場合は終了コード 0 で終了します。
+
 ### Git Hooks 設定（推奨）
 
 ```bash

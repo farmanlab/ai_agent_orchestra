@@ -68,6 +68,25 @@ Each agent requires different frontmatter formats:
 .agents/sync/sync.sh --verbose all
 ```
 
+### Validation
+
+Validate `.agents/` structure and content before syncing:
+
+```bash
+# Validate configuration files
+.agents/sync/sync.sh validate
+```
+
+**Validation checks**:
+- Directory structure (existence of rules, skills, agents, commands)
+- Required frontmatter fields (name, description, agents, etc.)
+- Value validity (agents field must be claude/cursor/copilot, priority must be numeric)
+- File naming conventions
+- YAML syntax (frontmatter delimiters)
+- Skills structure (SKILL.md existence)
+
+Returns exit code 1 if errors found, 0 if only warnings or success.
+
 ### Setup and Maintenance
 
 ```bash

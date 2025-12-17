@@ -31,6 +31,7 @@ Commands:
   claude          Sync to Claude Code only
   cursor          Sync to Cursor only
   copilot         Sync to GitHub Copilot only
+  validate        Validate .agents/ directory structure and content
   init            Initialize directory structure
   install-hooks   Install git pre-commit hook
   clean           Remove all generated files
@@ -43,6 +44,7 @@ Options:
 Examples:
   $0 all                    # Sync to all agents
   $0 claude                 # Sync to Claude Code only
+  $0 validate               # Validate configuration files
   $0 --dry-run all          # Show what would be synced
   $0 --verbose all          # Sync with detailed output
   $0 install-hooks          # Install git hooks
@@ -249,6 +251,19 @@ sync_all() {
     echo ""
 }
 
+# バリデーション実行
+run_validation() {
+    log_info "Running validation..."
+
+    if [ ! -f "$SCRIPT_DIR/validate.sh" ]; then
+        log_error "validate.sh not found"
+        return 1
+    fi
+
+    chmod +x "$SCRIPT_DIR/validate.sh"
+    "$SCRIPT_DIR/validate.sh"
+}
+
 # オプション解析
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -263,7 +278,7 @@ while [[ $# -gt 0 ]]; do
         -h|--help)
             show_help
             ;;
-        all|claude|cursor|copilot|init|install-hooks|clean)
+        all|claude|cursor|copilot|validate|init|install-hooks|clean)
             COMMAND=$1
             shift
             ;;
@@ -287,6 +302,9 @@ case $COMMAND in
         ;;
     copilot)
         sync_to_copilot
+        ;;
+    validate)
+        run_validation
         ;;
     init)
         init_dirs

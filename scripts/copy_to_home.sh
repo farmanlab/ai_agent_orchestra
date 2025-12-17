@@ -63,7 +63,6 @@ ZIP_FILE="$TEMP_DIR/repo.zip"
 
 # クリーンアップ関数
 cleanup() {
-    echo -e "${YELLOW}一時ファイルをクリーンアップしています...${NC}"
     rm -rf "$TEMP_DIR"
 }
 

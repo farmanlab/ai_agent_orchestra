@@ -1,0 +1,120 @@
+# AI Agent 統一管理システム - 設定ファイル
+
+# サポートするエージェント
+agents:
+  claude:
+    enabled: true
+    output_dir: .claude
+    features:
+      rules: true
+      skills: true
+      agents: true
+    notes: |
+      Claude Code v2.0.64+ では .claude/rules/ ディレクトリによる
+      モジュラールールをサポート。CLAUDE.md は非推奨。
+
+  cursor:
+    enabled: true
+    output_dir: .cursor
+    features:
+      rules: true
+      skills: true  # Rules に統合される
+      agents: false
+    notes: |
+      Skills は単一 MDC ファイルに統合される。
+      Agent mode 用の instructions として使用可能。
+
+  copilot:
+    enabled: true
+    output_dir: .github
+    features:
+      rules: true
+      skills: true  # instructions として変換
+      agents: true  # AGENTS.md に統合
+    notes: |
+      GitHub Copilot coding agent は CLAUDE.md ファイルを
+      ネイティブサポート（2025年8月〜）
+
+# 変換ルール
+conversion:
+  rules:
+    # globs 指定なしのルールの扱い
+    always_apply_without_globs: true
+
+    # priority によるソート
+    sort_by_priority: true
+
+    # ファイル名のプレフィックス（Cursor用）
+    file_prefix_format: "%02d"
+
+  skills:
+    # Skills を progressive disclosure として保持（Claude Code）
+    preserve_structure_for_claude: true
+
+    # Skills を単一ファイルに統合（Cursor, Copilot）
+    merge_to_single_file_for_others: true
+
+    # scripts ディレクトリの扱い
+    include_scripts: false  # Cursor, Copilot は実行不可のため除外
+
+  agents:
+    # Claude Code 用の frontmatter フィールド
+    claude_fields:
+      - name
+      - description
+      - tools
+      - model
+
+    # Copilot 用に削除するフィールド
+    remove_for_copilot:
+      - tools
+      - model
+
+# 生成ファイルの設定
+output:
+  # CLAUDE.md を生成（Copilot 互換レイヤー）
+  generate_claude_md: true
+
+  # AGENTS.md を生成（Copilot coding agent 用）
+  generate_agents_md: true
+
+  # 生成ファイルにコメントを追加
+  add_generation_comment: true
+  generation_comment: "Auto-generated from .agents/ - Do not edit directly"
+
+  # ファイルエンコーディング
+  encoding: utf-8
+
+# Git 連携
+git:
+  # pre-commit hook を自動インストール
+  auto_install_hooks: false
+
+  # 生成ファイルを自動 stage
+  auto_stage_generated: true
+
+  # Git で管理するファイル
+  tracked_files:
+    - .claude/
+    - .cursor/
+    - .github/
+    - CLAUDE.md
+    - AGENTS.md
+
+# ログ設定
+logging:
+  # ログレベル: debug, info, warning, error
+  level: info
+
+  # ログファイル出力
+  file: .agents/sync.log
+  enable_file_logging: false
+
+# その他
+misc:
+  # バックアップを作成
+  create_backup: false
+  backup_dir: .agents/.backup
+
+  # 古いファイルをクリーンアップ
+  cleanup_old_files: true

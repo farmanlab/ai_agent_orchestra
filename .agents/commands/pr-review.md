@@ -1,6 +1,6 @@
 ---
 description: PRレビューコメントに対応する（コメントごとに妥当性を評価し、対応を支援）
-argument-hint: <PR URL>
+argument-hint: [PR URL]（省略時は現在のブランチのPRを使用）
 allowed-tools: Bash(gh:*), Bash(git:*), Read, Edit, Write, Glob, Grep, Task, AskUserQuestion
 ---
 
@@ -10,11 +10,15 @@ allowed-tools: Bash(gh:*), Bash(git:*), Read, Edit, Write, Glob, Grep, Task, Ask
 
   以下のPRのレビューコメントに対応してください：
 
-  **PR URL**: $ARGUMENTS
-
 ## 手順
 
+  0. **PR URLの決定**
+     - `$ARGUMENTS` が指定されている場合: それをPR URLとして使用
+     - `$ARGUMENTS` が空の場合: `gh pr view --json url --jq .url` を実行して現在のブランチのPR URLを取得
+     - PR URLが取得できない場合: エラーメッセージを表示して終了
+
   1. **PRコメントの取得**
+     - 決定したPR URLを使用
      - `gh api` を使用してPRのレビューコメントを取得
      - URL形式: `https://github.com/{owner}/{repo}/pull/{number}`
 

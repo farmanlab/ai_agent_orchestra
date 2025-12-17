@@ -1,5 +1,9 @@
 # ai_agent_orchestra
 
+<img width="567" height="309" alt="ai_agent_orchestra" src="https://github.com/user-attachments/assets/f10a36d9-faa2-4114-9c40-4508ebb10884" />
+
+
+
 ## セットアップ
 
 ### 設定フォルダのコピー

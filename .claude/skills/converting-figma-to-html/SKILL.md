@@ -1,0 +1,239 @@
+---
+name: converting-figma-to-html
+description: Provides expertise in converting Figma designs to HTML/CSS using Figma MCP tools, with data attributes for content tracking and comprehensive analysis. Use when converting Figma designs to web code.
+allowed-tools: [Read, Write, Glob, figma:get_screenshot, figma:get_design_context, figma:get_metadata]
+
+---
+
+
+# Figma to HTML Conversion Skill
+
+Figma MCPツールを使用してFigmaデザインからHTML/CSSを生成し、コンテンツ分析を行うための専門知識を提供するスキルです。
+
+## 目次
+
+1. [概要](#概要)
+2. [クイックスタート](#クイックスタート)
+3. [詳細ガイド](#詳細ガイド)
+4. [生成されるファイル](#生成されるファイル)
+5. [使い方](#使い方)
+
+## 概要
+
+このスキルは以下のタスクをサポートします：
+
+1. **Figmaデータ取得**: Figma MCPツールを使用してデザイン情報を取得
+2. **HTML/CSS生成**: Tailwind CSSベースのレスポンシブHTMLを生成
+3. **data属性埋め込み**: トレーサビリティとコンテンツ管理のための属性を付与
+4. **コンテンツ分析**: 静的/動的コンテンツの分類とデータ要件の整理
+5. **プレビュー生成**: デバイスフレーム付きプレビューHTML（オプション）
+
+## クイックスタート
+
+### 基本的な使い方
+
+```
+以下のFigma URLからHTML/CSSを生成してください：
+https://figma.com/design/XXXXX/Project?node-id=1234-5678
+```
+
+エージェントは自動的に：
+1. Figmaデータを取得（screenshot, design_context, metadata）
+2. data属性付きHTMLを生成
+3. コンテンツ分析ドキュメントを作成
+4. プレビューHTML（オプション）を生成
+
+### 生成されるファイル
+
+```
+outputs/
+├── {component_name}.html                  # メインHTML（data属性付き）
+├── {component_name}_content_analysis.md   # コンテンツ分析
+└── {component_name}_preview.html          # デバイスフレーム付きプレビュー（オプション）
+```
+
+## 詳細ガイド
+
+詳細な情報は以下のファイルを参照してください：
+
+### ワークフロー
+**[workflow.md](workflow.md)**: Figma MCPツールの実行順序と各ステップの詳細
+
+- Step 1: Figmaデータ取得（screenshot, design_context, metadata）
+- Step 2: HTML生成ルール（Tailwind CSS、data属性、レイアウト）
+- Step 3: コンテンツ分析（static/dynamic分類、データ要件）
+- Step 4: 品質チェック（ビジュアル確認、属性確認）
+
+### 変換ガイドライン
+**[conversion-guidelines.md](conversion-guidelines.md)**: 変換時の判断基準と処理ルール
+
+- アイコン・画像アセットの処理
+- レイアウト・配置の処理（Flexbox/Grid優先）
+- デザイントークンの処理
+- OSネイティブUI要素の除外
+- コンテンツ分類体系
+
+### クイックリファレンス
+**[quick-reference.md](quick-reference.md)**: よく使うパターンと命名規則
+
+- 必須data属性一覧
+- data-figma-content-XXX 命名例
+- HTML構造パターン
+- Tailwindクラス早見表
+
+### テンプレート
+**[templates/](templates/)**: 各種テンプレートファイル
+
+- **[html-output.html](templates/html-output.html)**: HTMLテンプレート（変数付き）
+- **[content-analysis.md](templates/content-analysis.md)**: コンテンツ分析テンプレート
+- **[preview.html](templates/preview.html)**: プレビュー用ラッパー
+
+## 主要な機能
+
+### 1. data属性による追跡
+
+全ての要素に以下の属性を付与：
+
+| 属性 | 用途 | 例 |
+|------|------|-----|
+| `data-figma-node` | FigmaノードID | `"5070:65342"` |
+| `data-figma-content-XXX` | コンテンツ識別子 | `nav-title`, `course-item` |
+| `data-figma-tokens` | デザイントークン | `"background: darkblue"` |
+| `data-figma-font` | フォントトークン | `"JP/16 - Bold"` |
+| `data-figma-icon-svg` | アイコンURL | `"https://figma.com/api/..."` |
+
+### 2. コンテンツ分類
+
+HTMLの各コンテンツを以下のカテゴリで整理：
+
+| 分類 | 説明 | 例 |
+|------|------|-----|
+| `static` | 固定ラベル・UI文言 | ボタン名、ナビゲーション |
+| `dynamic` | ユーザー/時間で変化 | 数値、日付、ユーザー名 |
+| `dynamic_list` | 件数可変リスト | 講座一覧、通知一覧 |
+| `asset` | アイコン・画像 | SVG、ロゴ |
+
+### 3. レスポンシブ対応
+
+- Tailwind CSS（CDN経由）を使用
+- モバイルファースト（max-w-[375px]等）
+- Flexbox/Gridで相対的レイアウト
+- absolute/fixed は最小限に
+
+### 4. アイコン処理
+
+複雑なSVGパスは再現せず、シンプルなプレースホルダーに置換：
+
+```html
+<div class="w-6 h-6"
+     data-figma-icon-svg="https://figma.com/api/..."
+     data-figma-content-settings-icon>
+  <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+    <rect x="4" y="4" width="16" height="16" rx="2"
+          stroke="currentColor" stroke-width="2"/>
+  </svg>
+</div>
+```
+
+### 5. OSネイティブUI除外
+
+以下の要素は自動的に除外：
+- ステータスバー（時刻、電波、バッテリー）
+- Dynamic Island
+- Home Indicator
+
+## ワークフロー（概要）
+
+```
+1. figma:get_screenshot
+   └─> デザインのビジュアル参照を取得
+
+2. figma:get_design_context (clientLanguages: "html,css")
+   └─> ★最重要：構造・スタイル情報を取得
+
+3. figma:get_metadata（必要に応じて）
+   └─> 階層構造の詳細確認
+
+4. HTML生成
+   ├─> Tailwind CSSでマークアップ
+   ├─> data属性を全要素に付与
+   └─> プレースホルダーアイコンを配置
+
+5. コンテンツ分析
+   ├─> static/dynamic分類
+   ├─> データ要件抽出
+   └─> HTMLマッピング作成
+
+6. プレビュー生成（オプション）
+   └─> デバイスフレーム付きプレビュー
+```
+
+詳細は **[workflow.md](workflow.md)** を参照してください。
+
+## 完了チェックリスト
+
+生成後、以下を確認：
+
+```
+- [ ] Figmaスクリーンショットと見た目が一致
+- [ ] 全ての主要要素にdata-figma-node属性がある
+- [ ] コンテンツ要素にdata-figma-content-XXX属性がある
+- [ ] アイコンにdata-figma-icon-svg属性がある
+- [ ] ステータスバー等のOSネイティブUIが除外されている
+- [ ] コンテンツ分析が完成している
+- [ ] プレビューHTMLが正しく表示される（オプション）
+```
+
+## 使い方
+
+このスキルは、Figmaデザインを変換するエージェントから参照されます。
+
+### スキルの利用
+
+エージェントは以下のステップでこのスキルを活用します：
+
+1. **ワークフローの参照**: [workflow.md](workflow.md) の手順に従う
+2. **ガイドラインの適用**: [conversion-guidelines.md](conversion-guidelines.md) の変換ルールを適用
+3. **テンプレートの使用**: [templates/](templates/) のテンプレートを利用してファイル生成
+4. **リファレンスの確認**: [quick-reference.md](quick-reference.md) で命名規則やパターンを確認
+
+### 必要なツール
+
+- **Figma MCP**: Figmaデザインデータの取得に必須
+- **Read**: テンプレートやガイドラインの読み込み
+- **Write**: HTML/分析ドキュメントの生成
+- **Glob**: 既存ファイルのパターン検索
+
+## 注意事項
+
+### Figma MCP ツール
+
+このエージェントは **Figma MCP** を使用します。以下を確認してください：
+
+- Figma MCP サーバーが起動している
+- Figma URLが有効である
+- 必要な権限がある
+
+### アセットURL
+
+- FigmaアセットURLは **7日間で期限切れ** になります
+- 本番実装前にアセットをダウンロードまたは再取得が必要です
+
+### ブラウザ確認
+
+生成されたHTMLは以下で確認してください：
+
+```bash
+# プレビューHTMLを開く
+open {component_name}_preview.html
+
+# またはメインHTMLを直接開く
+open {component_name}.html
+```
+
+## 参照
+
+- **[workflow.md](workflow.md)**: 詳細なワークフロー手順
+- **[conversion-guidelines.md](conversion-guidelines.md)**: 変換ルールの詳細
+- **[quick-reference.md](quick-reference.md)**: クイックリファレンス
+- **[templates/](templates/)**: 各種テンプレート

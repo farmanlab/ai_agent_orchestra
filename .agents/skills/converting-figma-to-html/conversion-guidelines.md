@@ -1,0 +1,306 @@
+# Figma MCP → フロントエンド変換ルールガイドライン
+
+## 概要
+
+このガイドラインは、Figma MCPから取得したデザイン情報をWeb/Android/iOSなどのフロントエンドUIに変換する際の判断基準とルールを定義する。
+
+---
+
+## 1. アイコン・画像アセットの処理
+
+### ルール
+
+| 状況 | 対応 |
+|------|------|
+| SVGアイコン | プレースホルダーSVGを仮置きし、`data-figma-icon-svg`属性でFigmaアセットURLを埋め込む |
+| PNG/JPG画像 | プレースホルダーを使用し、`data-figma-asset-src`属性でFigmaアセットURLを埋め込む |
+| ロゴ等のブランドアセット | 同上 |
+
+### プレースホルダー方針
+
+**SVGやアイコンは無理に再現しようとしない。** サイズと位置関係を最優先とし、簡単なプレースホルダーに置き換える。
+
+```html
+<!-- ❌ 複雑なパスを再現しようとしない -->
+<svg viewBox="0 0 24 24">
+  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+</svg>
+
+<!-- ✅ シンプルな図形でサイズ・位置を保持 -->
+<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+  <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+</svg>
+```
+
+### 実装例
+
+```html
+<span class="w-6 h-6"
+      data-figma-icon-svg="https://www.figma.com/api/mcp/asset/ea960857-7d7c-48e8-a9d5-bf863835ea2f"
+      data-figma-icon-color="Icon/Main/Default">
+  <!-- Placeholder SVG -->
+  <svg viewBox="0 0 24 24">...</svg>
+</span>
+```
+
+### data属性仕様
+
+| 属性 | 用途 | 値の例 |
+|------|------|--------|
+| `data-figma-icon-svg` | FigmaアセットURL（SVG、7日間有効） | `https://www.figma.com/api/mcp/asset/xxx-xxx` |
+| `data-figma-icon-color` | Figmaのカラートークン名 | `Icon/Main/Default` |
+| `data-figma-asset-src` | FigmaアセットURL（画像、7日間有効） | `https://www.figma.com/api/mcp/asset/xxx-xxx` |
+
+### 注意事項
+
+- FigmaアセットURLは**7日間で期限切れ**になるため、実装時に再取得またはダウンロードが必要
+- 後処理スクリプトで`data-figma-icon-svg`属性からURLを抽出し、アセットをダウンロード可能
+
+---
+
+## 2. レイアウト・配置の処理
+
+### ルール
+
+**Figmaの絶対位置情報はコンポーネントの位置関係・並べ方の参考にとどめ、`absolute`や`fixed`は使用しない。**
+
+| Figmaの状態 | 変換方針 |
+|-------------|----------|
+| 絶対位置で配置されている | Flexbox/Gridで相対的なレイアウトに変換 |
+| オーバーラップしている要素 | 必要に応じて`relative`+`absolute`を検討するが、基本は避ける |
+| 固定サイズ指定 | レスポンシブを考慮し、`max-w-*`や`w-full`を優先 |
+
+### 理由
+
+- Figmaのデザインはピクセルパーフェクトだが、実装は様々な画面サイズに対応する必要がある
+- 絶対位置はメンテナンス性が低く、レスポンシブ対応が困難
+- Flexbox/Gridを使うことで、意図したレイアウトを柔軟に実現できる
+
+### 実装例
+
+```html
+<!-- ❌ Figmaの絶対位置をそのまま使わない -->
+<div class="relative">
+  <div class="absolute top-[16px] left-[24px]">ヘッダー</div>
+  <div class="absolute top-[80px] left-[24px]">コンテンツ</div>
+</div>
+
+<!-- ✅ Flexboxで位置関係を再現 -->
+<div class="flex flex-col gap-4 p-6">
+  <div>ヘッダー</div>
+  <div>コンテンツ</div>
+</div>
+```
+
+### 例外
+
+以下の場合のみ`absolute`/`fixed`を許容：
+
+- モーダル/オーバーレイ
+- ツールチップ/ポップオーバー
+- フローティングアクションボタン
+- アイコンバッジ（通知数など）
+
+---
+
+## 3. デザイントークンの処理
+
+### ルール
+
+- Figmaのデザイントークン（CSS変数形式）はTailwindの固定値に変換
+- 元のトークン名は`data-figma-tokens`属性で保持
+- マッピング表を別途作成し、デザインシステムとの整合性を維持
+
+### 実装例
+
+```html
+<div class="gap-3 px-4 py-3 bg-[#cfe5fc]"
+     data-figma-tokens="background: Background/Main/Secondary, gap: Space/150, padding-x: Space/200, padding-y: Space/150">
+```
+
+### マッピング優先順位
+
+1. プロジェクトのtailwind.config.jsに定義済みのトークンがあれば使用
+2. なければTailwindのデフォルトユーティリティクラスで近似
+3. 完全一致がなければ任意値（`[]`記法）で対応
+
+---
+
+## 4. タイポグラフィの処理
+
+### ルール
+
+- Figmaのフォントトークン名を`data-figma-font`属性で埋め込む
+- フォントファミリーはシステムフォント依存を考慮しフォールバックを設定
+- Webフォントとして利用不可のフォント（Hiragino Sans等）は代替フォントを明示
+
+### 実装例
+
+```html
+<span class="font-hiragino text-base leading-[1.5]"
+      data-figma-font="JP/16 - Regular"
+      data-figma-tokens="color: Text/Default/Default">
+  テキスト
+</span>
+```
+
+### フォントフォールバック設定
+
+```css
+.font-hiragino {
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+}
+```
+
+---
+
+## 5. コンポーネント状態の処理
+
+### ルール
+
+| 状況 | 対応 |
+|------|------|
+| 状態バリエーションが別ノードで定義されている | 各状態のノードIDを取得し、hover/active/disabled等のスタイルを抽出 |
+| 状態バリエーションがない | デフォルトのインタラクションスタイルを追加（hover:bg-gray-100等） |
+| 状態バリエーションの有無が不明 | ユーザーに確認を求める |
+
+### 実装例（状態なしの場合）
+
+```html
+<a href="#" class="... hover:bg-gray-100 transition-colors">
+```
+
+---
+
+## 6. Figmaノード情報の保持
+
+### ルール
+
+- すべての主要要素に`data-figma-node`属性でノードIDを埋め込む
+- デバッグ・トレーサビリティ・将来の更新のため
+
+### 実装例
+
+```html
+<div data-figma-node="I4829:26664;4067:23861">
+```
+
+---
+
+## 7. 出力ファイル構成
+
+### 推奨構成
+
+```
+outputs/
+├── component_name.html          # 変換後のHTML
+├── design_tokens_mapping.md     # トークンマッピング表
+└── assets/
+    └── icons/                   # エクスポートしたSVG（後から配置）
+```
+
+---
+
+## 8. 変換プロセスのチェックリスト
+
+### 変換前
+
+- [ ] `get_design_context`でコード情報を取得
+- [ ] `get_variable_defs`でデザイントークンを取得
+- [ ] `get_screenshot`でビジュアル参照を取得
+- [ ] 状態バリエーションの有無を確認
+
+### 変換中
+
+- [ ] アイコンは仮置き + `data-figma-icon-svg`属性でFigma URLを埋め込み
+- [ ] フォントトークンは`data-figma-font`属性で保持
+- [ ] カラー/スペーシングトークンは`data-figma-tokens`属性で保持
+- [ ] ノードIDは`data-figma-node`属性で保持
+
+### 変換後
+
+- [ ] デザイントークンマッピング表を作成
+- [ ] フォントフォールバックを設定
+- [ ] アクセシビリティ属性（aria-label等）を追加
+
+---
+
+## 9. OSネイティブUI要素の処理
+
+### ルール
+
+**OSネイティブUI要素は変換対象から省略する。** ネイティブアプリではOSが自動描画し、Webアプリでは通常表示しないため。
+
+### OSネイティブUIの判断基準
+
+以下の条件に該当する要素はOSネイティブUIと判断し、**出力から除外する**：
+
+| 判断基準 | 具体例 |
+|----------|--------|
+| **ノード名に以下を含む** | `Status Bar`, `StatusBar`, `status-bar`, `Bars/Status` |
+| **ノード名に以下を含む** | `Notch`, `Dynamic Island`, `Home Indicator` |
+| **子要素に以下が含まれる** | 時刻表示（`9:41`, `12:00`等の固定時刻）、`Carrier`, `100%`（バッテリー）、電波アイコン、WiFiアイコン、バッテリーアイコン |
+| **位置が画面最上部** | y=0 かつ height が 20〜50px 程度の細長いバー |
+| **iOSデザインの特徴** | SF Pro フォント使用、黒/白のステータスアイコン群 |
+| **Androidデザインの特徴** | Roboto フォント使用、時刻が左上、アイコンが右上 |
+
+### 実装例
+
+```html
+<!-- ❌ ステータスバーを含めない -->
+<div class="navigation">
+  <div class="status-bar">...</div>  <!-- 削除 -->
+  <nav class="nav-bar">...</nav>
+</div>
+
+<!-- ✅ ナビゲーション部分のみ出力 -->
+<nav class="nav-bar">...</nav>
+```
+
+### 注意
+
+- デザインファイル内では視覚的な確認のためにステータスバーが含まれることが多い
+- 変換時は自動的に除外し、アプリ固有のUIのみを出力する
+
+---
+
+## 10. プラットフォーム別の考慮事項
+
+### Web (HTML/Tailwind)
+
+- CDN版Tailwindで即座にプレビュー可能
+- data属性でメタ情報を保持
+
+### Android (Compose/XML)
+
+- トークンマッピングをdimens.xml/colors.xmlに変換
+- data属性の情報をXMLコメントとして保持
+
+### iOS (SwiftUI/UIKit)
+
+- トークンマッピングをAsset Catalog/拡張に変換
+- data属性の情報をコードコメントとして保持
+
+---
+
+## 11. PCでのモバイルデザインプレビュー
+
+詳細は [mobile-preview.md](./mobile-preview.md) を参照。
+
+**概要**: iframeとデバイスフレームを使用してモバイルHTMLをPC上でプレビューする方法。
+
+---
+
+## 12. コンテンツ分析（後続フェーズ連携用）
+
+詳細は [content-classification.md](./content-classification.md) を参照。
+
+**概要**: HTMLコンテンツを静的/動的/リストに分類し、データ要件を整理する方法。
+
+---
+
+## 変更履歴
+
+| 日付 | 変更内容 |
+|------|----------|
+| 2025-01-XX | 初版作成 |

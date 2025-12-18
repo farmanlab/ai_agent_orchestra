@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{COMPONENT_NAME}}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* ===================================
+       フォント設定
+       =================================== */
+    .font-hiragino {
+      font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    }
+    .font-hiragino-w3 {
+      font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+      font-weight: 300;
+    }
+    .font-hiragino-w6 {
+      font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+      font-weight: 600;
+    }
+    .font-number {
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      font-weight: 400;
+    }
+    
+    /* ===================================
+       カスタムスタイル（必要に応じて追加）
+       =================================== */
+  </style>
+</head>
+<body class="bg-[#f8f9f9]">
+  
+  <!-- ===================================
+       メインコンテナ
+       - data-figma-node: FigmaのルートノードID
+       =================================== -->
+  <div class="flex flex-col w-full max-w-[375px] mx-auto min-h-screen"
+       data-figma-node="{{ROOT_NODE_ID}}">
+    
+    <!-- ===================================
+         Navigation Bar
+         - OSネイティブのステータスバーは省略
+         =================================== -->
+    <nav class="flex items-center justify-between w-full p-2.5 bg-[{{NAV_BG_COLOR}}]"
+         data-figma-node="{{NAV_NODE_ID}}"
+         data-figma-tokens="background: {{NAV_TOKEN}}">
+      
+      <!-- Left (Back button space) -->
+      <div class="w-6 h-6 shrink-0">
+        <!-- 戻るボタン等が入るスペース -->
+      </div>
+      
+      <!-- Center (Title) -->
+      <div class="flex-1 flex items-center justify-center px-3 min-w-0">
+        <h1 class="font-hiragino-w6 text-base leading-[1.5] text-white text-center truncate"
+            data-figma-font="System Font: Size 16 / Leading 24"
+            data-figma-content-nav-title>
+          {{NAV_TITLE}}
+        </h1>
+      </div>
+      
+      <!-- Right (Action buttons) -->
+      <div class="flex items-center justify-end gap-4 shrink-0">
+        <button class="w-6 h-6 flex items-center justify-center text-white"
+                aria-label="{{ACTION_LABEL}}"
+                data-figma-node="{{ACTION_NODE_ID}}"
+                data-figma-icon-svg="{{ACTION_ICON_URL}}"
+                data-figma-content-{{ACTION_ID}}-icon>
+          <!-- Placeholder SVG -->
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+            <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </button>
+      </div>
+    </nav>
+    
+    <!-- ===================================
+         Tab Menu（タブがある場合）
+         =================================== -->
+    <div class="flex items-center w-full"
+         data-figma-node="{{TAB_NODE_ID}}"
+         data-figma-content-tab-menu>
+      
+      <!-- Tab 1 (Active) -->
+      <button class="flex-1 flex flex-col items-center gap-1.5 pt-2.5 bg-[{{TAB_BG_COLOR}}]"
+              data-figma-node="{{TAB1_NODE_ID}}"
+              data-figma-content-tab-active>
+        <span class="font-hiragino-w3 text-sm leading-[1.5] text-white text-center"
+              data-figma-content-tab-{{TAB1_ID}}>{{TAB1_LABEL}}</span>
+        <div class="w-full h-[3px] bg-[{{TAB_ACTIVE_COLOR}}]"></div>
+      </button>
+      
+      <!-- Tab 2 -->
+      <button class="flex-1 flex items-center justify-center py-2.5 pb-[9px] bg-[{{TAB_BG_COLOR}}]"
+              data-figma-node="{{TAB2_NODE_ID}}">
+        <span class="font-hiragino-w3 text-sm leading-[1.5] text-white text-center"
+              data-figma-content-tab-{{TAB2_ID}}>{{TAB2_LABEL}}</span>
+      </button>
+    </div>
+    
+    <!-- ===================================
+         Main Content Section
+         =================================== -->
+    <section class="flex flex-col items-center p-4 w-full"
+             data-figma-node="{{MAIN_NODE_ID}}">
+      
+      <!-- ここにメインコンテンツを配置 -->
+      
+    </section>
+    
+    <!-- ===================================
+         リストセクション（リストがある場合）
+         =================================== -->
+    <section class="flex flex-col w-full px-4 pb-4"
+             data-figma-node="{{LIST_SECTION_NODE_ID}}">
+      
+      <h2 class="font-hiragino-w6 text-base leading-[1.5] text-[#24243f] mb-3"
+          data-figma-content-section-title>
+        {{SECTION_TITLE}}
+      </h2>
+      
+      <!-- List Container -->
+      <div class="flex flex-col gap-2"
+           data-figma-content-{{LIST_ID}}-list>
+        
+        <!-- List Item Template -->
+        <article class="flex items-start gap-3 p-3 bg-white rounded-lg"
+                 data-figma-node="{{ITEM_NODE_ID}}"
+                 data-figma-content-{{LIST_ID}}-item>
+          
+          <!-- Item Icon -->
+          <div class="w-8 h-8 shrink-0 flex items-center justify-center"
+               data-figma-icon-svg="{{ITEM_ICON_URL}}"
+               data-figma-content-{{LIST_ID}}-icon>
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+          
+          <!-- Item Content -->
+          <div class="flex-1 min-w-0">
+            <p class="font-hiragino text-xs text-[#67717a]"
+               data-figma-content-{{LIST_ID}}-category>{{ITEM_CATEGORY}}</p>
+            <p class="font-hiragino-w6 text-sm text-[#24243f] truncate"
+               data-figma-content-{{LIST_ID}}-title>{{ITEM_TITLE}}</p>
+          </div>
+          
+          <!-- Item Meta -->
+          <div class="flex flex-col items-end shrink-0">
+            <span class="font-number text-xs text-[#67717a]"
+                  data-figma-content-{{LIST_ID}}-duration>{{ITEM_DURATION}}</span>
+            <span class="font-number text-xs text-[#67717a]"
+                  data-figma-content-{{LIST_ID}}-score>{{ITEM_SCORE}}</span>
+          </div>
+        </article>
+        
+        <!-- 繰り返しアイテム... -->
+        
+      </div>
+    </section>
+    
+    <!-- ===================================
+         Spacer for Bottom Navigation
+         =================================== -->
+    <div class="h-[56px] w-full shrink-0"></div>
+    
+    <!-- ===================================
+         Bottom Navigation
+         =================================== -->
+    <nav class="fixed bottom-0 left-0 right-0 max-w-[375px] mx-auto h-[56px] bg-white border-t border-[#dae2e5] flex items-center justify-around"
+         data-figma-node="{{BOTTOM_NAV_NODE_ID}}"
+         data-figma-content-bottom-nav>
+      
+      <!-- Nav Item 1 -->
+      <button class="flex flex-col items-center justify-center gap-0.5 py-2 px-3"
+              data-figma-content-nav-{{NAV1_ID}}>
+        <div class="w-6 h-6"
+             data-figma-icon-svg="{{NAV1_ICON_URL}}"
+             data-figma-content-nav-{{NAV1_ID}}-icon>
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+            <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </div>
+        <span class="font-hiragino text-[10px] text-[#67717a]"
+              data-figma-content-nav-{{NAV1_ID}}-label>{{NAV1_LABEL}}</span>
+      </button>
+      
+      <!-- Nav Item 2 -->
+      <button class="flex flex-col items-center justify-center gap-0.5 py-2 px-3"
+              data-figma-content-nav-{{NAV2_ID}}>
+        <div class="w-6 h-6"
+             data-figma-icon-svg="{{NAV2_ICON_URL}}"
+             data-figma-content-nav-{{NAV2_ID}}-icon>
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+            <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </div>
+        <span class="font-hiragino text-[10px] text-[#67717a]"
+              data-figma-content-nav-{{NAV2_ID}}-label>{{NAV2_LABEL}}</span>
+      </button>
+      
+      <!-- Nav Item 3 (Active) -->
+      <button class="flex flex-col items-center justify-center gap-0.5 py-2 px-3"
+              data-figma-content-nav-{{NAV3_ID}}
+              data-figma-content-nav-active>
+        <div class="w-6 h-6"
+             data-figma-icon-svg="{{NAV3_ICON_URL}}"
+             data-figma-content-nav-{{NAV3_ID}}-icon>
+          <svg class="w-6 h-6 text-[{{NAV_ACTIVE_COLOR}}]" viewBox="0 0 24 24" fill="none">
+            <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </div>
+        <span class="font-hiragino text-[10px] text-[{{NAV_ACTIVE_COLOR}}]"
+              data-figma-content-nav-{{NAV3_ID}}-label>{{NAV3_LABEL}}</span>
+      </button>
+      
+      <!-- 追加のナビアイテム... -->
+      
+    </nav>
+    
+  </div>
+
+</body>
+</html>
+
+<!--
+===================================
+テンプレート変数一覧
+===================================
+
+基本情報:
+- {{COMPONENT_NAME}}: コンポーネント名（titleに使用）
+- {{ROOT_NODE_ID}}: FigmaのルートノードID
+
+ナビゲーション:
+- {{NAV_NODE_ID}}: ナビゲーションのノードID
+- {{NAV_BG_COLOR}}: ナビゲーション背景色（例: #0b41a0）
+- {{NAV_TOKEN}}: デザイントークン名（例: darkblue）
+- {{NAV_TITLE}}: ナビゲーションタイトル
+
+タブ:
+- {{TAB_NODE_ID}}: タブメニューのノードID
+- {{TAB_BG_COLOR}}: タブ背景色
+- {{TAB_ACTIVE_COLOR}}: アクティブタブの下線色
+- {{TAB1_ID}}, {{TAB2_ID}}: タブの識別子
+- {{TAB1_LABEL}}, {{TAB2_LABEL}}: タブのラベル
+
+リスト:
+- {{LIST_ID}}: リストの識別子（例: course）
+- {{SECTION_TITLE}}: セクションタイトル
+
+ボトムナビ:
+- {{BOTTOM_NAV_NODE_ID}}: ボトムナビのノードID
+- {{NAV1_ID}}, {{NAV2_ID}}, {{NAV3_ID}}: ナビアイテムの識別子
+- {{NAV1_LABEL}}, {{NAV2_LABEL}}, {{NAV3_LABEL}}: ナビアイテムのラベル
+- {{NAV_ACTIVE_COLOR}}: アクティブナビの色
+
+===================================
+-->

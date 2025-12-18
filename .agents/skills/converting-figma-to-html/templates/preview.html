@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preview: {{COMPONENT_NAME}}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    
+    /* Device Frame Styles */
+    .device-frame {
+      position: relative;
+      background: #1a1a1a;
+      border-radius: 44px;
+      padding: 12px;
+      box-shadow: 
+        0 0 0 1px rgba(255,255,255,0.1),
+        0 25px 50px -12px rgba(0,0,0,0.5),
+        inset 0 0 0 1px rgba(255,255,255,0.05);
+    }
+    
+    .device-screen {
+      border-radius: 32px;
+      overflow: hidden;
+      background: #fff;
+    }
+    
+    .device-notch {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 28px;
+      background: #1a1a1a;
+      border-radius: 0 0 14px 14px;
+      z-index: 10;
+    }
+    
+    .device-home-indicator {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 134px;
+      height: 5px;
+      background: #fff;
+      border-radius: 3px;
+      opacity: 0.3;
+    }
+    
+    /* Device Sizes */
+    .device-iphone-13-mini .device-screen {
+      width: 375px;
+      height: 812px;
+    }
+    
+    .device-iphone-14-pro .device-screen {
+      width: 393px;
+      height: 852px;
+    }
+    
+    .device-iphone-14-pro-max .device-screen {
+      width: 430px;
+      height: 932px;
+    }
+    
+    /* Selector button styles */
+    .device-selector button {
+      transition: all 0.2s;
+    }
+    .device-selector button:hover {
+      background-color: #e5e7eb;
+    }
+    .device-selector button.active {
+      background-color: #3b82f6;
+      color: white;
+    }
+  </style>
+</head>
+<body class="bg-gray-200 min-h-screen py-8">
+  
+  <div class="max-w-4xl mx-auto px-4">
+    
+    <!-- Header -->
+    <header class="mb-8 text-center">
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">{{COMPONENT_NAME}}</h1>
+      <p class="text-gray-600">Figma Node: {{ROOT_NODE_ID}}</p>
+    </header>
+    
+    <!-- Device Selector -->
+    <div class="device-selector flex justify-center gap-2 mb-8">
+      <button onclick="setDevice('iphone-13-mini')" class="px-4 py-2 rounded-lg bg-gray-100 text-sm font-medium active" id="btn-iphone-13-mini">
+        iPhone 13 mini (375×812)
+      </button>
+      <button onclick="setDevice('iphone-14-pro')" class="px-4 py-2 rounded-lg bg-gray-100 text-sm font-medium" id="btn-iphone-14-pro">
+        iPhone 14 Pro (393×852)
+      </button>
+      <button onclick="setDevice('iphone-14-pro-max')" class="px-4 py-2 rounded-lg bg-gray-100 text-sm font-medium" id="btn-iphone-14-pro-max">
+        iPhone 14 Pro Max (430×932)
+      </button>
+    </div>
+    
+    <!-- Device Frame -->
+    <div class="flex justify-center">
+      <div id="device-container" class="device-frame device-iphone-13-mini">
+        <div class="device-notch"></div>
+        <div class="device-screen">
+          <iframe 
+            id="preview-iframe"
+            src="{{HTML_FILENAME}}" 
+            class="w-full h-full border-0"
+            title="Component Preview">
+          </iframe>
+        </div>
+        <div class="device-home-indicator"></div>
+      </div>
+    </div>
+    
+    <!-- Info Panel -->
+    <div class="mt-8 bg-white rounded-lg shadow p-6">
+      <h2 class="text-lg font-bold text-gray-900 mb-4">ファイル情報</h2>
+      <dl class="grid grid-cols-2 gap-4 text-sm">
+        <div>
+          <dt class="text-gray-500">HTML File</dt>
+          <dd class="font-mono text-gray-900">{{HTML_FILENAME}}</dd>
+        </div>
+        <div>
+          <dt class="text-gray-500">Figma Node</dt>
+          <dd class="font-mono text-gray-900">{{ROOT_NODE_ID}}</dd>
+        </div>
+        <div>
+          <dt class="text-gray-500">作成日</dt>
+          <dd class="text-gray-900">{{DATE}}</dd>
+        </div>
+        <div>
+          <dt class="text-gray-500">Figma URL</dt>
+          <dd class="text-gray-900">
+            <a href="{{FIGMA_URL}}" target="_blank" class="text-blue-600 hover:underline">
+              Figmaで開く →
+            </a>
+          </dd>
+        </div>
+      </dl>
+    </div>
+    
+    <!-- Related Files -->
+    <div class="mt-6 bg-white rounded-lg shadow p-6">
+      <h2 class="text-lg font-bold text-gray-900 mb-4">関連ファイル</h2>
+      <ul class="space-y-2 text-sm">
+        <li>
+          <a href="{{HTML_FILENAME}}" class="text-blue-600 hover:underline font-mono">
+            {{HTML_FILENAME}}
+          </a>
+          <span class="text-gray-500 ml-2">- メインHTML</span>
+        </li>
+        <li>
+          <a href="{{CONTENT_ANALYSIS_FILENAME}}" class="text-blue-600 hover:underline font-mono">
+            {{CONTENT_ANALYSIS_FILENAME}}
+          </a>
+          <span class="text-gray-500 ml-2">- コンテンツ分析</span>
+        </li>
+        <li>
+          <a href="{{TOKENS_FILENAME}}" class="text-blue-600 hover:underline font-mono">
+            {{TOKENS_FILENAME}}
+          </a>
+          <span class="text-gray-500 ml-2">- デザイントークン</span>
+        </li>
+      </ul>
+    </div>
+    
+  </div>
+  
+  <script>
+    // Device sizes
+    const devices = {
+      'iphone-13-mini': { width: 375, height: 812 },
+      'iphone-14-pro': { width: 393, height: 852 },
+      'iphone-14-pro-max': { width: 430, height: 932 }
+    };
+    
+    function setDevice(deviceId) {
+      const container = document.getElementById('device-container');
+      const iframe = document.getElementById('preview-iframe');
+      
+      // Update container class
+      container.className = `device-frame device-${deviceId}`;
+      
+      // Update button states
+      document.querySelectorAll('.device-selector button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.getElementById(`btn-${deviceId}`).classList.add('active');
+      
+      // Reload iframe to apply new size
+      iframe.style.width = devices[deviceId].width + 'px';
+      iframe.style.height = devices[deviceId].height + 'px';
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      setDevice('iphone-13-mini');
+    });
+  </script>
+
+</body>
+</html>
+
+<!--
+===================================
+テンプレート変数一覧
+===================================
+
+- {{COMPONENT_NAME}}: コンポーネント名
+- {{ROOT_NODE_ID}}: FigmaのルートノードID
+- {{HTML_FILENAME}}: メインHTMLファイル名（例: mypage_learning_record.html）
+- {{FIGMA_URL}}: FigmaデザインのURL
+- {{DATE}}: 作成日
+- {{CONTENT_ANALYSIS_FILENAME}}: コンテンツ分析ファイル名
+- {{TOKENS_FILENAME}}: トークンマッピングファイル名
+
+===================================
+-->

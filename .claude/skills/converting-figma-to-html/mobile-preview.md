@@ -1,0 +1,1 @@
+../../.agents/skills/converting-figma-to-html/mobile-preview.md

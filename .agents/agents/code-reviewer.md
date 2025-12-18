@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: コードレビュー実施。PR作成前のセルフレビュー、品質チェック時に起動。
+description: Performs comprehensive code reviews covering architecture, quality, performance, security, and testing. Use when reviewing pull requests, conducting self-reviews before PR creation, or performing quality checks on code changes.
 tools: [Read, Grep, Glob]
 model: sonnet
 agents: [claude, copilot]

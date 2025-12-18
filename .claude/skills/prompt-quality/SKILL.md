@@ -1,0 +1,118 @@
+---
+name: prompt-quality
+description: Provides expertise in prompt engineering best practices for Claude Code, Cursor, and GitHub Copilot. Use when creating or validating rules, skills, agents, or command prompts.
+allowed-tools: [Read, Grep, Glob, WebFetch, WebSearch]
+
+---
+
+
+# Prompt Quality Skill
+
+このスキルは、AI エージェント向けプロンプト（rules, skills, agents, commands）の作成と品質検証に関する専門知識を提供します。
+
+## 対象エージェント
+
+- **Claude Code**: Skills, Agents, Rules, Commands
+- **Cursor**: Rules (`.cursor/rules/`)
+- **GitHub Copilot**: Instructions (`.github/copilot-instructions.md`, `AGENTS.md`)
+
+## 公式ドキュメント
+
+最新のベストプラクティスは以下の公式ドキュメントを参照：
+
+- **Claude Skills**: https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices
+- **Cursor Rules**: https://cursor.com/docs/context/rules
+- **GitHub Copilot**: https://docs.github.com/copilot/customizing-copilot/adding-custom-instructions-for-github-copilot
+
+## 核心原則
+
+### 1. Conciseness（簡潔性）
+
+> "Concise is key - the context window is a public good"
+
+- Claudeが既に知っている情報を繰り返さない
+- 各情報の必要性を吟味する
+- トークン数を意識する（1トークン ≈ 4文字）
+
+### 2. Progressive Disclosure（段階的開示）
+
+- エントリーポイントは簡潔に（500行以下推奨）
+- 詳細情報は別ファイルに分離
+- 参照の深さは1階層まで
+- 100行超のファイルには目次を追加
+
+### 3. 第三人称の原則
+
+- description は必ず第三人称で記述
+- "I can", "You can" を避ける
+- "何をするか" と "いつ使うか" を明示
+
+### 4. アクション指向
+
+- 動詞から始まる具体的な指示
+- 実行可能なステップを提示
+- チェックリスト形式を活用
+
+## ファイルサイズ制限
+
+| エージェント | 制限 | 備考 |
+|------------|------|------|
+| Cursor | 500行 | rules 推奨 |
+| Copilot | 2ページ (~1000行) | instructions 上限 |
+| Claude Skills | 500行 | SKILL.md 推奨 |
+
+## 参照ファイル
+
+詳細な検証基準とベストプラクティスは以下を参照：
+
+- **[validation-criteria.md](validation-criteria.md)**: 14の検証観点の詳細
+- **[best-practices.md](best-practices.md)**: 公式推奨事項まとめ
+- **[examples.md](examples.md)**: 良い例・悪い例集
+
+## メタデータ要件
+
+### Claude Skills/Agents
+
+```yaml
+---
+name: skill-name              # 64文字以内、小文字・数字・ハイフンのみ
+description: Third-person description. Use when...  # 1024文字以内、第三人称、トリガー含む
+allowed-tools: [Read, Write]  # Skills のみ
+tools: [Read, Write]          # Agents のみ
+agents: [claude]              # 対象エージェント
+---
+```
+
+### Cursor Rules
+
+```yaml
+---
+description: What this rule does
+alwaysApply: false           # description/globs があれば false
+globs: "**/*.ts"             # カンマ区切り、単一行
+---
+```
+
+### GitHub Copilot
+
+```yaml
+---
+applyTo: "**/*.ts"           # カンマ区切り
+---
+```
+
+## 使用上の注意
+
+### アンチパターン
+
+- ❌ Windows形式のパス（`\` → `/` を使用）
+- ❌ 時間依存情報（"before 2025" など）
+- ❌ 選択肢の過剰提示（デフォルトを明示）
+- ❌ 深いネスト参照（2階層以上）
+
+### 推奨パターン
+
+- ✅ Before/After 形式の具体例
+- ✅ ワークフローチェックリスト
+- ✅ フィードバックループ
+- ✅ 出力テンプレート

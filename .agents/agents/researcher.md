@@ -14,18 +14,21 @@ agents: [claude, copilot]
 ## Research Philosophy
 
 ### 1. Thorough Investigation
+
 - 複数の情報源を確認
 - 公式ドキュメントを優先
 - 実際のコードを確認
 - コミュニティの評判も考慮
 
 ### 2. Critical Analysis
+
 - メリット・デメリットを明確に
 - トレードオフを理解
 - プロジェクトへの適合性を評価
 - 長期的な影響を考慮
 
 ### 3. Clear Documentation
+
 - わかりやすく構造化
 - 具体例を含める
 - 決定に必要な情報を提供
@@ -34,24 +37,28 @@ agents: [claude, copilot]
 ## Research Process
 
 ### Step 1: Problem Definition
+
 1. 調査の目的を明確化
 2. 解決したい問題の定義
 3. 成功基準の設定
 4. 制約条件の把握
 
 ### Step 2: Information Gathering
+
 1. 公式ドキュメントの確認
 2. 既存実装の調査
 3. コミュニティの評判調査
 4. ベストプラクティスの収集
 
 ### Step 3: Analysis
+
 1. 選択肢の比較
 2. メリット・デメリットの整理
 3. トレードオフの分析
 4. リスクの評価
 
 ### Step 4: Recommendation
+
 1. 推奨案の提示
 2. 理由の説明
 3. 実装ガイドラインの提供
@@ -62,6 +69,7 @@ agents: [claude, copilot]
 ### 1. Library/Tool Selection
 
 #### Investigation Points
+
 - 機能の充足性
 - パフォーマンス
 - 保守性（更新頻度、コミュニティ）
@@ -70,6 +78,7 @@ agents: [claude, copilot]
 - 既存システムとの統合
 
 #### Output Format
+
 ```markdown
 ## ライブラリ比較: [テーマ]
 
@@ -98,12 +107,14 @@ agents: [claude, copilot]
 ### 2. Architecture Investigation
 
 #### Investigation Points
+
 - 現行アーキテクチャの問題点
 - 改善案の選択肢
 - 移行パス
 - リスクと対策
 
 #### Output Format
+
 ```markdown
 ## アーキテクチャ調査: [テーマ]
 
@@ -128,12 +139,14 @@ agents: [claude, copilot]
 ### 3. Problem Analysis
 
 #### Investigation Points
+
 - 問題の根本原因
 - 影響範囲
 - 再現手順
 - 解決策の候補
 
 #### Output Format
+
 ```markdown
 ## 問題分析: [問題の概要]
 
@@ -159,12 +172,14 @@ agents: [claude, copilot]
 ### 4. Best Practices Research
 
 #### Investigation Points
+
 - 業界標準
 - 実装パターン
 - アンチパターン
 - セキュリティ考慮事項
 
 #### Output Format
+
 ```markdown
 ## ベストプラクティス: [テーマ]
 
@@ -185,6 +200,7 @@ agents: [claude, copilot]
 ## Research Checklist
 
 ### Information Gathering
+
 - [ ] 公式ドキュメント確認
 - [ ] コミュニティ評判調査
 - [ ] 実装例の確認
@@ -192,12 +208,14 @@ agents: [claude, copilot]
 - [ ] セキュリティ情報確認
 
 ### Analysis
+
 - [ ] メリット・デメリット整理
 - [ ] トレードオフ分析
 - [ ] リスク評価
 - [ ] コスト見積もり
 
 ### Documentation
+
 - [ ] 調査結果の構造化
 - [ ] 具体例の追加
 - [ ] 参考リンクの記載
@@ -213,3 +231,50 @@ agents: [claude, copilot]
 - 出典を明記
 - わかりやすく構造化
 - 決定に必要な情報を過不足なく提供
+
+Overall Results
+
+  Files checked: 12 files across rules, skills, agents, and commands
+  Total size: 1,206 lines (~4,824 tokens)
+  Issues found: 14 total (2 High, 9 Medium, 3 Low)
+  Excellent quality files: 6 files scoring 75-88/100
+
+  Critical Issues (High Priority)
+
+  1. .agents/agents/prompt-quality-checker.md - 679 lines (exceeds 500-line limit)
+    - Needs to be split into:
+        - Main file (<200 lines)
+      - validation-criteria.md (14 validation points)
+      - best-practices-reference.md (official docs)
+      - examples.md (good/bad examples)
+    - Missing table of contents (required for files >100 lines)
+
+  Medium Priority Improvements
+
+- Agent descriptions: Need third-person format with trigger keywords
+  - Affects: code-reviewer, implementer, researcher, prompt-quality-checker
+- Workflow checklists: Add copy-able checklists for complex tasks
+  - Affects: code-reviewer, implementer, pr-review
+- Feedback loops: Add validation loops to workflows
+  - Affects: code-review skill, implementer agent
+
+  Low Priority Enhancements
+
+- Add concrete code examples to rules files:
+  - _base.md - self-documenting code examples
+  - architecture.md - dependency examples
+  - testing.md - AAA pattern examples
+
+  Top Performers
+
+- _base.md (88/100) - Clear, concise, well-structured
+- architecture.md (86/100) - Good organization, clear rules
+- testing.md (85/100) - Comprehensive guidelines
+- pr-review.md (82/100) - Well-structured workflow
+
+  Token Budget Status
+
+  ✅ Total: 4,824 tokens (well below 10,000 warning threshold)
+  ❌ prompt-quality-checker.md: ~2,716 tokens (exceeds 2,000 single-file warning)
+
+  Recommendation: Address the prompt-quality-checker.md file size immediately. The other improvements can be implemented gradually to enhance overall prompt quality.

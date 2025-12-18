@@ -1,5 +1,6 @@
 ---
 description: アーキテクチャ原則と設計パターン
+
 globs: "**/*.ts", "**/*.js", "**/*.py"
 alwaysApply: false
 ---

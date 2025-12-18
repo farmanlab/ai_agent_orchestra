@@ -1,0 +1,1 @@
+../../.agents/skills/prompt-quality/validation-criteria.md

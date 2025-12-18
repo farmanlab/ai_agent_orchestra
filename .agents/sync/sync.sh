@@ -32,6 +32,8 @@ Commands:
   cursor          Sync to Cursor only
   copilot         Sync to GitHub Copilot only
   validate        Validate .agents/ directory structure and content
+  check-size      Check prompt file sizes and token counts
+  check-quality   Check prompt quality and best practices
   init            Initialize directory structure
   install-hooks   Install git pre-commit hook
   clean           Remove all generated files
@@ -45,6 +47,8 @@ Examples:
   $0 all                    # Sync to all agents
   $0 claude                 # Sync to Claude Code only
   $0 validate               # Validate configuration files
+  $0 check-size             # Check prompt file sizes
+  $0 check-quality          # Check prompt quality
   $0 --dry-run all          # Show what would be synced
   $0 --verbose all          # Sync with detailed output
   $0 install-hooks          # Install git hooks
@@ -264,6 +268,32 @@ run_validation() {
     "$SCRIPT_DIR/validate.sh"
 }
 
+# サイズチェック実行
+run_size_check() {
+    log_info "Running size check..."
+
+    if [ ! -f "$SCRIPT_DIR/check-size.sh" ]; then
+        log_error "check-size.sh not found"
+        return 1
+    fi
+
+    chmod +x "$SCRIPT_DIR/check-size.sh"
+    "$SCRIPT_DIR/check-size.sh"
+}
+
+# 品質チェック実行
+run_quality_check() {
+    log_info "Running quality check..."
+
+    if [ ! -f "$SCRIPT_DIR/check-quality.sh" ]; then
+        log_error "check-quality.sh not found"
+        return 1
+    fi
+
+    chmod +x "$SCRIPT_DIR/check-quality.sh"
+    "$SCRIPT_DIR/check-quality.sh"
+}
+
 # オプション解析
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -278,7 +308,7 @@ while [[ $# -gt 0 ]]; do
         -h|--help)
             show_help
             ;;
-        all|claude|cursor|copilot|validate|init|install-hooks|clean)
+        all|claude|cursor|copilot|validate|check-size|check-quality|init|install-hooks|clean)
             COMMAND=$1
             shift
             ;;
@@ -305,6 +335,12 @@ case $COMMAND in
         ;;
     validate)
         run_validation
+        ;;
+    check-size)
+        run_size_check
+        ;;
+    check-quality)
+        run_quality_check
         ;;
     init)
         init_dirs

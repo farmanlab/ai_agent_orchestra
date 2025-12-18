@@ -87,6 +87,92 @@ Validate `.agents/` structure and content before syncing:
 
 Returns exit code 1 if errors found, 0 if only warnings or success.
 
+### Size Check
+
+Check file sizes and token counts to prevent prompt bloat:
+
+```bash
+# Check prompt sizes
+.agents/sync/sync.sh check-size
+```
+
+**Metrics**:
+- Line count, character count, byte size per file
+- Estimated token count (1 token ≈ 4 characters)
+- Category breakdown (rules, skills, agents, commands)
+- Total token count across all files
+
+**Default thresholds**:
+- Single file warning: 500 lines or 2000 tokens
+- Single file error: 1000 lines or 4000 tokens
+- Total warning: 10000 tokens
+- Total error: 20000 tokens
+
+Exceeding thresholds triggers recommendations to split files or use progressive disclosure.
+
+### Quality Check
+
+Verify prompt construction against official best practices:
+
+```bash
+# Quick static check
+.agents/sync/check-quality
+```
+
+**Validation Criteria**:
+1. **Clarity**: Detect vague language ("maybe", "consider", etc.)
+2. **Structure**: Proper heading hierarchy and organization
+3. **Examples**: Presence of concrete code examples
+4. **Scope**: Repository-level guidance, not task-specific
+5. **Progressive Disclosure**: Appropriate separation of details
+6. **No Duplication**: Avoid redundant or conflicting instructions
+7. **File Naming**: Names clearly reflect purpose
+8. **Action-Oriented**: Executable instructions with verbs
+9. **Metadata**: Complete frontmatter fields
+10. **Tone**: Consistent professional style
+
+**Best Practice Compliance**:
+- Cursor: Keep rules under 500 lines, include concrete examples
+- GitHub Copilot: Max 2 pages, not task-specific, clear and concise
+- Claude Code: Specific context, structured format
+
+**Issue Priority**:
+- 🔴 High: Missing required metadata, excessive size
+- 🟡 Medium: Structural issues, vague language, poor progressive disclosure
+- 🟢 Low: Action-orientation, minor improvements
+
+#### Dynamic Check with Latest Documentation
+
+The `prompt-quality-checker` agent fetches and validates against the latest official documentation:
+
+**Agent Execution Process**:
+1. **Fetch Official Docs**: Automatically retrieves latest docs from Cursor, Copilot, Claude
+2. **Extract Thresholds**: Pulls current line limits, token limits, best practices
+3. **Detect Changes**: Reports if official recommendations have been updated
+4. **Validate**: Checks prompts against the most current standards
+
+**Official Sources Referenced**:
+- Cursor: https://cursor.com/docs/context/rules
+- GitHub Copilot: https://docs.github.com/copilot/customizing-copilot/adding-custom-instructions-for-github-copilot
+- Claude: https://support.claude.com/en/articles/7996856-what-is-the-maximum-prompt-length
+
+**Benefits**:
+- Always aligned with current best practices
+- Automatic detection of guideline updates
+- Fallback to known values if fetch fails
+
+**Usage**:
+```bash
+# In Claude Code terminal
+# Say: "Use the prompt-quality-checker agent to check prompt quality"
+```
+
+The agent will automatically:
+1. Fetch official documentation
+2. Extract latest thresholds
+3. Validate all files in `.agents/`
+4. Generate detailed report
+
 ### Setup and Maintenance
 
 ```bash

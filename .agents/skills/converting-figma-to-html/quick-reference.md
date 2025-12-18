@@ -146,10 +146,11 @@ nav-home-label     ナビのホームラベル
 ## 📁 出力ファイル
 
 ```
-{component_name}.html                  # メインHTML
-{component_name}_content_analysis.md   # コンテンツ分析
-{component_name}_preview.html          # プレビュー（オプション）
-{component_name}_tokens.md             # トークン（オプション）
+.agents/tmp/{short-screen-name}/
+├── index.html              # メインHTML
+├── content_analysis.md     # コンテンツ分析
+├── preview.html            # プレビュー（オプション）
+└── tokens.md               # トークン（オプション）
 ```
 
 ---

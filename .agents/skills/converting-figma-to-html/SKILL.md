@@ -45,11 +45,13 @@ https://figma.com/design/XXXXX/Project?node-id=1234-5678
 ### 生成されるファイル
 
 ```
-outputs/
-├── {component_name}.html                  # メインHTML（data属性付き）
-├── {component_name}_content_analysis.md   # コンテンツ分析
-└── {component_name}_preview.html          # デバイスフレーム付きプレビュー（オプション）
+.agents/tmp/{short-screen-name}/
+├── index.html                  # メインHTML（data属性付き）
+├── content_analysis.md         # コンテンツ分析
+└── preview.html                # デバイスフレーム付きプレビュー（オプション）
 ```
+
+`{short-screen-name}` はFigmaの画面名から生成した短い識別名（例: `homework-modal`）
 
 ## 詳細ガイド
 

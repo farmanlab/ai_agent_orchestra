@@ -7,11 +7,11 @@ Figmaから出力したHTMLのコンテンツを分類し、UIデザインから
 ## 出力ファイル
 
 ```
-outputs/
-├── component_name.html
-├── component_name_preview.html
-├── component_name_tokens.md
-└── component_name_content_analysis.md   ← 追加
+.agents/tmp/{short-screen-name}/
+├── index.html
+├── preview.html
+├── tokens.md
+└── content_analysis.md   ← 追加
 ```
 
 ## 分類体系

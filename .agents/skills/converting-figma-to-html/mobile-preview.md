@@ -75,10 +75,10 @@
 ## 出力ファイル構成
 
 ```
-outputs/
-├── component_name.html              # 元のモバイルHTML
-├── component_name_preview.html      # プレビュー用ラッパー
-└── component_name_tokens.md         # トークンマッピング
+.agents/tmp/{short-screen-name}/
+├── index.html              # 元のモバイルHTML
+├── preview.html            # プレビュー用ラッパー
+└── tokens.md               # トークンマッピング
 ```
 
 ## メリット

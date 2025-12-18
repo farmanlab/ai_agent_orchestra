@@ -202,12 +202,14 @@
 ### 推奨構成
 
 ```
-outputs/
-├── component_name.html          # 変換後のHTML
-├── design_tokens_mapping.md     # トークンマッピング表
+.agents/tmp/{short-screen-name}/
+├── index.html                   # 変換後のHTML
+├── content_analysis.md          # コンテンツ分析
 └── assets/
     └── icons/                   # エクスポートしたSVG（後から配置）
 ```
+
+`{short-screen-name}` はFigmaの画面名から生成した短い識別名（例: `homework-modal`, `login-form`）
 
 ---
 

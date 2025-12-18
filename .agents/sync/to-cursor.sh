@@ -233,10 +233,12 @@ if [ -d "$AGENTS_DIR/skills" ]; then
             mkdir -p "$target_file_dir"
 
             # 相対パスでシンボリックリンクを作成
-            # ディレクトリの深さに応じて ../ の数を調整
+            # .cursor/rules/{skill-name}/ から .agents/skills/{skill-name}/ へは
+            # 3階層上がる必要がある: rules/ → .cursor/ → repo-root/
+            # さらにサブディレクトリがある場合は追加で上がる
             depth=$(echo "$rel_path" | tr -cd '/' | wc -c)
             rel_prefix=""
-            for i in $(seq 0 $((depth + 1))); do
+            for i in $(seq 0 $((depth + 2))); do
                 rel_prefix="../$rel_prefix"
             done
             rel_link_path="${rel_prefix}.agents/skills/$skill_name/$rel_path"

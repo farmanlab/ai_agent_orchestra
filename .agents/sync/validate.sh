@@ -74,7 +74,6 @@ validate_directory_structure() {
 
     local required_dirs=(
         "$AGENTS_DIR/rules"
-        "$AGENTS_DIR/skills"
         "$AGENTS_DIR/agents"
         "$AGENTS_DIR/commands"
         "$AGENTS_DIR/sync"
@@ -157,77 +156,9 @@ validate_rules() {
     log_success "Rules validation complete"
 }
 
-# 3. Skills の検証
-validate_skills() {
-    log_info "Validating skills..."
+# Note: Skills検証はskillportに移譲されたため削除
 
-    if [ ! -d "$AGENTS_DIR/skills" ]; then
-        log_error "Skills directory not found"
-        return
-    fi
-
-    if ! compgen -G "$AGENTS_DIR/skills/*" > /dev/null 2>&1; then
-        log_warning "No skill directories found"
-        return
-    fi
-
-    find "$AGENTS_DIR/skills" -mindepth 1 -maxdepth 1 -type d | while IFS= read -r skill_dir; do
-        local skill_name=$(basename "$skill_dir")
-        local skill_file="$skill_dir/SKILL.md"
-
-        # SKILL.md の存在チェック
-        if [ ! -f "$skill_file" ]; then
-            log_error "[$skill_name] SKILL.md not found"
-            continue
-        fi
-
-        local frontmatter=$(extract_frontmatter "$skill_file")
-
-        if [ -z "$frontmatter" ]; then
-            log_error "[$skill_name/SKILL.md] No frontmatter found"
-            continue
-        fi
-
-        # 必須フィールドのチェック
-        local name=$(get_field_value "$frontmatter" "name")
-        local description=$(get_field_value "$frontmatter" "description")
-        local triggers=$(get_array_field "$frontmatter" "triggers")
-        local agents=$(get_array_field "$frontmatter" "agents")
-
-        if [ -z "$name" ]; then
-            log_error "[$skill_name/SKILL.md] Missing required field: name"
-        fi
-
-        if [ -z "$description" ]; then
-            log_error "[$skill_name/SKILL.md] Missing required field: description"
-        fi
-
-        if [ -z "$triggers" ]; then
-            log_warning "[$skill_name/SKILL.md] No triggers defined"
-        fi
-
-        if [ -z "$agents" ]; then
-            log_error "[$skill_name/SKILL.md] Missing required field: agents"
-        else
-            # agents の値を検証
-            while IFS= read -r agent; do
-                if [[ ! "$agent" =~ ^(claude|cursor|copilot)$ ]]; then
-                    log_error "[$skill_name/SKILL.md] Invalid agent value: '$agent'"
-                fi
-            done <<< "$agents"
-        fi
-
-        # ディレクトリ名とnameフィールドの一致確認
-        if [ -n "$name" ] && [ "$name" != "$skill_name" ]; then
-            log_warning "[$skill_name/SKILL.md] Directory name '$skill_name' does not match 'name' field '$name'"
-        fi
-
-    done
-
-    log_success "Skills validation complete"
-}
-
-# 4. Agents の検証
+# 3. Agents の検証
 validate_agents() {
     log_info "Validating agents..."
 
@@ -290,7 +221,7 @@ validate_agents() {
     log_success "Agents validation complete"
 }
 
-# 5. Commands の検証
+# 4. Commands の検証
 validate_commands() {
     log_info "Validating commands..."
 
@@ -327,12 +258,12 @@ validate_commands() {
     log_success "Commands validation complete"
 }
 
-# 6. ファイル命名規則の検証
+# 5. ファイル命名規則の検証
 validate_file_naming() {
     log_info "Validating file naming conventions..."
 
-    # すべての .md ファイルをチェック
-    find "$AGENTS_DIR" -type f -name "*.md" ! -path "*/sync/*" | while IFS= read -r file; do
+    # すべての .md ファイルをチェック（skillsはskillportで管理、tmpは作業用）
+    find "$AGENTS_DIR" -type f -name "*.md" ! -path "*/sync/*" ! -path "*/skills/*" ! -path "*/tmp/*" | while IFS= read -r file; do
         local filename=$(basename "$file")
 
         # ファイル名に空白やアルファベット以外の特殊文字が含まれていないかチェック
@@ -340,13 +271,8 @@ validate_file_naming() {
             log_warning "[$filename] Filename contains spaces"
         fi
 
-        # SKILL.md は skills ディレクトリ配下にあるべき
-        if [[ "$filename" == "SKILL.md" ]] && [[ ! "$file" =~ /skills/ ]]; then
-            log_error "[$filename] SKILL.md should be in skills directory"
-        fi
-
         # README.md を除外して、一般的なマークダウンファイルは小文字とハイフンのみを推奨
-        if [[ "$filename" != "README.md" ]] && [[ "$filename" != "SKILL.md" ]] && [[ "$filename" =~ [A-Z] ]]; then
+        if [[ "$filename" != "README.md" ]] && [[ "$filename" =~ [A-Z] ]]; then
             log_warning "[$filename] Filename contains uppercase letters (lowercase-with-hyphens is recommended)"
         fi
 
@@ -355,18 +281,13 @@ validate_file_naming() {
     log_success "File naming validation complete"
 }
 
-# 7. YAML構文の検証
+# 6. YAML構文の検証
 validate_yaml_syntax() {
     log_info "Validating YAML syntax..."
 
-    find "$AGENTS_DIR" -type f -name "*.md" ! -path "*/sync/*" ! -name "README.md" | while IFS= read -r file; do
+    find "$AGENTS_DIR" -type f -name "*.md" ! -path "*/sync/*" ! -path "*/skills/*" ! -path "*/tmp/*" ! -name "README.md" | while IFS= read -r file; do
         local filename=$(basename "$file")
         local dirname=$(basename "$(dirname "$file")")
-
-        # Skills の補助ファイル（SKILL.md 以外）はスキップ
-        if [[ "$file" =~ /skills/ ]] && [[ "$filename" != "SKILL.md" ]]; then
-            continue
-        fi
 
         # frontmatter の区切り (---) をチェック
         local delimiter_count=$(grep -c "^---$" "$file" || true)
@@ -403,8 +324,6 @@ main() {
     validate_directory_structure
     echo ""
     validate_rules
-    echo ""
-    validate_skills
     echo ""
     validate_agents
     echo ""

@@ -84,10 +84,10 @@ log_verbose() {
 init_dirs() {
     log_info "Initializing directory structure..."
 
-    mkdir -p "$REPO_ROOT/.agents"/{rules,skills,agents,commands,sync}
+    mkdir -p "$REPO_ROOT/.agents"/{rules,agents,commands,sync}
     log_success "Created .agents/ directory structure"
 
-    mkdir -p "$REPO_ROOT/.claude"/{rules,skills,agents,commands}
+    mkdir -p "$REPO_ROOT/.claude"/{rules,agents,commands}
     log_success "Created .claude/ directory structure"
 
     mkdir -p "$REPO_ROOT/.cursor"/{rules,commands}
@@ -106,7 +106,6 @@ clean_generated() {
     if [ "$DRY_RUN" = true ]; then
         log_warning "DRY RUN: Would remove:"
         [ -d "$REPO_ROOT/.claude/rules" ] && echo "  .claude/rules/"
-        [ -d "$REPO_ROOT/.claude/skills" ] && echo "  .claude/skills/"
         [ -d "$REPO_ROOT/.claude/agents" ] && echo "  .claude/agents/"
         [ -d "$REPO_ROOT/.claude/commands" ] && echo "  .claude/commands/"
         [ -d "$REPO_ROOT/.cursor/rules" ] && echo "  .cursor/rules/"
@@ -118,7 +117,7 @@ clean_generated() {
         return
     fi
 
-    rm -rf "$REPO_ROOT/.claude/rules" "$REPO_ROOT/.claude/skills" "$REPO_ROOT/.claude/agents" "$REPO_ROOT/.claude/commands"
+    rm -rf "$REPO_ROOT/.claude/rules" "$REPO_ROOT/.claude/agents" "$REPO_ROOT/.claude/commands"
     rm -rf "$REPO_ROOT/.cursor/rules" "$REPO_ROOT/.cursor/commands"
     rm -rf "$REPO_ROOT/.github/instructions" "$REPO_ROOT/.github/prompts"
     rm -f "$REPO_ROOT/CLAUDE.md" "$REPO_ROOT/AGENTS.md"

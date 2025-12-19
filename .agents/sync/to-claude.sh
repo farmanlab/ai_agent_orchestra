@@ -16,7 +16,7 @@ echo "Target: $CLAUDE_DIR"
 echo ""
 
 # ディレクトリ作成
-mkdir -p "$CLAUDE_DIR"/{rules,skills,agents}
+mkdir -p "$CLAUDE_DIR"/{rules,agents}
 
 # Rules 変換
 echo "Converting Rules..."
@@ -92,121 +92,8 @@ if [ -d "$AGENTS_DIR/rules" ]; then
     done
 fi
 
-# Skills 変換
-echo ""
-echo "Converting Skills..."
-if [ -d "$AGENTS_DIR/skills" ]; then
-    mkdir -p "$CLAUDE_DIR/skills"
-
-    find "$AGENTS_DIR/skills" -mindepth 1 -maxdepth 1 -type d | while read -r skill_dir; do
-        skill_name=$(basename "$skill_dir")
-        target_dir="$CLAUDE_DIR/skills/$skill_name"
-
-        echo "  Processing: $skill_name"
-
-        # 既存のシンボリックリンクまたはディレクトリを削除
-        [ -L "$target_dir" ] && rm "$target_dir"
-        [ -d "$target_dir" ] && rm -rf "$target_dir"
-
-        # ディレクトリを作成
-        mkdir -p "$target_dir"
-
-        # SKILL.md を変換（frontmatterをClaude形式に変換）
-        if [ -f "$skill_dir/SKILL.md" ]; then
-            awk '
-            BEGIN {
-                in_frontmatter = 0;
-                has_frontmatter = 0;
-                buffered_frontmatter = "";
-                in_allowed_field = 0;
-            }
-            /^---$/ {
-                if (NR == 1) {
-                    in_frontmatter = 1;
-                    has_frontmatter = 1;
-                    next;
-                } else if (in_frontmatter) {
-                    in_frontmatter = 0;
-                    # frontmatter を出力（末尾の改行を除去）
-                    print "---";
-                    gsub(/\n$/, "", buffered_frontmatter);
-                    print buffered_frontmatter;
-                    print "---";
-                    print "";
-                    next;
-                }
-            }
-            in_frontmatter {
-                # コメント行や空行はスキップ（保持しない）
-                if ($0 ~ /^#/ || NF == 0) {
-                    next;
-                }
-                # name, description, allowed-tools を保持（公式仕様準拠）
-                if ($0 ~ /^name:/ || $0 ~ /^description:/ || $0 ~ /^allowed-tools:/) {
-                    buffered_frontmatter = buffered_frontmatter $0 "\n";
-                    in_allowed_field = 1;
-                    next;
-                }
-                # 不要なフィールド（compatibility, triggers, agents, priority など）
-                # compatibility は Claude が含まれているかのフィルタリングに使用済み
-                if ($0 ~ /^compatibility:/ || $0 ~ /^triggers:/ || $0 ~ /^agents:/ || $0 ~ /^priority:/ || $0 ~ /^paths:/) {
-                    in_allowed_field = 0;
-                    next;
-                }
-                # 配列要素
-                if ($0 ~ /^  - /) {
-                    if (in_allowed_field == 1) {
-                        buffered_frontmatter = buffered_frontmatter $0 "\n";
-                    }
-                    next;
-                }
-                # その他のフィールド（新しいフィールドが来たらリセット）
-                if ($0 ~ /^[a-zA-Z]/) {
-                    in_allowed_field = 0;
-                }
-            }
-            !in_frontmatter && has_frontmatter {
-                print $0;
-            }
-            !has_frontmatter && NR == 1 {
-                # frontmatter がない場合はそのまま出力
-                print $0;
-            }
-            !has_frontmatter && NR > 1 {
-                print $0;
-            }
-            ' "$skill_dir/SKILL.md" > "$target_dir/SKILL.md"
-        fi
-
-        # その他のファイルとサブディレクトリをシンボリックリンク
-        find "$skill_dir" -type f ! -name "SKILL.md" | while read -r file; do
-            # スキルディレクトリからの相対パスを取得
-            rel_path="${file#$skill_dir/}"
-            target_file="$target_dir/$rel_path"
-            target_file_dir=$(dirname "$target_file")
-
-            # ターゲット側のディレクトリを作成
-            mkdir -p "$target_file_dir"
-
-            # 相対パスでシンボリックリンクを作成
-            # .claude/skills/{skill-name}/ から .agents/skills/{skill-name}/ へは
-            # 3階層上がる必要がある: skills/ → .claude/ → repo-root/
-            # さらにサブディレクトリがある場合は追加で上がる
-            depth=$(echo "$rel_path" | tr -cd '/' | wc -c)
-            rel_prefix=""
-            for i in $(seq 0 $((depth + 2))); do
-                rel_prefix="../$rel_prefix"
-            done
-            rel_link_path="${rel_prefix}.agents/skills/$skill_name/$rel_path"
-
-            ln -sf "$rel_link_path" "$target_file"
-        done
-
-        echo "    → $target_dir/SKILL.md"
-    done
-fi
-
 # Agents 変換
+# Note: Skills管理はskillportに移譲されたため、変換処理は不要
 echo ""
 echo "Converting Agents..."
 if [ -d "$AGENTS_DIR/agents" ]; then
@@ -288,7 +175,5 @@ echo "=== Claude Code conversion complete ==="
 echo ""
 echo "Generated files:"
 echo "  .claude/rules/"
-echo "  .claude/skills/"
 echo "  .claude/agents/"
 echo "  .claude/commands/"
-echo "  CLAUDE.md (Copilot compatibility)"

@@ -19,14 +19,13 @@
 
 | エージェント | Rules | Skills | Subagents | Commands |
 |-------------|-------|--------|-----------|----------|
-| **Claude Code** | ✅ .claude/rules/*.md | ✅ .claude/skills/ | ✅ .claude/agents/ | ✅ .claude/commands/ |
-| **Cursor** | ✅ .cursor/rules/*/RULE.md | ✅ .cursor/skills/*/SKILL.md | ✅ Agent mode | ✅ .cursor/commands/ |
-| **GitHub Copilot** | ✅ .github/copilot-instructions.md | ✅ .github/instructions/ | ✅ AGENTS.md | ✅ .github/prompts/ |
+| **Claude Code** | ✅ .claude/rules/*.md | ⚙️ skillport管理 | ✅ .claude/agents/ | ✅ .claude/commands/ |
+| **Cursor** | ✅ .cursor/rules/*/RULE.md | ⚙️ skillport管理 | ✅ Agent mode | ✅ .cursor/commands/ |
+| **GitHub Copilot** | ✅ .github/copilot-instructions.md | ❌ 非サポート | ✅ AGENTS.md | ✅ .github/prompts/ |
 
-> **Note**: 
+> **Note**:
 > - Cursor の RULE.md は `description`, `alwaysApply`, `globs` (カンマ区切り) のみをサポート
-> - Cursor の Skills は Agent Skills 標準（agentskills.io）に準拠し、`.cursor/skills/` に配置されます
-> - Cursor Settings → Rules → Import Settings → Agent Skills を有効化してください
+> - Skills管理はskillportに移譲されました（詳細は `mcp__skillport__search_skills` を参照）
 
 ## クイックスタート
 

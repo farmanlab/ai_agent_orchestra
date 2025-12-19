@@ -160,9 +160,6 @@ main() {
     check_category "rules" "*.md"
     local rules_tokens=$CATEGORY_TOKEN_COUNT
 
-    check_category "skills" "*.md"
-    local skills_tokens=$CATEGORY_TOKEN_COUNT
-
     check_category "agents" "*.md"
     local agents_tokens=$CATEGORY_TOKEN_COUNT
 
@@ -170,7 +167,7 @@ main() {
     local commands_tokens=$CATEGORY_TOKEN_COUNT
 
     # 合計計算
-    local total_tokens=$((rules_tokens + skills_tokens + agents_tokens + commands_tokens))
+    local total_tokens=$((rules_tokens + agents_tokens + commands_tokens))
 
     echo "========================================"
     echo "  Summary"
@@ -179,7 +176,6 @@ main() {
 
     echo -e "${CYAN}Category Breakdown:${NC}"
     echo -e "  Rules:    ~${rules_tokens} tokens"
-    echo -e "  Skills:   ~${skills_tokens} tokens"
     echo -e "  Agents:   ~${agents_tokens} tokens"
     echo -e "  Commands: ~${commands_tokens} tokens"
     echo ""

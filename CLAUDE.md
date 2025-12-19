@@ -42,12 +42,10 @@ Each agent requires different frontmatter formats:
 - When both `description` and `globs` exist, `globs` determines file scope
 - Unneeded fields (`name`, `triggers`, `agents`, `priority`) are auto-removed
 
-**Skills (.agents/skills/{name}/SKILL.md)** - agentskills.io準拠:
-- Source format (公式仕様): `name`, `description`, `compatibility`, `allowed-tools` (スペース区切り)
-- ディレクトリ構造: `references/` (参照ドキュメント), `assets/` (テンプレート), `scripts/` (実行可能スクリプト)
-- Claude: `name`, `description`, `allowed-tools` を保持（compatibility除去）
-- Cursor: `.cursor/skills/{name}/SKILL.md` に配置（Agent Skills 標準準拠、`name`, `description`, `allowed-tools` を保持）
-- Copilot: Not supported (no auto-loading triggers)
+**Skills (.agents/skills/)** - skillportで管理:
+- Skills管理はskillportに移譲されました
+- `.agents/skills/`にあるスキルはsync対象外です
+- skillportの使用方法は`mcp__skillport__search_skills`で確認してください
 
 ## Essential Commands
 
@@ -79,12 +77,11 @@ Validate `.agents/` structure and content before syncing:
 ```
 
 **Validation checks**:
-- Directory structure (existence of rules, skills, agents, commands)
+- Directory structure (existence of rules, agents, commands)
 - Required frontmatter fields (name, description, agents, etc.)
 - Value validity (agents field must be claude/cursor/copilot, priority must be numeric)
 - File naming conventions
 - YAML syntax (frontmatter delimiters)
-- Skills structure (SKILL.md existence)
 
 Returns exit code 1 if errors found, 0 if only warnings or success.
 
@@ -100,7 +97,7 @@ Check file sizes and token counts to prevent prompt bloat:
 **Metrics**:
 - Line count, character count, byte size per file
 - Estimated token count (1 token ≈ 4 characters)
-- Category breakdown (rules, skills, agents, commands)
+- Category breakdown (rules, agents, commands)
 - Total token count across all files
 
 **Default thresholds**:
@@ -192,7 +189,7 @@ chmod +x .agents/sync/*.sh
 
 ## Workflow for Making Changes
 
-1. Edit source files in `.agents/rules/`, `.agents/skills/`, `.agents/agents/`, or `.agents/commands/`
+1. Edit source files in `.agents/rules/`, `.agents/agents/`, or `.agents/commands/`
 2. Run `.agents/sync/sync.sh all` to convert to all agent formats
 3. Commit both source files (`.agents/`) and generated files (`.claude/`, `.cursor/`, `.github/`, etc.)
 
@@ -224,37 +221,6 @@ git commit -m "Add my-rule"
 
 ## Important Implementation Details
 
-### Progressive Disclosure (Skills)
-
-Skills use progressive disclosure with reference files:
-
-```
-.agents/skills/code-review/
-├── SKILL.md          # Entry point
-├── references/       # Referenced from SKILL.md
-│   ├── checklist.md
-│   └── patterns.md
-└── scripts/          # Executable scripts (optional)
-    └── test.sh
-```
-
-When converted:
-- Claude: SKILL.md frontmatter converted (only `name`, `description`, `allowed-tools`), supplementary files symlinked
-- Cursor: `.cursor/skills/{name}/SKILL.md` (Agent Skills 標準準拠、`name`, `description`, `allowed-tools` を保持), supplementary files symlinked
-- Copilot: Not supported
-
-### Enabling Agent Skills in Cursor
-
-To use Agent Skills in Cursor:
-
-1. Open **Cursor Settings** → **Rules**
-2. Find the **Import Settings** section
-3. Toggle **Agent Skills** to **ON**
-
-Agent Skills are automatically applied by the agent based on context. They are treated as rules that the agent can choose to apply, not always-applied rules.
-
-**Note**: Skills are located in `.cursor/skills/` directory (not `.cursor/rules/`). The sync script automatically converts skills from `.agents/skills/` to `.cursor/skills/` format.
-
 ### Frontmatter Transformation Logic
 
 The sync scripts (`to-claude.sh`, `to-cursor.sh`, `to-copilot.sh`) use AWK to parse and transform YAML frontmatter:
@@ -265,15 +231,13 @@ The sync scripts (`to-claude.sh`, `to-cursor.sh`, `to-copilot.sh`) use AWK to pa
 - Auto-compute `alwaysApply` for Cursor based on field presence
 
 **Agent-specific field requirements**:
-- Claude skills: `name`, `description`, `allowed-tools`
-- Cursor rules/skills: `description`, `alwaysApply`, `globs` (comma-separated)
+- Cursor rules: `description`, `alwaysApply`, `globs` (comma-separated)
 - Copilot: `applyTo` (comma-separated)
 
 ### File Naming Conventions
 
 - `.agents/rules/_base.md` → Base rules that apply to all files
 - `.agents/rules/{domain}.md` → Domain-specific rules (architecture, testing, etc.)
-- `.agents/skills/{skill-name}/SKILL.md` → Skill entry point
 - `.agents/agents/{agent-name}.md` → Subagent definitions
 - `.agents/commands/{command-name}.md` → Slash command definitions
 
@@ -287,14 +251,6 @@ The sync scripts (`to-claude.sh`, `to-cursor.sh`, `to-copilot.sh`) use AWK to pa
 - Only accepts `description`, `alwaysApply`, `globs` in frontmatter
 - `globs` must be comma-separated single line (not YAML array)
 - `alwaysApply` logic: false when `description` OR `globs` exist
-
-**Skills** (`.cursor/skills/{name}/SKILL.md`):
-- Agent Skills standard format (agentskills.io)
-- Located in `.cursor/skills/` directory (not `.cursor/rules/`)
-- Uses `SKILL.md` filename (not `RULE.md`)
-- Frontmatter: `name`, `description`, `allowed-tools` (Agent Skills standard)
-- Automatically applied by agent based on context
-- Enable in Cursor Settings → Rules → Import Settings → Agent Skills
 
 ## Troubleshooting
 

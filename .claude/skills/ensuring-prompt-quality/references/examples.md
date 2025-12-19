@@ -1,1 +1,0 @@
-../../../../.agents/skills/ensuring-prompt-quality/references/examples.md

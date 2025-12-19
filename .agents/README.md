@@ -12,8 +12,8 @@ Single Source of Truth (.agents/) → 各エージェント固有形式へ変換
 
 | エージェント | Rules | Skills | Subagents |
 |-------------|-------|--------|-----------|
-| Claude Code | ✅ .claude/rules/*.md | ✅ .claude/skills/ | ✅ .claude/agents/ |
-| Cursor | ✅ .cursor/rules/*.mdc | ✅ .cursor/rules/skill-*/ | ✅ Agent mode |
+| Claude Code | ✅ .claude/rules/*.md | ⚙️ skillport管理 | ✅ .claude/agents/ |
+| Cursor | ✅ .cursor/rules/*/RULE.md | ⚙️ skillport管理 | ✅ Agent mode |
 | GitHub Copilot | ✅ .github/copilot-instructions.md | ❌ (非サポート) | ✅ AGENTS.md |
 
 ### クロスプラットフォーム互換性
@@ -328,18 +328,8 @@ allowed-tools: [Tool1, Tool2, ...]  # Claude Code用（オプション）
 
 ### Skills 変換
 
-| 統一形式 | Claude Code | Cursor | Copilot |
-|---------|-------------|--------|---------|
-| `SKILL.md` | SKILL.md (変換) + 補助ファイル (symlink) | RULE.md (変換) + 補助ファイル (symlink) | ❌ 非サポート |
-| frontmatter | `name`, `description`, `allowed-tools`のみ | `description`と`alwaysApply`のみ | — |
-| フォルダ構造 | ディレクトリ構造維持 | ディレクトリ構造維持 | — |
-| Progressive disclosure | ✅ 完全維持 | ✅ 完全維持 | — |
-
-> **Note**:
-> - Claude Code の SKILL.md frontmatter には `name`, `description`, `allowed-tools` のみが有効（自動変換される）
-> - Cursor v2.2+ では `.cursor/rules/skill-name/RULE.md` 形式で Progressive disclosure をサポート
-> - Cursor の RULE.md frontmatter には `description`と`alwaysApply`のみが有効（自動変換される）
-> - GitHub Copilot は Skills の自動読み込み機能（triggers）を持たないため、変換対象外
+> **Note**: Skills管理はskillportに移譲されました。`.agents/skills/` にあるスキルはsync対象外です。
+> skillportの使用方法は `mcp__skillport__search_skills` で確認してください。
 
 ### Agents 変換
 
@@ -377,7 +367,7 @@ project/
 │   └── commands/                 # Slash Commands
 │
 ├── .cursor/
-│   ├── rules/*.mdc               # Cursor 用 Rules
+│   ├── rules/*/RULE.md           # Cursor 用 Rules
 │   └── commands/*.md             # Cursor 用 Slash Commands
 │
 ├── .github/
@@ -431,7 +421,7 @@ EOF
 ## ベストプラクティス
 
 ### 1. ルールは簡潔に
-- 1ファイル150行以内推奨
+- 1ファイル150行以内推奨（500行で警告、1000行でエラー）
 - 箇条書きより具体例
 - 重複を避ける
 

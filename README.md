@@ -20,10 +20,13 @@
 | エージェント | Rules | Skills | Subagents | Commands |
 |-------------|-------|--------|-----------|----------|
 | **Claude Code** | ✅ .claude/rules/*.md | ✅ .claude/skills/ | ✅ .claude/agents/ | ✅ .claude/commands/ |
-| **Cursor** | ✅ .cursor/rules/*/RULE.md | ✅ .cursor/rules/skill-*/ | ✅ Agent mode | ✅ .cursor/commands/ |
+| **Cursor** | ✅ .cursor/rules/*/RULE.md | ✅ .cursor/skills/*/SKILL.md | ✅ Agent mode | ✅ .cursor/commands/ |
 | **GitHub Copilot** | ✅ .github/copilot-instructions.md | ✅ .github/instructions/ | ✅ AGENTS.md | ✅ .github/prompts/ |
 
-> **Note**: Cursor の RULE.md は `description`, `alwaysApply`, `globs` (カンマ区切り) のみをサポート
+> **Note**: 
+> - Cursor の RULE.md は `description`, `alwaysApply`, `globs` (カンマ区切り) のみをサポート
+> - Cursor の Skills は Agent Skills 標準（agentskills.io）に準拠し、`.cursor/skills/` に配置されます
+> - Cursor Settings → Rules → Import Settings → Agent Skills を有効化してください
 
 ## クイックスタート
 

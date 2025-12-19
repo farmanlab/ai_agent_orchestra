@@ -1,8 +1,8 @@
 ---
 name: ensuring-prompt-quality
 description: Provides expertise in prompt engineering best practices for Claude Code, Cursor, and GitHub Copilot. Use when creating or validating rules, skills, agents, or command prompts.
-allowed-tools: [Read, Grep, Glob, WebFetch, WebSearch]
-agents: [claude]
+compatibility: Claude Code
+allowed-tools: Read Grep Glob WebFetch WebSearch
 ---
 
 # Prompt Quality Skill
@@ -64,9 +64,9 @@ agents: [claude]
 
 詳細な検証基準とベストプラクティスは以下を参照：
 
-- **[validation-criteria.md](validation-criteria.md)**: 14の検証観点の詳細
-- **[best-practices.md](best-practices.md)**: 公式推奨事項まとめ
-- **[examples.md](examples.md)**: 良い例・悪い例集
+- **[validation-criteria.md](references/validation-criteria.md)**: 14の検証観点の詳細
+- **[best-practices.md](references/best-practices.md)**: 公式推奨事項まとめ
+- **[examples.md](references/examples.md)**: 良い例・悪い例集
 
 ## Workflow
 
@@ -103,7 +103,7 @@ Prompt Quality Workflow:
 - 100行超なら目次を追加
 
 **Step 5: 品質チェック**
-- [validation-criteria.md](validation-criteria.md) の14観点で検証
+- [validation-criteria.md](references/validation-criteria.md) の14観点で検証
 - アンチパターンがないか確認
 - 冗長な説明を削除
 

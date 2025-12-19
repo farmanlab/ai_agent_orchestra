@@ -42,10 +42,11 @@ Each agent requires different frontmatter formats:
 - When both `description` and `globs` exist, `globs` determines file scope
 - Unneeded fields (`name`, `triggers`, `agents`, `priority`) are auto-removed
 
-**Skills (.agents/skills/{name}/SKILL.md)**:
-- Source format: Includes `name`, `description`, `triggers`, `agents`, `allowed-tools`
-- Claude: Converts to only `name`, `description`, `allowed-tools` (triggers/agents removed)
-- Cursor: Converts to RULE.md with only `description` and `alwaysApply`
+**Skills (.agents/skills/{name}/SKILL.md)** - agentskills.io準拠:
+- Source format (公式仕様): `name`, `description`, `compatibility`, `allowed-tools` (スペース区切り)
+- ディレクトリ構造: `references/` (参照ドキュメント), `assets/` (テンプレート), `scripts/` (実行可能スクリプト)
+- Claude: `name`, `description`, `allowed-tools` を保持（compatibility除去）
+- Cursor: `.cursor/skills/{name}/SKILL.md` に配置（Agent Skills 標準準拠、`name`, `description`, `allowed-tools` を保持）
 - Copilot: Not supported (no auto-loading triggers)
 
 ## Essential Commands
@@ -230,14 +231,29 @@ Skills use progressive disclosure with reference files:
 ```
 .agents/skills/code-review/
 ├── SKILL.md          # Entry point
-├── checklist.md      # Referenced from SKILL.md
-└── patterns.md       # Referenced from SKILL.md
+├── references/       # Referenced from SKILL.md
+│   ├── checklist.md
+│   └── patterns.md
+└── scripts/          # Executable scripts (optional)
+    └── test.sh
 ```
 
 When converted:
 - Claude: SKILL.md frontmatter converted (only `name`, `description`, `allowed-tools`), supplementary files symlinked
-- Cursor: SKILL.md → RULE.md (frontmatter converted to `description`, `alwaysApply`), supplementary files symlinked
+- Cursor: `.cursor/skills/{name}/SKILL.md` (Agent Skills 標準準拠、`name`, `description`, `allowed-tools` を保持), supplementary files symlinked
 - Copilot: Not supported
+
+### Enabling Agent Skills in Cursor
+
+To use Agent Skills in Cursor:
+
+1. Open **Cursor Settings** → **Rules**
+2. Find the **Import Settings** section
+3. Toggle **Agent Skills** to **ON**
+
+Agent Skills are automatically applied by the agent based on context. They are treated as rules that the agent can choose to apply, not always-applied rules.
+
+**Note**: Skills are located in `.cursor/skills/` directory (not `.cursor/rules/`). The sync script automatically converts skills from `.agents/skills/` to `.cursor/skills/` format.
 
 ### Frontmatter Transformation Logic
 
@@ -265,11 +281,20 @@ The sync scripts (`to-claude.sh`, `to-cursor.sh`, `to-copilot.sh`) use AWK to pa
 
 ### Cursor Format Specifics
 
-Cursor v2.2+ uses `.cursor/rules/{name}/RULE.md` format:
+**Rules** (`.cursor/rules/{name}/RULE.md`):
+- Cursor v2.2+ uses directory-based format
 - Supports progressive disclosure via directory structure
 - Only accepts `description`, `alwaysApply`, `globs` in frontmatter
 - `globs` must be comma-separated single line (not YAML array)
 - `alwaysApply` logic: false when `description` OR `globs` exist
+
+**Skills** (`.cursor/skills/{name}/SKILL.md`):
+- Agent Skills standard format (agentskills.io)
+- Located in `.cursor/skills/` directory (not `.cursor/rules/`)
+- Uses `SKILL.md` filename (not `RULE.md`)
+- Frontmatter: `name`, `description`, `allowed-tools` (Agent Skills standard)
+- Automatically applied by agent based on context
+- Enable in Cursor Settings → Rules → Import Settings → Agent Skills
 
 ## Troubleshooting
 

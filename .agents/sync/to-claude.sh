@@ -127,8 +127,9 @@ if [ -d "$AGENTS_DIR/skills" ]; then
                     next;
                 } else if (in_frontmatter) {
                     in_frontmatter = 0;
-                    # frontmatter を出力
+                    # frontmatter を出力（末尾の改行を除去）
                     print "---";
+                    gsub(/\n$/, "", buffered_frontmatter);
                     print buffered_frontmatter;
                     print "---";
                     print "";
@@ -140,14 +141,15 @@ if [ -d "$AGENTS_DIR/skills" ]; then
                 if ($0 ~ /^#/ || NF == 0) {
                     next;
                 }
-                # name, description, allowed-tools を保持
+                # name, description, allowed-tools を保持（公式仕様準拠）
                 if ($0 ~ /^name:/ || $0 ~ /^description:/ || $0 ~ /^allowed-tools:/) {
                     buffered_frontmatter = buffered_frontmatter $0 "\n";
                     in_allowed_field = 1;
                     next;
                 }
-                # 不要なフィールド（triggers, agents, priority など）
-                if ($0 ~ /^triggers:/ || $0 ~ /^agents:/ || $0 ~ /^priority:/ || $0 ~ /^paths:/) {
+                # 不要なフィールド（compatibility, triggers, agents, priority など）
+                # compatibility は Claude が含まれているかのフィルタリングに使用済み
+                if ($0 ~ /^compatibility:/ || $0 ~ /^triggers:/ || $0 ~ /^agents:/ || $0 ~ /^priority:/ || $0 ~ /^paths:/) {
                     in_allowed_field = 0;
                     next;
                 }
@@ -215,8 +217,9 @@ if [ -d "$AGENTS_DIR/agents" ]; then
         echo "  Processing: $filename"
 
         # frontmatter を Claude Code 形式でそのまま保持
-        # agents フィールドをフィルタリング用に確認
-        if grep -q "^agents:.*claude" "$agent_file" || ! grep -q "^agents:" "$agent_file"; then
+        # compatibility フィールドをフィルタリング用に確認（公式仕様準拠）
+        # "Claude" が含まれているか、compatibility/agents フィールドがない場合は変換
+        if grep -q "^compatibility:.*Claude" "$agent_file" || grep -q "^agents:.*claude" "$agent_file" || (! grep -q "^compatibility:" "$agent_file" && ! grep -q "^agents:" "$agent_file"); then
             # claude が含まれているか、agents フィールドがない場合は変換
             awk '
             BEGIN { in_frontmatter = 0; }
@@ -232,8 +235,8 @@ if [ -d "$AGENTS_DIR/agents" ]; then
                 }
             }
             in_frontmatter {
-                # agents フィールドは削除（フィルタリングに使っただけ）
-                if ($0 ~ /^agents:/) {
+                # compatibility, agents フィールドは削除（フィルタリングに使っただけ）
+                if ($0 ~ /^compatibility:/ || $0 ~ /^agents:/) {
                     next;
                 }
                 print $0;

@@ -1,8 +1,7 @@
 ---
 name: code-review
 description: コードレビュー専門知識。PR作成前のセルフレビュー、品質チェック、ベストプラクティス確認時に使用。
-triggers: [review, レビュー, quality, 品質, pr, pull request]
-agents: [claude, cursor]  # copilot は Skills 非サポート
+compatibility: Claude Code, Cursor
 ---
 
 # Code Review Skill
@@ -79,5 +78,5 @@ agents: [claude, cursor]  # copilot は Skills 非サポート
 5. **フィードバック** - 建設的で具体的な改善提案
 
 ## Reference Files
-- [checklist.md](checklist.md) - レビューチェックリスト
-- [patterns.md](patterns.md) - よくあるパターンと対処法
+- [checklist.md](references/checklist.md) - レビューチェックリスト
+- [patterns.md](references/patterns.md) - よくあるパターンと対処法

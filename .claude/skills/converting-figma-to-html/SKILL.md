@@ -1,8 +1,7 @@
 ---
 name: converting-figma-to-html
 description: Provides expertise in converting Figma designs to HTML/CSS using Figma MCP tools, with data attributes for content tracking and comprehensive analysis. Use when converting Figma designs to web code.
-allowed-tools: [Read, Write, Glob, figma:get_screenshot, figma:get_design_context, figma:get_metadata]
-
+allowed-tools: Read Write Glob mcp__figma__get_screenshot mcp__figma__get_design_context mcp__figma__get_metadata
 ---
 
 
@@ -46,18 +45,20 @@ https://figma.com/design/XXXXX/Project?node-id=1234-5678
 ### 生成されるファイル
 
 ```
-outputs/
-├── {component_name}.html                  # メインHTML（data属性付き）
-├── {component_name}_content_analysis.md   # コンテンツ分析
-└── {component_name}_preview.html          # デバイスフレーム付きプレビュー（オプション）
+.agents/tmp/{short-screen-name}/
+├── index.html                  # メインHTML（data属性付き）
+├── content_analysis.md         # コンテンツ分析
+└── preview.html                # デバイスフレーム付きプレビュー（オプション）
 ```
+
+`{short-screen-name}` はFigmaの画面名から生成した短い識別名（例: `homework-modal`）
 
 ## 詳細ガイド
 
 詳細な情報は以下のファイルを参照してください：
 
 ### ワークフロー
-**[workflow.md](workflow.md)**: Figma MCPツールの実行順序と各ステップの詳細
+**[workflow.md](references/workflow.md)**: Figma MCPツールの実行順序と各ステップの詳細
 
 - Step 1: Figmaデータ取得（screenshot, design_context, metadata）
 - Step 2: HTML生成ルール（Tailwind CSS、data属性、レイアウト）
@@ -65,7 +66,7 @@ outputs/
 - Step 4: 品質チェック（ビジュアル確認、属性確認）
 
 ### 変換ガイドライン
-**[conversion-guidelines.md](conversion-guidelines.md)**: 変換時の判断基準と処理ルール
+**[conversion-guidelines.md](references/conversion-guidelines.md)**: 変換時の判断基準と処理ルール
 
 - アイコン・画像アセットの処理
 - レイアウト・配置の処理（Flexbox/Grid優先）
@@ -74,7 +75,7 @@ outputs/
 - コンテンツ分類体系
 
 ### クイックリファレンス
-**[quick-reference.md](quick-reference.md)**: よく使うパターンと命名規則
+**[quick-reference.md](references/quick-reference.md)**: よく使うパターンと命名規則
 
 - 必須data属性一覧
 - data-figma-content-XXX 命名例
@@ -82,11 +83,11 @@ outputs/
 - Tailwindクラス早見表
 
 ### テンプレート
-**[templates/](templates/)**: 各種テンプレートファイル
+**[assets/](assets/)**: 各種テンプレートファイル
 
-- **[html-output.html](templates/html-output.html)**: HTMLテンプレート（変数付き）
-- **[content-analysis.md](templates/content-analysis.md)**: コンテンツ分析テンプレート
-- **[preview.html](templates/preview.html)**: プレビュー用ラッパー
+- **[html-output.html](assets/html-output.html)**: HTMLテンプレート（変数付き）
+- **[content-analysis.md](assets/content-analysis.md)**: コンテンツ分析テンプレート
+- **[preview.html](assets/preview.html)**: プレビュー用ラッパー
 
 ## 主要な機能
 
@@ -168,7 +169,7 @@ HTMLの各コンテンツを以下のカテゴリで整理：
    └─> デバイスフレーム付きプレビュー
 ```
 
-詳細は **[workflow.md](workflow.md)** を参照してください。
+詳細は **[workflow.md](references/workflow.md)** を参照してください。
 
 ## 完了チェックリスト
 
@@ -192,10 +193,10 @@ HTMLの各コンテンツを以下のカテゴリで整理：
 
 エージェントは以下のステップでこのスキルを活用します：
 
-1. **ワークフローの参照**: [workflow.md](workflow.md) の手順に従う
-2. **ガイドラインの適用**: [conversion-guidelines.md](conversion-guidelines.md) の変換ルールを適用
-3. **テンプレートの使用**: [templates/](templates/) のテンプレートを利用してファイル生成
-4. **リファレンスの確認**: [quick-reference.md](quick-reference.md) で命名規則やパターンを確認
+1. **ワークフローの参照**: [workflow.md](references/workflow.md) の手順に従う
+2. **ガイドラインの適用**: [conversion-guidelines.md](references/conversion-guidelines.md) の変換ルールを適用
+3. **テンプレートの使用**: [assets/](assets/) のテンプレートを利用してファイル生成
+4. **リファレンスの確認**: [quick-reference.md](references/quick-reference.md) で命名規則やパターンを確認
 
 ### 必要なツール
 
@@ -233,7 +234,7 @@ open {component_name}.html
 
 ## 参照
 
-- **[workflow.md](workflow.md)**: 詳細なワークフロー手順
-- **[conversion-guidelines.md](conversion-guidelines.md)**: 変換ルールの詳細
-- **[quick-reference.md](quick-reference.md)**: クイックリファレンス
-- **[templates/](templates/)**: 各種テンプレート
+- **[workflow.md](references/workflow.md)**: 詳細なワークフロー手順
+- **[conversion-guidelines.md](references/conversion-guidelines.md)**: 変換ルールの詳細
+- **[quick-reference.md](references/quick-reference.md)**: クイックリファレンス
+- **[assets/](assets/)**: 各種テンプレート

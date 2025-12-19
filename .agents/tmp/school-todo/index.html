@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>やること - Learn Native</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Hiragino Sans", "ヒラギノ角ゴ Pro", "Hiragino Kaku Gothic Pro", sans-serif;
+            background: #1c80e7;
+            width: 375px;
+            margin: 0 auto;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* ===== ナビゲーションバー ===== */
+        .nav-bar {
+            background: #0b41a0;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-title {
+            flex: 1;
+            text-align: center;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .nav-left, .nav-right {
+            display: flex;
+            gap: 16px;
+        }
+
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ===== タブメニュー ===== */
+        .tab-menu {
+            background: #0b41a0;
+            display: flex;
+            width: 100%;
+        }
+
+        .tab-item {
+            flex: 1;
+            padding: 10px 8px 0;
+            text-align: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 300;
+            position: relative;
+        }
+
+        .tab-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #3ec1bd;
+        }
+
+        /* ===== メインコンテンツ ===== */
+        .main-content {
+            flex: 1;
+            padding: 8px;
+            overflow-y: auto;
+            padding-bottom: 70px;
+        }
+
+        .info-link {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 8px;
+        }
+
+        .info-link a {
+            color: white;
+            font-size: 12px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .info-link svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* ===== 課題カード ===== */
+        .assignment-card {
+            background: white;
+            border-radius: 4px;
+            padding: 16px;
+            margin-bottom: 8px;
+            display: flex;
+            gap: 16px;
+        }
+
+        .card-date {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: center;
+            width: 80px;
+            flex-shrink: 0;
+        }
+
+        .date-icon {
+            width: 64px;
+            height: 64px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: linear-gradient(180deg, var(--month-bg) 0%, var(--month-bg) 31.25%, transparent 31.25%);
+        }
+
+        .date-icon .month {
+            position: absolute;
+            top: 12px;
+            font-size: 14px;
+            font-family: "StudySapuri Numbers", sans-serif;
+            color: white;
+        }
+
+        .date-icon .month-label {
+            position: absolute;
+            top: 12px;
+            right: 8px;
+            font-size: 10px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .date-icon .day {
+            font-size: 24px;
+            font-family: "StudySapuri Numbers", sans-serif;
+            color: var(--day-color);
+            margin-top: 10px;
+        }
+
+        .date-icon--pink {
+            --month-bg: #de30ca;
+            --day-color: #de30ca;
+        }
+
+        .date-icon--blue {
+            --month-bg: #0b41a0;
+            --day-color: #0b41a0;
+        }
+
+        .date-icon .progress-ring {
+            position: absolute;
+            width: 64px;
+            height: 64px;
+        }
+
+        .date-label {
+            background: var(--label-bg);
+            color: var(--label-color);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 10px;
+            text-align: center;
+            width: 80px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .date-label--pink {
+            --label-bg: #fef2f7;
+            --label-color: #de30ca;
+        }
+
+        .date-label--blue {
+            --label-bg: #e1f4ff;
+            --label-color: #0ca5e6;
+        }
+
+        /* ===== カードコンテンツ ===== */
+        .card-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .card-header {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4c5263;
+            line-height: 1.5;
+        }
+
+        .card-teacher {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .teacher-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+
+        .teacher-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .teacher-name {
+            font-size: 12px;
+            font-weight: 300;
+            color: #4c5263;
+        }
+
+        .card-details {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .detail-row {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            font-size: 10px;
+            font-weight: 300;
+            color: #4c5263;
+        }
+
+        .detail-icon {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        .detail-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ===== ボトムナビゲーション ===== */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #005fcc;
+            display: flex;
+            max-width: 375px;
+            margin: 0 auto;
+            height: 56px;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            padding: 7px 16px 8px;
+            position: relative;
+            opacity: 0.6;
+        }
+
+        .nav-item.active {
+            opacity: 1;
+        }
+
+        .nav-item-icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        .nav-item-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .nav-item-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .nav-badge {
+            position: absolute;
+            top: 1px;
+            right: 12px;
+            background: #de30ca;
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 1px 4px 0;
+            border-radius: 8px;
+            min-width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container" data-figma-node="104:452">
+        <!-- ナビゲーションバー -->
+        <nav class="nav-bar" data-figma-node="I2411:1816;2785:4493">
+            <div class="nav-left"></div>
+            <h1 class="nav-title">やること</h1>
+            <div class="nav-right">
+                <div class="nav-icon">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2"/>
+                        <path d="M9 12L11 14L15 10" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="nav-icon">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <rect x="4" y="4" width="16" height="16" rx="2" stroke="white" stroke-width="2"/>
+                        <line x1="4" y1="9" x2="20" y2="9" stroke="white" stroke-width="2"/>
+                    </svg>
+                </div>
+            </div>
+        </nav>
+
+        <!-- タブメニュー -->
+        <div class="tab-menu" data-figma-node="868:2841">
+            <div class="tab-item active" data-figma-node="I868:2841;7:84">配信中の宿題</div>
+            <div class="tab-item" data-figma-node="I868:2841;7:97">あなたへのおすすめ講義</div>
+        </div>
+
+        <!-- メインコンテンツ -->
+        <main class="main-content" data-figma-node="6566:7934">
+            <div class="info-link" data-figma-node="7090:5057">
+                <a href="#" data-figma-node="7090:5058">
+                    <svg viewBox="0 0 16 16" fill="white">
+                        <circle cx="8" cy="8" r="7" stroke="white" stroke-width="1.5" fill="none"/>
+                        <text x="8" y="12" text-anchor="middle" font-size="12" fill="white">?</text>
+                    </svg>
+                    宿題の種類について
+                </a>
+            </div>
+
+            <!-- 課題カード1: 今日まで（ピンク） -->
+            <article class="assignment-card" data-figma-node="6566:7886">
+                <div class="card-date">
+                    <div class="date-icon date-icon--pink">
+                        <svg class="progress-ring" viewBox="0 0 64 64">
+                            <circle cx="32" cy="32" r="30" fill="none" stroke="#f0f0f0" stroke-width="4"/>
+                        </svg>
+                        <div class="month">12</div>
+                        <div class="month-label">月</div>
+                        <div class="day">31</div>
+                    </div>
+                    <div class="date-label date-label--pink">今日まで</div>
+                </div>
+                <div class="card-content">
+                    <div class="card-header">
+                        <h2 class="card-title">11月27日の宿題</h2>
+                        <div class="card-teacher">
+                            <div class="teacher-avatar">
+                                <svg viewBox="0 0 24 24" fill="#ccc">
+                                    <circle cx="12" cy="12" r="12"/>
+                                </svg>
+                            </div>
+                            <span class="teacher-name">山田 太郎</span>
+                        </div>
+                    </div>
+                    <div class="card-details">
+                        <div class="detail-row">
+                            <div class="detail-icon">
+                                <svg viewBox="0 0 16 16" fill="#4c5263">
+                                    <rect x="3" y="3" width="10" height="10" rx="1" stroke="currentColor" fill="none"/>
+                                    <line x1="6" y1="6" x2="10" y2="10" stroke="currentColor"/>
+                                </svg>
+                            </div>
+                            <span>3講義：5チャプター　確認テスト15問</span>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-icon">
+                                <svg viewBox="0 0 16 16" fill="#4c5263">
+                                    <rect x="3" y="3" width="10" height="10" rx="1" stroke="currentColor" fill="none"/>
+                                    <line x1="5" y1="1" x2="5" y2="4" stroke="currentColor"/>
+                                    <line x1="11" y1="1" x2="11" y2="4" stroke="currentColor"/>
+                                </svg>
+                            </div>
+                            <span>3月30日(水)10:00 – 4月6日(水)10:00</span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <!-- 課題カード2: あと3日（ピンク、進行中） -->
+            <article class="assignment-card" data-figma-node="6566:7936">
+                <div class="card-date">
+                    <div class="date-icon date-icon--pink">
+                        <svg class="progress-ring" viewBox="0 0 64 64">
+                            <circle cx="32" cy="32" r="30" fill="none" stroke="#f0f0f0" stroke-width="4"/>
+                            <circle cx="32" cy="32" r="30" fill="none" stroke="#de30ca" stroke-width="4"
+                                    stroke-dasharray="94.2 188.4" transform="rotate(-90 32 32)"/>
+                        </svg>
+                        <div class="month">12</div>
+                        <div class="month-label">月</div>
+                        <div class="day">31</div>
+                    </div>
+                    <div class="date-label date-label--pink">あと3日</div>
+                </div>
+                <div class="card-content">
+                    <div class="card-header">
+                        <h2 class="card-title">タイトルが長かった場合（２行以上）の場合、タイトルが長かった...</h2>
+                        <div class="card-teacher">
+                            <div class="teacher-avatar">
+                                <svg viewBox="0 0 24 24" fill="#ccc">
+                                    <circle cx="12" cy="12" r="12"/>
+                                </svg>
+                            </div>
+                            <span class="teacher-name">山田 太郎</span>
+                        </div>
+                    </div>
+                    <div class="card-details">
+                        <div class="detail-row">
+                            <div class="detail-icon">
+                                <svg viewBox="0 0 16 16" fill="#4c5263">
+                                    <rect x="3" y="3" width="10" height="10" rx="1" stroke="currentColor" fill="none"/>
+                                    <line x1="6" y1="6" x2="10" y2="10" stroke="currentColor"/>
+                                </svg>
+                            </div>
+                            <span>3講義：5チャプター　確認テスト15問</span>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-icon">
+                                <svg viewBox="0 0 16 16" fill="#4c5263">
+                                    <rect x="3" y="3" width="10" height="10" rx="1" stroke="currentColor" fill="none"/>
+                                    <line x1="5" y1="1" x2="5" y2="4" stroke="currentColor"/>
+                                    <line x1="11" y1="1" x2="11" y2="4" stroke="currentColor"/>
+                                </svg>
+                            </div>
+                            <span>3月30日(水)10:00 – 4月6日(水)10:00</span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <!-- 課題カード3: あと7日（ブルー、未着手） -->
+            <article class="assignment-card" data-figma-node="6566:7937">
+                <div class="card-date">
+                    <div class="date-icon date-icon--blue">
+                        <svg class="progress-ring" viewBox="0 0 64 64">
+                            <circle cx="32" cy="32" r="30" fill="none" stroke="#f0f0f0" stroke-width="4"/>
+                        </svg>
+                        <div class="month">12</div>
+                        <div class="month-label">月</div>
+                        <div class="day">31</div>
+                    </div>
+                    <div class="date-label date-label--blue">あと7日</div>
+                </div>
+                <div class="card-content">
+                    <div class="card-header">
+                        <h2 class="card-title">11月27日の宿題</h2>
+                        <div class="card-teacher">
+                            <div class="teacher-avatar">
+                                <svg viewBox="0 0 24 24" fill="#ccc">
+                                    <circle cx="12" cy="12" r="12"/>
+                                </svg>
+                            </div>
+                            <span class="teacher-name">山田 太郎</span>
+                        </div>
+                    </div>
+                    <div class="card-details">
+                        <div class="detail-row">
+                            <div class="detail-icon">
+                                <svg viewBox="0 0 16 16" fill="#4c5263">
+                                    <rect x="3" y="3" width="10" height="10" rx="1" stroke="currentColor" fill="none"/>
+                                    <line x1="6" y1="6" x2="10" y2="10" stroke="currentColor"/>
+                                </svg>
+                            </div>
+                            <span>3講義：5チャプター　確認テスト15問</span>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-icon">
+                                <svg viewBox="0 0 16 16" fill="#4c5263">
+                                    <rect x="3" y="3" width="10" height="10" rx="1" stroke="currentColor" fill="none"/>
+                                    <line x1="5" y1="1" x2="5" y2="4" stroke="currentColor"/>
+                                    <line x1="11" y1="1" x2="11" y2="4" stroke="currentColor"/>
+                                </svg>
+                            </div>
+                            <span>3月30日(水)10:00 – 4月6日(水)10:00</span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <!-- 課題カード4: 1月16日（自動配信） -->
+            <article class="assignment-card" data-figma-node="6566:7938">
+                <div class="card-date">
+                    <div class="date-icon date-icon--blue">
+                        <svg class="progress-ring" viewBox="0 0 64 64">
+                            <circle cx="32" cy="32" r="30" fill="none" stroke="#f0f0f0" stroke-width="4"/>
+                            <circle cx="32" cy="32" r="30" fill="none" stroke="#0b41a0" stroke-width="4"
+                                    stroke-dasharray="94.2 188.4" transform="rotate(-90 32 32)"/>
+                        </svg>
+                        <div class="month">1</div>
+                        <div class="month-label">月</div>
+                        <div class="day">16</div>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="card-header">
+                        <h2 class="card-title">11月27日の宿題</h2>
+                        <div class="card-teacher">
+                            <div class="teacher-avatar">
+                                <svg viewBox="0 0 24 24" fill="#ccc">
+                                    <circle cx="12" cy="12" r="12"/>
+                                </svg>
+                            </div>
+                            <span class="teacher-name">山田 太郎（自動配信）</span>
+                        </div>
+                    </div>
+                    <div class="card-details">
+                        <div class="detail-row">
+                            <div class="detail-icon">
+                                <svg viewBox="0 0 16 16" fill="#4c5263">
+                                    <rect x="3" y="3" width="10" height="10" rx="1" stroke="currentColor" fill="none"/>
+                                    <line x1="6" y1="6" x2="10" y2="10" stroke="currentColor"/>
+                                </svg>
+                            </div>
+                            <span>3講義：5チャプター　確認テスト15問</span>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-icon">
+                                <svg viewBox="0 0 16 16" fill="#4c5263">
+                                    <rect x="3" y="3" width="10" height="10" rx="1" stroke="currentColor" fill="none"/>
+                                    <line x1="5" y1="1" x2="5" y2="4" stroke="currentColor"/>
+                                    <line x1="11" y1="1" x2="11" y2="4" stroke="currentColor"/>
+                                </svg>
+                            </div>
+                            <span>3月30日(水)10:00 – 4月6日(水)10:00</span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <!-- 課題カード5 -->
+            <article class="assignment-card" data-figma-node="6566:7939">
+                <div class="card-date">
+                    <div class="date-icon date-icon--blue">
+                        <svg class="progress-ring" viewBox="0 0 64 64">
+                            <circle cx="32" cy="32" r="30" fill="none" stroke="#f0f0f0" stroke-width="4"/>
+                        </svg>
+                        <div class="month">12</div>
+                        <div class="month-label">月</div>
+                        <div class="day">31</div>
+                    </div>
+                    <div class="date-label date-label--blue">あと7日</div>
+                </div>
+                <div class="card-content">
+                    <div class="card-header">
+                        <h2 class="card-title">11月27日の宿題</h2>
+                        <div class="card-teacher">
+                            <div class="teacher-avatar">
+                                <svg viewBox="0 0 24 24" fill="#ccc">
+                                    <circle cx="12" cy="12" r="12"/>
+                                </svg>
+                            </div>
+                            <span class="teacher-name">山田 太郎</span>
+                        </div>
+                    </div>
+                    <div class="card-details">
+                        <div class="detail-row">
+                            <div class="detail-icon">
+                                <svg viewBox="0 0 16 16" fill="#4c5263">
+                                    <rect x="3" y="3" width="10" height="10" rx="1" stroke="currentColor" fill="none"/>
+                                    <line x1="6" y1="6" x2="10" y2="10" stroke="currentColor"/>
+                                </svg>
+                            </div>
+                            <span>3講義：5チャプター　確認テスト15問</span>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-icon">
+                                <svg viewBox="0 0 16 16" fill="#4c5263">
+                                    <rect x="3" y="3" width="10" height="10" rx="1" stroke="currentColor" fill="none"/>
+                                    <line x1="5" y1="1" x2="5" y2="4" stroke="currentColor"/>
+                                    <line x1="11" y1="1" x2="11" y2="4" stroke="currentColor"/>
+                                </svg>
+                            </div>
+                            <span>3月30日(水)10:00 – 4月6日(水)10:00</span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </main>
+
+        <!-- ボトムナビゲーション -->
+        <nav class="bottom-nav" data-figma-node="5184:181531">
+            <div class="nav-item active" data-figma-node="491:2054">
+                <div class="nav-item-icon">
+                    <svg viewBox="0 0 24 24" fill="white">
+                        <rect x="4" y="4" width="7" height="7" rx="1" stroke="white" fill="none"/>
+                        <rect x="13" y="4" width="7" height="7" rx="1" stroke="white" fill="none"/>
+                        <rect x="4" y="13" width="7" height="7" rx="1" stroke="white" fill="none"/>
+                        <rect x="13" y="13" width="7" height="7" rx="1" stroke="white" fill="none"/>
+                    </svg>
+                </div>
+                <div class="nav-item-label">やること</div>
+            </div>
+            <div class="nav-item" data-figma-node="491:2098">
+                <div class="nav-item-icon">
+                    <svg viewBox="0 0 24 24" fill="white">
+                        <rect x="4" y="6" width="16" height="3" rx="1" fill="white"/>
+                        <rect x="4" y="11" width="16" height="3" rx="1" fill="white"/>
+                        <rect x="4" y="16" width="16" height="3" rx="1" fill="white"/>
+                    </svg>
+                </div>
+                <div class="nav-item-label">講座一覧</div>
+            </div>
+            <div class="nav-item" data-figma-node="491:2087">
+                <div class="nav-item-icon">
+                    <svg viewBox="0 0 24 24" fill="white">
+                        <rect x="6" y="4" width="12" height="16" rx="2" stroke="white" fill="none"/>
+                        <line x1="9" y1="8" x2="15" y2="8" stroke="white"/>
+                        <line x1="9" y1="12" x2="15" y2="12" stroke="white"/>
+                    </svg>
+                </div>
+                <div class="nav-item-label">マイ講座</div>
+            </div>
+            <div class="nav-item" data-figma-node="5184:181538">
+                <div class="nav-badge">99+</div>
+                <div class="nav-item-icon">
+                    <svg viewBox="0 0 24 24" fill="white">
+                        <path d="M12 3L4 9V19C4 19.5523 4.44772 20 5 20H19C19.5523 20 20 19.5523 20 19V9L12 3Z" stroke="white" fill="none"/>
+                        <rect x="9" y="13" width="6" height="7" fill="white"/>
+                    </svg>
+                </div>
+                <div class="nav-item-label">学校</div>
+            </div>
+            <div class="nav-item" data-figma-node="5184:181539">
+                <div class="nav-badge">9</div>
+                <div class="nav-item-icon">
+                    <svg viewBox="0 0 24 24" fill="white">
+                        <circle cx="12" cy="8" r="3" stroke="white" fill="none"/>
+                        <path d="M5 20C5 16.6863 7.68629 14 11 14H13C16.3137 14 19 16.6863 19 20" stroke="white" fill="none"/>
+                    </svg>
+                </div>
+                <div class="nav-item-label">マイページ</div>
+            </div>
+        </nav>
+    </div>
+</body>
+</html>

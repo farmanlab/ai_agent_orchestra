@@ -37,6 +37,7 @@ Commands:
   init            Initialize directory structure
   install-hooks   Install git pre-commit hook
   clean           Remove all generated files
+  prune <path>    Remove a file from .agents/ and all synced copies/symlinks
 
 Options:
   --verbose       Show detailed output
@@ -52,6 +53,7 @@ Examples:
   $0 --dry-run all          # Show what would be synced
   $0 --verbose all          # Sync with detailed output
   $0 install-hooks          # Install git hooks
+  $0 prune rules/foo.md     # Remove rules/foo.md and synced copies
 
 EOF
     exit 0
@@ -123,6 +125,86 @@ clean_generated() {
     rm -f "$REPO_ROOT/CLAUDE.md" "$REPO_ROOT/AGENTS.md"
 
     log_success "Cleanup complete"
+}
+
+# 指定ファイルとシンボリックリンク/コピーを削除
+prune_file() {
+    local target_path="$1"
+
+    if [ -z "$target_path" ]; then
+        log_error "Usage: $0 prune <path>"
+        log_error "Example: $0 prune rules/foo.md"
+        exit 1
+    fi
+
+    # .agents/ プレフィックスを除去（あれば）
+    target_path="${target_path#.agents/}"
+
+    local source_file="$REPO_ROOT/.agents/$target_path"
+
+    if [ ! -e "$source_file" ]; then
+        log_error "File not found: .agents/$target_path"
+        exit 1
+    fi
+
+    # ファイルタイプを判定（rules, agents, skills, commands）
+    local file_type=$(echo "$target_path" | cut -d'/' -f1)
+    local filename=$(basename "$target_path")
+    local name_without_ext="${filename%.md}"
+
+    log_info "Pruning: .agents/$target_path"
+
+    # 削除対象を収集
+    local targets=()
+    targets+=("$source_file")
+
+    case "$file_type" in
+        rules)
+            targets+=("$REPO_ROOT/.claude/rules/$filename")
+            targets+=("$REPO_ROOT/.cursor/rules/$filename")
+            # Copilot: rules は .github/instructions/*.instructions.md にマッピング
+            targets+=("$REPO_ROOT/.github/instructions/${name_without_ext}.instructions.md")
+            ;;
+        agents)
+            targets+=("$REPO_ROOT/.claude/agents/$filename")
+            targets+=("$REPO_ROOT/.cursor/agents/$filename")
+            # Copilot: agents は .github/agents/*.agents.md にマッピング
+            targets+=("$REPO_ROOT/.github/agents/${name_without_ext}.agents.md")
+            ;;
+        skills)
+            # skills はディレクトリの場合がある
+            local skill_name=$(echo "$target_path" | cut -d'/' -f2)
+            targets+=("$REPO_ROOT/.claude/skills/$skill_name")
+            targets+=("$REPO_ROOT/.cursor/skills/$skill_name")
+            targets+=("$REPO_ROOT/.github/skills/$skill_name")
+            ;;
+        commands)
+            targets+=("$REPO_ROOT/.claude/commands/$filename")
+            targets+=("$REPO_ROOT/.cursor/commands/$filename")
+            targets+=("$REPO_ROOT/.github/prompts/$filename")
+            ;;
+        *)
+            log_warning "Unknown file type: $file_type"
+            ;;
+    esac
+
+    # 削除実行
+    for target in "${targets[@]}"; do
+        if [ -e "$target" ] || [ -L "$target" ]; then
+            if [ "$DRY_RUN" = true ]; then
+                log_warning "DRY RUN: Would remove $target"
+            else
+                rm -rf "$target"
+                log_verbose "Removed: $target"
+            fi
+        fi
+    done
+
+    if [ "$DRY_RUN" = true ]; then
+        log_warning "DRY RUN: No files were actually removed"
+    else
+        log_success "Prune complete: .agents/$target_path"
+    fi
 }
 
 # Git hooks インストール
@@ -406,6 +488,12 @@ while [[ $# -gt 0 ]]; do
             COMMAND=$1
             shift
             ;;
+        prune)
+            COMMAND=$1
+            shift
+            PRUNE_TARGET="$1"
+            shift 2>/dev/null || true
+            ;;
         *)
             log_error "Unknown option: $1"
             show_help
@@ -444,6 +532,9 @@ case $COMMAND in
         ;;
     clean)
         clean_generated
+        ;;
+    prune)
+        prune_file "$PRUNE_TARGET"
         ;;
     *)
         log_error "No command specified"

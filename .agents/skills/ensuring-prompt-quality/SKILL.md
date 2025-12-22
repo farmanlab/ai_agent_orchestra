@@ -1,6 +1,6 @@
 ---
 name: ensuring-prompt-quality
-description: Provides expertise in prompt engineering best practices for Claude Code, Cursor, and GitHub Copilot. Use when creating or validating rules, skills, agents, or command prompts.
+description: Provides expertise in prompt engineering best practices for Claude Code, Cursor, and GitHub Copilot. Use after creating or editing rules, skills, agents in .agents/ directory for self-review. Also use when asked to 品質チェック, プロンプト検証, or レビュー prompt files.
 compatibility: Claude Code
 allowed-tools: Read Grep Glob WebFetch WebSearch
 ---

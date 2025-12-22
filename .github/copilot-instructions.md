@@ -24,6 +24,23 @@
 - マジックナンバー禁止
 - 適切なエラーハンドリング
 
+### Example: Magic Numbers
+
+**Bad**:
+```typescript
+if (retries > 3) {
+  throw new Error("Failed");
+}
+```
+
+**Good**:
+```typescript
+const MAX_RETRIES = 3;
+if (retries > MAX_RETRIES) {
+  throw new Error("Failed after maximum retries");
+}
+```
+
 ## Testing
 - 変更には対応するテストを含める
 - 既存テストを壊さない

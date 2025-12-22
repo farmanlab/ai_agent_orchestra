@@ -16,7 +16,7 @@ echo "Target: $CLAUDE_DIR"
 echo ""
 
 # ディレクトリ作成
-mkdir -p "$CLAUDE_DIR"/{rules,agents}
+mkdir -p "$CLAUDE_DIR/rules"
 
 # Rules 変換
 echo "Converting Rules..."
@@ -93,52 +93,10 @@ if [ -d "$AGENTS_DIR/rules" ]; then
 fi
 
 # Agents 変換
-# Note: Skills管理はskillportに移譲されたため、変換処理は不要
+# Note: agents はファイルレベルのシンボリックリンクで管理（sync.sh で作成）
 echo ""
 echo "Converting Agents..."
-if [ -d "$AGENTS_DIR/agents" ]; then
-    find "$AGENTS_DIR/agents" -type f -name "*.md" | while read -r agent_file; do
-        filename=$(basename "$agent_file")
-        target="$CLAUDE_DIR/agents/$filename"
-
-        echo "  Processing: $filename"
-
-        # frontmatter を Claude Code 形式でそのまま保持
-        # compatibility フィールドをフィルタリング用に確認（公式仕様準拠）
-        # "Claude" が含まれているか、compatibility/agents フィールドがない場合は変換
-        if grep -q "^compatibility:.*Claude" "$agent_file" || grep -q "^agents:.*claude" "$agent_file" || (! grep -q "^compatibility:" "$agent_file" && ! grep -q "^agents:" "$agent_file"); then
-            # claude が含まれているか、agents フィールドがない場合は変換
-            awk '
-            BEGIN { in_frontmatter = 0; }
-            /^---$/ {
-                if (NR == 1) {
-                    in_frontmatter = 1;
-                    print $0;
-                    next;
-                } else if (in_frontmatter) {
-                    in_frontmatter = 0;
-                    print $0;
-                    next;
-                }
-            }
-            in_frontmatter {
-                # compatibility, agents フィールドは削除（フィルタリングに使っただけ）
-                if ($0 ~ /^compatibility:/ || $0 ~ /^agents:/) {
-                    next;
-                }
-                print $0;
-            }
-            !in_frontmatter {
-                print $0;
-            }
-            ' "$agent_file" > "$target"
-
-            echo "    → $target"
-        else
-            echo "    (Skipped: not for Claude Code)"
-        fi
-    done
-fi
+echo "  (Managed via file-level symlinks in sync.sh)"
 
 # CLAUDE.md は手動管理（リポジトリガイドとして使用）
 # このリポジトリでは .claude/rules/ によるモジュラールール方式を採用しているため、

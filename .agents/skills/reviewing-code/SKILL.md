@@ -1,6 +1,6 @@
 ---
-name: code-review
-description: コードレビュー専門知識。PR作成前のセルフレビュー、品質チェック、ベストプラクティス確認時に使用。
+name: reviewing-code
+description: Provides code review expertise with constructive feedback. Use when conducting self-reviews before PR creation, quality checks, or best practice validation.
 compatibility: Claude Code, Cursor
 ---
 

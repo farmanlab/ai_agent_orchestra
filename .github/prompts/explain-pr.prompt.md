@@ -1,10 +1,24 @@
 ---
 name: explain-pr
-description: Explains GitHub PR changes based on user's technical proficiency level (beginner, intermediate, advanced)
+description: Explains GitHub PR changes based on user's technical proficiency level. Use when reviewing or learning from pull request changes.
 agents: [claude]
 ---
 
 # Explain PR Command
+
+## 目次
+
+1. [概要](#概要)
+2. [使用方法](#使用方法)
+3. [実行手順](#実行手順)
+   - [Step 1: PR情報の取得](#step-1-pr情報の取得)
+   - [Step 2: 習熟度レベルの確認](#step-2-習熟度レベルの確認)
+   - [Step 3: レベル別の解説生成](#step-3-レベル別の解説生成)
+   - [Step 4: 出力とフィードバック](#step-4-出力とフィードバック)
+4. [注意事項](#注意事項)
+5. [エラーハンドリング](#エラーハンドリング)
+
+---
 
 ## 概要
 

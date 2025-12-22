@@ -112,8 +112,8 @@ clean_generated() {
         [ -d "$REPO_ROOT/.cursor/commands" ] && echo "  .cursor/commands/"
         [ -d "$REPO_ROOT/.github/instructions" ] && echo "  .github/instructions/"
         [ -d "$REPO_ROOT/.github/prompts" ] && echo "  .github/prompts/"
-        [ -f "$REPO_ROOT/CLAUDE.md" ] && echo "  CLAUDE.md"
         [ -f "$REPO_ROOT/AGENTS.md" ] && echo "  AGENTS.md"
+        [ -L "$REPO_ROOT/CLAUDE.md" ] && echo "  CLAUDE.md -> AGENTS.md"
         return
     fi
 
@@ -160,6 +160,23 @@ EOF
     log_success "Git hook installed: $HOOK_FILE"
 }
 
+# Skills シンボリックリンク作成
+create_skills_symlinks() {
+    log_verbose "Creating skills symlinks..."
+
+    # Claude Code
+    if [ ! -L "$REPO_ROOT/.claude/skills" ]; then
+        ln -sf ../.agents/skills "$REPO_ROOT/.claude/skills"
+        log_verbose "Created .claude/skills symlink"
+    fi
+
+    # Cursor
+    if [ ! -L "$REPO_ROOT/.cursor/skills" ]; then
+        ln -sf ../.agents/skills "$REPO_ROOT/.cursor/skills"
+        log_verbose "Created .cursor/skills symlink"
+    fi
+}
+
 # Claude Code への同期
 sync_to_claude() {
     log_info "Syncing to Claude Code..."
@@ -181,6 +198,32 @@ sync_to_claude() {
     else
         "$SCRIPT_DIR/to-claude.sh" > /dev/null 2>&1
     fi
+
+    # Skills symlinks (file-level)
+    mkdir -p "$REPO_ROOT/.claude/skills"
+    for skill_dir in "$REPO_ROOT/.agents/skills"/*/; do
+        if [ -d "$skill_dir" ]; then
+            skill_name=$(basename "$skill_dir")
+            target="$REPO_ROOT/.claude/skills/$skill_name"
+            if [ ! -L "$target" ]; then
+                ln -sf "../../.agents/skills/$skill_name" "$target"
+                log_verbose "Created .claude/skills/$skill_name symlink"
+            fi
+        fi
+    done
+
+    # Agents symlinks (file-level)
+    mkdir -p "$REPO_ROOT/.claude/agents"
+    for agent_file in "$REPO_ROOT/.agents/agents"/*.md; do
+        if [ -f "$agent_file" ]; then
+            filename=$(basename "$agent_file")
+            target="$REPO_ROOT/.claude/agents/$filename"
+            if [ ! -L "$target" ]; then
+                ln -sf "../../.agents/agents/$filename" "$target"
+                log_verbose "Created .claude/agents/$filename symlink"
+            fi
+        fi
+    done
 
     log_success "Claude Code sync complete"
 }
@@ -207,6 +250,32 @@ sync_to_cursor() {
         "$SCRIPT_DIR/to-cursor.sh" > /dev/null 2>&1
     fi
 
+    # Skills symlinks (file-level)
+    mkdir -p "$REPO_ROOT/.cursor/skills"
+    for skill_dir in "$REPO_ROOT/.agents/skills"/*/; do
+        if [ -d "$skill_dir" ]; then
+            skill_name=$(basename "$skill_dir")
+            target="$REPO_ROOT/.cursor/skills/$skill_name"
+            if [ ! -L "$target" ]; then
+                ln -sf "../../.agents/skills/$skill_name" "$target"
+                log_verbose "Created .cursor/skills/$skill_name symlink"
+            fi
+        fi
+    done
+
+    # Agents symlinks (file-level)
+    mkdir -p "$REPO_ROOT/.cursor/agents"
+    for agent_file in "$REPO_ROOT/.agents/agents"/*.md; do
+        if [ -f "$agent_file" ]; then
+            filename=$(basename "$agent_file")
+            target="$REPO_ROOT/.cursor/agents/$filename"
+            if [ ! -L "$target" ]; then
+                ln -sf "../../.agents/agents/$filename" "$target"
+                log_verbose "Created .cursor/agents/$filename symlink"
+            fi
+        fi
+    done
+
     log_success "Cursor sync complete"
 }
 
@@ -231,6 +300,32 @@ sync_to_copilot() {
     else
         "$SCRIPT_DIR/to-copilot.sh" > /dev/null 2>&1
     fi
+
+    # Skills symlinks (file-level)
+    mkdir -p "$REPO_ROOT/.github/skills"
+    for skill_dir in "$REPO_ROOT/.agents/skills"/*/; do
+        if [ -d "$skill_dir" ]; then
+            skill_name=$(basename "$skill_dir")
+            target="$REPO_ROOT/.github/skills/$skill_name"
+            if [ ! -L "$target" ]; then
+                ln -sf "../../.agents/skills/$skill_name" "$target"
+                log_verbose "Created .github/skills/$skill_name symlink"
+            fi
+        fi
+    done
+
+    # Agents symlinks (file-level, renamed to *.agents.md)
+    mkdir -p "$REPO_ROOT/.github/agents"
+    for agent_file in "$REPO_ROOT/.agents/agents"/*.md; do
+        if [ -f "$agent_file" ]; then
+            filename=$(basename "$agent_file" .md)
+            target="$REPO_ROOT/.github/agents/${filename}.agents.md"
+            if [ ! -L "$target" ]; then
+                ln -sf "../../.agents/agents/${filename}.md" "$target"
+                log_verbose "Created .github/agents/${filename}.agents.md symlink"
+            fi
+        fi
+    done
 
     log_success "GitHub Copilot sync complete"
 }

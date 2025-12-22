@@ -68,6 +68,13 @@ log_low() {
     echo $((count + 1)) > "$LOW_ISSUES_FILE"
 }
 
+# コンテンツのクリーンアップ（コードブロックを除去）
+get_clean_content() {
+    local file="$1"
+    # コードブロック（```で囲まれた部分）を除去
+    sed '/^```/,/^```/d' "$file"
+}
+
 # 1. 曖昧な表現のチェック
 check_vague_language() {
     local file="$1"
@@ -79,9 +86,17 @@ check_vague_language() {
     # 英語の曖昧表現
     local vague_en="consider|maybe|perhaps|possibly|might want to|you could"
 
-    local matches=$(grep -in -E "$vague_ja|$vague_en" "$file" 2>/dev/null)
+    # コードブロックを除去したコンテンツでチェック
+    local clean_content=$(get_clean_content "$file")
+    local matches=$(echo "$clean_content" | grep -in -E "$vague_ja|$vague_en" 2>/dev/null)
 
     if [ -n "$matches" ]; then
+        # best-practices.md と validation-criteria.md は警告のみ
+        if [[ "$filename" == "best-practices.md" ]] || [[ "$filename" == "validation-criteria.md" ]]; then
+            log_low "[$relative_path] Vague language detected (potential examples)"
+            return 0
+        fi
+
         log_medium "[$relative_path] Vague language detected"
         while IFS= read -r line; do
             log_detail "Line $(echo "$line" | cut -d: -f1): $(echo "$line" | cut -d: -f2- | sed 's/^[[:space:]]*//' | cut -c1-60)..."
@@ -97,21 +112,24 @@ check_structure() {
     local filename=$(basename "$file")
     local relative_path="${file#$AGENTS_DIR/}"
 
+    # コードブロックを除去したコンテンツでチェック
+    local clean_content=$(get_clean_content "$file")
+
     # H1の数をチェック（通常1つであるべき）
-    local h1_count=$(grep -c "^# " "$file" 2>/dev/null || echo 0)
+    local h1_count=$(echo "$clean_content" | grep -c "^# " || echo 0)
 
     # 見出しなしのチェック
-    local heading_count=$(grep -c "^#" "$file" 2>/dev/null || echo 0)
+    local heading_count=$(echo "$clean_content" | grep -c "^#" || echo 0)
 
-    if [ $h1_count -eq 0 ]; then
+    if [ "$h1_count" -eq 0 ]; then
         log_medium "[$relative_path] No H1 heading found"
         return 1
-    elif [ $h1_count -gt 1 ]; then
+    elif [ "$h1_count" -gt 1 ]; then
         log_low "[$relative_path] Multiple H1 headings ($h1_count found)"
         return 1
     fi
 
-    if [ $heading_count -lt 3 ]; then
+    if [ "$heading_count" -lt 3 ]; then
         log_low "[$relative_path] Limited structure (only $heading_count headings)"
         return 1
     fi
@@ -148,7 +166,8 @@ check_task_specific() {
     # タスク固有のパターン（具体的なファイル名、行番号への言及）
     local task_specific="line [0-9]+|fix.*bug|update.*\.js|change.*function"
 
-    local matches=$(grep -in -E "$task_specific" "$file" 2>/dev/null | head -3)
+    local clean_content=$(get_clean_content "$file")
+    local matches=$(echo "$clean_content" | grep -in -E "$task_specific" 2>/dev/null | head -3)
 
     if [ -n "$matches" ]; then
         log_medium "[$relative_path] Potentially task-specific instructions"
@@ -208,8 +227,11 @@ check_metadata() {
     local filename=$(basename "$file")
     local relative_path="${file#$AGENTS_DIR/}"
 
-    # frontmatter の抽出
-    local frontmatter=$(sed -n '/^---$/,/^---$/p' "$file" | sed '1d;$d')
+    # frontmatter の抽出（ファイルの先頭にある場合のみ）
+    local frontmatter=""
+    if [ "$(head -n 1 "$file")" = "---" ]; then
+        frontmatter=$(sed -n '2,/^---$/p' "$file" | sed '$d')
+    fi
 
     if [ -z "$frontmatter" ]; then
         # Skills の補助ファイルはスキップ
@@ -222,15 +244,15 @@ check_metadata() {
 
     # description の存在
     local has_description=$(echo "$frontmatter" | grep -c "^description:" || echo 0)
-    if [ $has_description -eq 0 ]; then
+    if [ "$has_description" -eq 0 ]; then
         log_high "[$relative_path] Missing description field"
         return 2
     fi
 
     # description が具体的か（最低10文字）
-    local description=$(echo "$frontmatter" | grep "^description:" | sed 's/description:\s*//')
+    local description=$(echo "$frontmatter" | grep "^description:" | sed 's/description:\s*//' | head -n 1)
     local desc_length=${#description}
-    if [ $desc_length -lt 10 ]; then
+    if [ "$desc_length" -lt 10 ]; then
         log_medium "[$relative_path] Description too short ($desc_length chars)"
         return 1
     fi
@@ -266,8 +288,10 @@ check_action_oriented() {
     local filename=$(basename "$file")
     local relative_path="${file#$AGENTS_DIR/}"
 
+    local clean_content=$(get_clean_content "$file")
+
     # 動詞から始まる行の割合
-    local total_lines=$(grep -E "^- |^[0-9]\." "$file" 2>/dev/null | wc -l | tr -d ' ')
+    local total_lines=$(echo "$clean_content" | grep -E "^- |^[0-9]\." | wc -l | tr -d ' ')
 
     if [ "$total_lines" -eq 0 ]; then
         return 0  # リスト項目がない場合はスキップ
@@ -275,11 +299,11 @@ check_action_oriented() {
 
     # 動詞パターン（日本語・英語）
     local action_verbs="^- [A-Z]|^- (Use|Add|Remove|Update|Check|Verify|Ensure|Avoid|Include|Implement)|^- (使用|追加|削除|更新|確認|検証|回避|含める|実装)"
-    local action_lines=$(grep -E "$action_verbs" "$file" 2>/dev/null | wc -l | tr -d ' ')
+    local action_lines=$(echo "$clean_content" | grep -E "$action_verbs" | wc -l | tr -d ' ')
 
     local ratio=$((action_lines * 100 / total_lines))
 
-    if [ $ratio -lt 30 ]; then
+    if [ "$ratio" -lt 30 ]; then
         log_low "[$relative_path] Low action-oriented ratio ($ratio% of list items)"
         return 1
     fi

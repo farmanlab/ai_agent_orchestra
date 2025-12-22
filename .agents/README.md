@@ -10,11 +10,11 @@ Single Source of Truth (.agents/) → 各エージェント固有形式へ変換
 
 ### サポート対象
 
-| エージェント | Rules | Skills | Subagents |
-|-------------|-------|--------|-----------|
-| Claude Code | ✅ .claude/rules/*.md | ⚙️ skillport管理 | ✅ .claude/agents/ |
-| Cursor | ✅ .cursor/rules/*/RULE.md | ⚙️ skillport管理 | ✅ Agent mode |
-| GitHub Copilot | ✅ .github/copilot-instructions.md | ❌ (非サポート) | ✅ AGENTS.md |
+| エージェント | Rules | Skills | Subagents | Commands |
+|-------------|-------|--------|-----------|----------|
+| Claude Code | ✅ .claude/rules/*.md | ✅ .claude/skills/* | ✅ .claude/agents/*.md | ✅ .claude/commands/ |
+| Cursor | ✅ .cursor/rules/*/RULE.md | ✅ .cursor/skills/* | ✅ .cursor/agents/*.md | ✅ .cursor/commands/ |
+| GitHub Copilot | ✅ .github/copilot-instructions.md | ✅ .github/skills/* | ✅ .github/agents/*.agents.md | ✅ .github/prompts/ |
 
 ### クロスプラットフォーム互換性
 
@@ -328,15 +328,21 @@ allowed-tools: [Tool1, Tool2, ...]  # Claude Code用（オプション）
 
 ### Skills 変換
 
-> **Note**: Skills管理はskillportに移譲されました。`.agents/skills/` にあるスキルはsync対象外です。
-> skillportの使用方法は `mcp__skillport__search_skills` で確認してください。
+| 統一形式 | Claude Code | Cursor | Copilot |
+|---------|-------------|--------|---------|
+| `{name}/` | .claude/skills/{name} (symlink) | .cursor/skills/{name} (symlink) | .github/skills/{name} (symlink) |
+
+> **Note**: 各ディレクトリはファイル単位のシンボリックリンクで管理されるため、エージェント固有のスキルを追加可能です。
 
 ### Agents 変換
 
 | 統一形式 | Claude Code | Cursor | Copilot |
 |---------|-------------|--------|---------|
-| `{name}.md` | .claude/agents/{name}.md | （未サポート） | AGENTS.md へ統合 |
-| `tools`, `model` | 保持 | — | 削除 |
+| `{name}.md` | .claude/agents/{name}.md (symlink) | .cursor/agents/{name}.md (symlink) | .github/agents/{name}.agents.md (symlink) |
+| `tools`, `model` | 保持 | 保持 | 保持 |
+
+> **Note**: 各ディレクトリはファイル単位のシンボリックリンクで管理されるため、エージェント固有のファイルを追加可能です。
+> GitHub Copilot は `*.agents.md` という命名規則が必要です。
 
 ### Commands 変換
 
@@ -358,25 +364,31 @@ project/
 │   ├── agents/*.md
 │   └── commands/*.md
 │
-├── CLAUDE.md                     # Claude Code + Copilot 共通 ⭐
+├── CLAUDE.md -> AGENTS.md        # Claude Code + Copilot 共通 ⭐
+├── AGENTS.md                     # Copilot Coding Agent 用
 │
 ├── .claude/                      # Claude Code 用
 │   ├── rules/                    # モジュラールール
-│   ├── skills/                   # Skills
-│   ├── agents/                   # Subagents
+│   ├── skills/*                  # → .agents/skills/* (symlinks)
+│   ├── agents/*.md               # → .agents/agents/* (symlinks)
 │   └── commands/                 # Slash Commands
 │
-├── .cursor/
+├── .cursor/                      # Cursor 用
 │   ├── rules/*/RULE.md           # Cursor 用 Rules
-│   └── commands/*.md             # Cursor 用 Slash Commands
+│   ├── skills/*                  # → .agents/skills/* (symlinks)
+│   ├── agents/*.md               # → .agents/agents/* (symlinks)
+│   └── commands/*.md             # Slash Commands
 │
-├── .github/
-│   ├── copilot-instructions.md   # Copilot 用メイン
-│   ├── instructions/*.instructions.md # パス指定 Instructions
-│   └── prompts/*.prompt.md       # GitHub Prompts
-│
-└── AGENTS.md                     # Copilot Coding Agent 用
+└── .github/                      # GitHub Copilot 用
+    ├── copilot-instructions.md   # Copilot 用メイン
+    ├── instructions/*.instructions.md # パス指定 Instructions
+    ├── skills/*                  # → .agents/skills/* (symlinks)
+    ├── agents/*.agents.md        # → .agents/agents/* (symlinks, renamed)
+    └── prompts/*.prompt.md       # GitHub Prompts
 ```
+
+> **Note**: skills/ と agents/ はファイル単位のシンボリックリンクで管理されます。
+> 各エージェント固有のファイルを追加することも可能です。
 
 ## 日常的なワークフロー
 

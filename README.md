@@ -19,13 +19,11 @@
 
 | エージェント | Rules | Skills | Subagents | Commands |
 |-------------|-------|--------|-----------|----------|
-| **Claude Code** | ✅ .claude/rules/*.md | ⚙️ skillport管理 | ✅ .claude/agents/ | ✅ .claude/commands/ |
-| **Cursor** | ✅ .cursor/rules/*/RULE.md | ⚙️ skillport管理 | ✅ Agent mode | ✅ .cursor/commands/ |
-| **GitHub Copilot** | ✅ .github/copilot-instructions.md | ❌ 非サポート | ✅ AGENTS.md | ✅ .github/prompts/ |
+| **Claude Code** | ✅ .claude/rules/*.md | ✅ .claude/skills/* | ✅ .claude/agents/*.md | ✅ .claude/commands/ |
+| **Cursor** | ✅ .cursor/rules/*/RULE.md | ✅ .cursor/skills/* | ✅ .cursor/agents/*.md | ✅ .cursor/commands/ |
+| **GitHub Copilot** | ✅ .github/copilot-instructions.md | ✅ .github/skills/* | ✅ .github/agents/*.agents.md | ✅ .github/prompts/ |
 
-> **Note**:
-> - Cursor の RULE.md は `description`, `alwaysApply`, `globs` (カンマ区切り) のみをサポート
-> - Skills管理はskillportに移譲されました（詳細は `mcp__skillport__search_skills` を参照）
+> **Note**: Cursor の RULE.md は `description`, `alwaysApply`, `globs` (カンマ区切り) のみをサポート
 
 ## クイックスタート
 
@@ -226,19 +224,25 @@ EOF
     └── to-copilot.sh
 
 # 生成されるファイル（自動生成、編集不要）
-CLAUDE.md                        # Claude + Copilot 共通
+# ※ skills/, agents/ は .agents/ へのシンボリックリンク（ファイル単位）
+#   各エージェント固有のファイルを追加可能
+CLAUDE.md                        # Claude + Copilot 共通 (-> AGENTS.md)
 AGENTS.md                        # Copilot エージェント定義
 .claude/                         # Claude Code 用
   ├── rules/
-  ├── skills/
-  ├── agents/
+  ├── skills/                    # → .agents/skills/* (symlinks)
+  ├── agents/                    # → .agents/agents/* (symlinks)
   └── commands/                  # Slash Commands
 .cursor/                         # Cursor 用
   ├── rules/
+  ├── skills/                    # → .agents/skills/* (symlinks)
+  ├── agents/                    # → .agents/agents/* (symlinks)
   └── commands/                  # Slash Commands
 .github/                         # GitHub Copilot 用
   ├── copilot-instructions.md
   ├── instructions/
+  ├── skills/                    # → .agents/skills/* (symlinks)
+  ├── agents/                    # *.agents.md (symlinks)
   └── prompts/                   # GitHub Prompts
 ```
 

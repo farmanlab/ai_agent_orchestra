@@ -46,10 +46,10 @@ log_error() {
     echo $((count + 1)) > "$ERROR_COUNT_FILE"
 }
 
-# YAML frontmatter を抽出
+# YAML frontmatter を抽出（最初の frontmatter のみ）
 extract_frontmatter() {
     local file="$1"
-    sed -n '/^---$/,/^---$/p' "$file" | sed '1d;$d'
+    awk '/^---$/{c++;if(c==2)exit;next}c==1' "$file"
 }
 
 # frontmatter からフィールド値を取得
@@ -156,7 +156,7 @@ validate_rules() {
     log_success "Rules validation complete"
 }
 
-# Note: Skills検証はskillportに移譲されたため削除
+# Note: Skills はファイルレベルのシンボリックリンクで管理
 
 # 3. Agents の検証
 validate_agents() {
@@ -262,7 +262,7 @@ validate_commands() {
 validate_file_naming() {
     log_info "Validating file naming conventions..."
 
-    # すべての .md ファイルをチェック（skillsはskillportで管理、tmpは作業用）
+    # すべての .md ファイルをチェック（skillsはシンボリックリンクで管理、tmpは作業用）
     find "$AGENTS_DIR" -type f -name "*.md" ! -path "*/sync/*" ! -path "*/skills/*" ! -path "*/tmp/*" | while IFS= read -r file; do
         local filename=$(basename "$file")
 

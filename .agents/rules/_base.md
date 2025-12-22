@@ -1,6 +1,6 @@
 ---
 name: _base
-description: プロジェクト共通の基本ルール
+description: Provides base project rules for all files. Use when common coding standards and communication guidelines apply.
 agents: [claude, cursor, copilot]
 priority: 100
 ---
@@ -25,6 +25,23 @@ priority: 100
 - 自己文書化コードを心がける
 - マジックナンバー禁止
 - 適切なエラーハンドリング
+
+### Example: Magic Numbers
+
+**Bad**:
+```typescript
+if (retries > 3) {
+  throw new Error("Failed");
+}
+```
+
+**Good**:
+```typescript
+const MAX_RETRIES = 3;
+if (retries > MAX_RETRIES) {
+  throw new Error("Failed after maximum retries");
+}
+```
 
 ## Testing
 - 変更には対応するテストを含める

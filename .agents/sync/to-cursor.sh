@@ -121,7 +121,7 @@ if [ -d "$AGENTS_DIR/rules" ]; then
     done
 fi
 
-# Note: Skills管理はskillportに移譲されたため、変換処理は不要
+# Note: Skills はファイルレベルのシンボリックリンクで管理（sync.sh で作成）
 
 # Commands 変換
 echo ""

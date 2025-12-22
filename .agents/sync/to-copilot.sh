@@ -202,6 +202,15 @@ fi
 
 echo "  → $AGENTS_MD"
 
+# CLAUDE.md をシンボリックリンクとして作成
+echo ""
+echo "Creating CLAUDE.md symlink..."
+CLAUDE_MD="$REPO_ROOT/CLAUDE.md"
+[ -L "$CLAUDE_MD" ] && rm "$CLAUDE_MD"
+[ -f "$CLAUDE_MD" ] && rm "$CLAUDE_MD"
+ln -s AGENTS.md "$CLAUDE_MD"
+echo "  → $CLAUDE_MD -> AGENTS.md"
+
 # Commands 変換（GitHub Prompts）
 echo ""
 echo "Converting Commands to GitHub Prompts..."
@@ -235,3 +244,4 @@ echo "  .github/copilot-instructions.md"
 echo "  .github/instructions/*.instructions.md"
 echo "  .github/prompts/*.prompt.md"
 echo "  AGENTS.md"
+echo "  CLAUDE.md -> AGENTS.md"

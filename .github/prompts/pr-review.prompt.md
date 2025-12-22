@@ -1,7 +1,7 @@
 ---
 name: pr-review
-description: PRレビューコメントを分析し、妥当性を評価して対応を実行する（変更のコミットとトラッキングを含む）
-argument-hint: [PR URL]（省略時は現在のブランチのPRを使用）
+description: Analyzes PR review comments, evaluates validity, and executes fixes with commit tracking. Use when responding to code review feedback on pull requests.
+argument-hint: [PR URL] (uses current branch PR if omitted)
 allowed-tools: Bash(gh:*), Bash(git:*), Read, Edit, Write, Glob, Grep, Task, AskUserQuestion
 ---
 

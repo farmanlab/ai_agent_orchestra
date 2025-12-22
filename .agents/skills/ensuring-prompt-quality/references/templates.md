@@ -11,8 +11,6 @@ description: Third-person description of what this rule enforces. Use when worki
 paths:
   - "**/*.ts"
   - "**/*.tsx"
-agents: [claude, cursor, copilot]
-priority: 80
 ---
 
 # Rule Title
@@ -68,7 +66,6 @@ This rule enforces [purpose].
 name: doing-something
 description: Does something specific. Use when performing certain tasks or analyzing particular data types.
 allowed-tools: [Read, Write, Bash]
-agents: [claude]
 ---
 
 # Skill Title
@@ -124,7 +121,6 @@ description: Performs specific tasks as a specialized agent. Use when conducting
 tools: [Read, Write, Grep, Glob]
 skills: [relevant-skill]
 model: sonnet
-agents: [claude]
 ---
 
 # Agent Title
@@ -185,7 +181,6 @@ If validation fails, return to Step 1.
 ---
 name: command-name
 description: Executes specific operations when invoked. Use when [trigger condition].
-agents: [claude]
 ---
 
 # Command Title

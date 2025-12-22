@@ -1,7 +1,6 @@
 ---
 name: explain-pr
 description: Explains GitHub PR changes based on user's technical proficiency level. Use when reviewing or learning from pull request changes.
-agents: [claude]
 ---
 
 # Explain PR Command

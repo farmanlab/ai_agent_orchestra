@@ -4,7 +4,6 @@ description: Validates existing prompt files against official best practices for
 tools: [Read, Grep, Glob, WebFetch, WebSearch]
 skills: [ensuring-prompt-quality]
 model: sonnet
-agents: [claude]
 ---
 
 # Prompt Quality Checker Agent

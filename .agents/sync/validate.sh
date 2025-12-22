@@ -68,6 +68,69 @@ get_array_field() {
     echo "$value"
 }
 
+# name フィールドの文字種検証（公式仕様: lowercase, numbers, hyphens only）
+validate_name_format() {
+    local name="$1"
+    local filename="$2"
+    local max_length="${3:-64}"  # デフォルト64文字（Skills仕様）
+
+    if [ -z "$name" ]; then
+        return 1
+    fi
+
+    # 文字種チェック: lowercase, numbers, hyphens のみ
+    if [[ ! "$name" =~ ^[a-z0-9-]+$ ]]; then
+        log_error "[$filename] name '$name' must use only lowercase letters, numbers, and hyphens"
+        return 1
+    fi
+
+    # 文字数チェック
+    if [ ${#name} -gt "$max_length" ]; then
+        log_error "[$filename] name '$name' exceeds $max_length characters (${#name} chars)"
+        return 1
+    fi
+
+    return 0
+}
+
+# description フィールドの文字数検証（公式仕様: max 1024 chars for Skills）
+validate_description_length() {
+    local description="$1"
+    local filename="$2"
+    local max_length="${3:-1024}"
+
+    if [ -z "$description" ]; then
+        return 1
+    fi
+
+    if [ ${#description} -gt "$max_length" ]; then
+        log_warning "[$filename] description exceeds $max_length characters (${#description} chars)"
+        return 1
+    fi
+
+    return 0
+}
+
+# ファイル行数の検証（公式仕様: Cursor推奨 500行以下）
+validate_line_count() {
+    local file="$1"
+    local filename="$2"
+    local warn_threshold="${3:-500}"
+    local error_threshold="${4:-1000}"
+
+    local line_count=$(wc -l < "$file" | tr -d ' ')
+
+    if [ "$line_count" -gt "$error_threshold" ]; then
+        log_error "[$filename] exceeds $error_threshold lines ($line_count lines)"
+        return 1
+    elif [ "$line_count" -gt "$warn_threshold" ]; then
+        log_warning "[$filename] exceeds $warn_threshold lines ($line_count lines) - consider splitting"
+        return 0
+    fi
+
+    return 0
+}
+
 # 1. ディレクトリ構造の検証
 validate_directory_structure() {
     log_info "Validating directory structure..."
@@ -93,6 +156,7 @@ validate_directory_structure() {
 }
 
 # 2. Rules の検証
+# 公式仕様: Claude Code rules では frontmatter はオプション
 validate_rules() {
     log_info "Validating rules..."
 
@@ -110,45 +174,33 @@ validate_rules() {
         local filename=$(basename "$file")
         local frontmatter=$(extract_frontmatter "$file")
 
+        # 行数チェック（公式仕様: Cursor推奨 500行以下）
+        validate_line_count "$file" "$filename"
+
+        # frontmatter はオプション（Claude Code公式仕様）
         if [ -z "$frontmatter" ]; then
-            log_error "[$filename] No frontmatter found"
+            log_info "[$filename] No frontmatter (optional for rules)"
             continue
         fi
 
-        # 必須フィールドのチェック
+        # frontmatter がある場合のみフィールドをチェック
         local name=$(get_field_value "$frontmatter" "name")
         local description=$(get_field_value "$frontmatter" "description")
-        local agents=$(get_array_field "$frontmatter" "agents")
-        local priority=$(get_field_value "$frontmatter" "priority")
 
-        if [ -z "$name" ]; then
-            log_error "[$filename] Missing required field: name"
+        # name がある場合は形式を検証
+        if [ -n "$name" ]; then
+            validate_name_format "$name" "$filename"
         fi
 
-        if [ -z "$description" ]; then
-            log_error "[$filename] Missing required field: description"
+        # description がある場合は文字数を検証
+        if [ -n "$description" ]; then
+            validate_description_length "$description" "$filename"
         fi
 
-        if [ -z "$agents" ]; then
-            log_error "[$filename] Missing required field: agents"
-        else
-            # agents の値を検証
-            while IFS= read -r agent; do
-                if [[ ! "$agent" =~ ^(claude|cursor|copilot)$ ]]; then
-                    log_error "[$filename] Invalid agent value: '$agent' (must be claude, cursor, or copilot)"
-                fi
-            done <<< "$agents"
-        fi
-
-        # priority が数値かチェック（存在する場合）
-        if [ -n "$priority" ] && ! [[ "$priority" =~ ^[0-9]+$ ]]; then
-            log_error "[$filename] Priority must be a number: $priority"
-        fi
-
-        # paths フィールドの存在確認（オプション）
+        # paths フィールドの存在確認（情報提供のみ）
         local has_paths=$(echo "$frontmatter" | grep -c "^paths:" || true)
         if [ "$has_paths" -eq 0 ]; then
-            log_warning "[$filename] No 'paths' field (rule applies to all files)"
+            log_info "[$filename] No 'paths' field (rule applies to all files)"
         fi
 
     done
@@ -156,9 +208,8 @@ validate_rules() {
     log_success "Rules validation complete"
 }
 
-# Note: Skills はファイルレベルのシンボリックリンクで管理
-
 # 3. Agents の検証
+# 公式仕様: https://code.claude.com/docs/en/sub-agents
 validate_agents() {
     log_info "Validating agents..."
 
@@ -176,44 +227,41 @@ validate_agents() {
         local filename=$(basename "$file")
         local frontmatter=$(extract_frontmatter "$file")
 
+        # 行数チェック
+        validate_line_count "$file" "$filename"
+
         if [ -z "$frontmatter" ]; then
             log_error "[$filename] No frontmatter found"
             continue
         fi
 
-        # 必須フィールドのチェック
+        # 必須フィールドのチェック（公式仕様: name, description 必須）
         local name=$(get_field_value "$frontmatter" "name")
         local description=$(get_field_value "$frontmatter" "description")
         local tools=$(get_array_field "$frontmatter" "tools")
-        local agents=$(get_array_field "$frontmatter" "agents")
 
         if [ -z "$name" ]; then
             log_error "[$filename] Missing required field: name"
+        else
+            # name フォーマット検証（公式仕様: lowercase letters and hyphens）
+            validate_name_format "$name" "$filename"
         fi
 
         if [ -z "$description" ]; then
             log_error "[$filename] Missing required field: description"
-        fi
-
-        if [ -z "$tools" ]; then
-            log_warning "[$filename] No tools defined"
-        fi
-
-        if [ -z "$agents" ]; then
-            log_error "[$filename] Missing required field: agents"
         else
-            # agents の値を検証
-            while IFS= read -r agent; do
-                if [[ ! "$agent" =~ ^(claude|cursor|copilot)$ ]]; then
-                    log_error "[$filename] Invalid agent value: '$agent'"
-                fi
-            done <<< "$agents"
+            validate_description_length "$description" "$filename"
         fi
 
-        # model フィールドの検証（オプション）
+        # tools はオプション（省略時は全ツール継承）
+        if [ -z "$tools" ]; then
+            log_info "[$filename] No tools defined (inherits all tools)"
+        fi
+
+        # model フィールドの検証（公式仕様: sonnet, opus, haiku, inherit）
         local model=$(get_field_value "$frontmatter" "model")
-        if [ -n "$model" ] && [[ ! "$model" =~ ^(sonnet|opus|haiku)$ ]]; then
-            log_warning "[$filename] Unusual model value: '$model' (typically sonnet, opus, or haiku)"
+        if [ -n "$model" ] && [[ ! "$model" =~ ^(sonnet|opus|haiku|inherit)$ ]]; then
+            log_warning "[$filename] Unusual model value: '$model' (expected: sonnet, opus, haiku, or inherit)"
         fi
 
     done
@@ -221,7 +269,87 @@ validate_agents() {
     log_success "Agents validation complete"
 }
 
-# 4. Commands の検証
+# 4. Skills の検証
+# 公式仕様: https://code.claude.com/docs/en/skills
+validate_skills() {
+    log_info "Validating skills..."
+
+    if [ ! -d "$AGENTS_DIR/skills" ]; then
+        log_warning "Skills directory not found"
+        return
+    fi
+
+    # 各スキルディレクトリをチェック
+    for skill_dir in "$AGENTS_DIR/skills"/*/; do
+        if [ ! -d "$skill_dir" ]; then
+            continue
+        fi
+
+        local skill_name=$(basename "$skill_dir")
+        local skill_file="$skill_dir/SKILL.md"
+
+        # SKILL.md の存在チェック（公式仕様: 必須）
+        if [ ! -f "$skill_file" ]; then
+            log_error "[skills/$skill_name] Missing required SKILL.md file"
+            continue
+        fi
+
+        local frontmatter=$(extract_frontmatter "$skill_file")
+
+        # 行数チェック
+        validate_line_count "$skill_file" "skills/$skill_name/SKILL.md"
+
+        if [ -z "$frontmatter" ]; then
+            log_error "[skills/$skill_name/SKILL.md] No frontmatter found"
+            continue
+        fi
+
+        # 必須フィールドのチェック（公式仕様: name, description 必須）
+        local name=$(get_field_value "$frontmatter" "name")
+        local description=$(get_field_value "$frontmatter" "description")
+
+        if [ -z "$name" ]; then
+            log_error "[skills/$skill_name/SKILL.md] Missing required field: name"
+        else
+            # name フォーマット検証（公式仕様: max 64 chars, lowercase/numbers/hyphens）
+            validate_name_format "$name" "skills/$skill_name/SKILL.md" 64
+        fi
+
+        if [ -z "$description" ]; then
+            log_error "[skills/$skill_name/SKILL.md] Missing required field: description"
+        else
+            # description 文字数検証（公式仕様: max 1024 chars）
+            validate_description_length "$description" "skills/$skill_name/SKILL.md" 1024
+
+            # description にトリガーキーワードが含まれているか確認（推奨）
+            if [[ ! "$description" =~ [Uu]se\ when|[Uu]se\ for|[Ww]hen\ working ]]; then
+                log_warning "[skills/$skill_name/SKILL.md] description should include trigger keywords (e.g., 'Use when...')"
+            fi
+        fi
+
+        # allowed-tools の検証（オプション）
+        local allowed_tools=$(get_field_value "$frontmatter" "allowed-tools")
+        if [ -n "$allowed_tools" ]; then
+            log_info "[skills/$skill_name/SKILL.md] allowed-tools: $allowed_tools"
+        fi
+
+        # 参照ファイルの存在チェック
+        local ref_count=0
+        for ref_file in "$skill_dir"*.md; do
+            if [ -f "$ref_file" ] && [ "$ref_file" != "$skill_file" ]; then
+                ((ref_count++))
+            fi
+        done
+        if [ "$ref_count" -gt 0 ]; then
+            log_info "[skills/$skill_name] Found $ref_count additional reference file(s)"
+        fi
+
+    done
+
+    log_success "Skills validation complete"
+}
+
+# 5. Commands の検証
 validate_commands() {
     log_info "Validating commands..."
 
@@ -258,7 +386,7 @@ validate_commands() {
     log_success "Commands validation complete"
 }
 
-# 5. ファイル命名規則の検証
+# 6. ファイル命名規則の検証
 validate_file_naming() {
     log_info "Validating file naming conventions..."
 
@@ -281,7 +409,7 @@ validate_file_naming() {
     log_success "File naming validation complete"
 }
 
-# 6. YAML構文の検証
+# 7. YAML構文の検証
 validate_yaml_syntax() {
     log_info "Validating YAML syntax..."
 
@@ -326,6 +454,8 @@ main() {
     validate_rules
     echo ""
     validate_agents
+    echo ""
+    validate_skills
     echo ""
     validate_commands
     echo ""

@@ -76,8 +76,6 @@ paths:                              # 適用対象 (オプション)
   - "**/*.ts"
   - "**/*.js"
   - "**/*.py"
-agents: [claude, cursor, copilot]  # 対象エージェント
-priority: 100                       # 優先度 (高い順)
 ---
 
 # Rule Content
@@ -94,7 +92,6 @@ priority: 100                       # 優先度 (高い順)
 name: skill-name
 description: スキルの説明
 triggers: [keyword1, keyword2]     # 自動検出用キーワード
-agents: [claude, cursor]           # copilot は Skills 非サポート
 ---
 
 # Skill Content
@@ -120,7 +117,6 @@ name: agent-name
 description: エージェントの説明
 tools: [Read, Grep, Glob]          # Claude Code用
 model: sonnet                       # Claude Code用
-agents: [claude, copilot]
 ---
 
 # Agent Prompt
@@ -184,8 +180,7 @@ allowed-tools: [Tool1, Tool2, ...]  # Claude Code用（オプション）
 
 **検証項目**:
 - ディレクトリ構造の確認（rules, skills, agents, commands の存在）
-- frontmatter の必須フィールド検証（name, description, agents など）
-- 値の妥当性チェック（agents フィールドが claude/cursor/copilot のいずれか、priority が数値など）
+- frontmatter の必須フィールド検証（name, description など）
 - ファイル命名規則の確認
 - YAML 構文の検証（frontmatter の区切りが正しいか）
 - Skills の構造検証（SKILL.md の存在）
@@ -311,13 +306,13 @@ allowed-tools: [Tool1, Tool2, ...]  # Claude Code用（オプション）
 | `paths` (YAML配列) | `paths` (YAML配列) | `globs` (カンマ区切り単一行) | `applyTo` (カンマ区切り単一行) |
 
 **形式の違い**:
-- `.agents/rules/`: `paths:` + YAML配列形式（`- "**/*.ts"`）+ 他のメタデータ（`name`, `agents`, `priority`）
+- `.agents/rules/`: `paths:` + YAML配列形式（`- "**/*.ts"`）+ メタデータ（`name`, `description`）
 - `.claude/rules/`: `paths:` + YAML配列形式（そのまま維持）
 - `.cursor/rules/`: `description`と`alwaysApply`（と`globs`）のみ、`globs`はカンマ区切り単一行
 - `.github/instructions/`: `applyTo:` + カンマ区切り単一行（`"**/*.ts", "**/*.js"`）
 
 **重要**:
-- Cursor の RULE.md には `name`, `triggers`, `agents`, `priority` などは不要で、`description`, `alwaysApply`, `globs` のみが有効です
+- Cursor の RULE.md には `name` などは不要で、`description`, `alwaysApply`, `globs` のみが有効です
 - `alwaysApply` の自動判定ルール：
   - `description` または `globs` が指定されている場合: `alwaysApply: false`
   - どちらも指定されていない場合: `alwaysApply: true`（実質的にはほぼ使われない）
@@ -418,7 +413,6 @@ cat > .agents/skills/my-skill/SKILL.md << 'EOF'
 name: my-skill
 description: スキルの説明
 triggers: [keyword1, keyword2]
-agents: [claude, cursor]
 ---
 
 # My Skill

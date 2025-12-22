@@ -4,7 +4,6 @@ description: Provides expertise in converting Figma designs to semantic HTML/CSS
 tools: [mcp__figma__whoami, mcp__figma__get_screenshot, mcp__figma__get_design_context, Read, Write, Bash]
 skills: [converting-figma-to-html]
 model: sonnet
-agents: [claude]
 ---
 
 # Figma to HTML 変換エージェント

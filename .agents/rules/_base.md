@@ -1,8 +1,6 @@
 ---
-name: _base
+name: base
 description: Provides base project rules for all files. Use when common coding standards and communication guidelines apply.
-agents: [claude, cursor, copilot]
-priority: 100
 ---
 
 # Project Base Rules

@@ -1,7 +1,6 @@
 ---
 name: session-learning
 description: Provides automatic detection of reusable patterns during sessions and suggests new rules/skills. Use when working on any task to enable continuous learning.
-agents: [claude, cursor, copilot]
 ---
 
 # Session Learning (Auto-Detection)

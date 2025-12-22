@@ -129,7 +129,7 @@ if [ -d "$AGENTS_DIR/rules" ]; then
                     next;
                 }
                 # 不要なフィールドをスキップ
-                if ($0 ~ /^(name|description|agents|priority):/) {
+                if ($0 ~ /^(name|description):/) {
                     next;
                 }
             }
@@ -157,46 +157,43 @@ EOF
 
 if [ -d "$AGENTS_DIR/agents" ]; then
     find "$AGENTS_DIR/agents" -type f -name "*.md" | sort | while read -r agent_file; do
-        # agents フィールドをチェック（copilot が含まれているか）
-        if grep -q "^agents:.*copilot" "$agent_file" || ! grep -q "^agents:" "$agent_file"; then
-            # エージェント名を取得
-            agent_name=$(awk '/^name:/ { sub(/^name: */, ""); print; exit }' "$agent_file")
-            if [ -z "$agent_name" ]; then
-                agent_name=$(basename "$agent_file" .md)
-            fi
-
-            echo "" >> "$AGENTS_MD"
-            echo "## $agent_name" >> "$AGENTS_MD"
-            echo "" >> "$AGENTS_MD"
-
-            # frontmatter を除いてコンテンツを出力
-            awk '
-            BEGIN { in_frontmatter = 0; skip = 0; }
-            /^---$/ {
-                if (NR == 1) {
-                    in_frontmatter = 1;
-                    skip = 1;
-                    next;
-                } else if (in_frontmatter) {
-                    in_frontmatter = 0;
-                    skip = 1;
-                    next;
-                }
-            }
-            in_frontmatter { next; }
-            !skip { print $0; }
-            skip {
-                if (NF > 0) {
-                    skip = 0;
-                    print $0;
-                }
-            }
-            ' "$agent_file" >> "$AGENTS_MD"
-
-            echo "" >> "$AGENTS_MD"
-            echo "---" >> "$AGENTS_MD"
-            echo "" >> "$AGENTS_MD"
+        # エージェント名を取得
+        agent_name=$(awk '/^name:/ { sub(/^name: */, ""); print; exit }' "$agent_file")
+        if [ -z "$agent_name" ]; then
+            agent_name=$(basename "$agent_file" .md)
         fi
+
+        echo "" >> "$AGENTS_MD"
+        echo "## $agent_name" >> "$AGENTS_MD"
+        echo "" >> "$AGENTS_MD"
+
+        # frontmatter を除いてコンテンツを出力
+        awk '
+        BEGIN { in_frontmatter = 0; skip = 0; }
+        /^---$/ {
+            if (NR == 1) {
+                in_frontmatter = 1;
+                skip = 1;
+                next;
+            } else if (in_frontmatter) {
+                in_frontmatter = 0;
+                skip = 1;
+                next;
+            }
+        }
+        in_frontmatter { next; }
+        !skip { print $0; }
+        skip {
+            if (NF > 0) {
+                skip = 0;
+                print $0;
+            }
+        }
+        ' "$agent_file" >> "$AGENTS_MD"
+
+        echo "" >> "$AGENTS_MD"
+        echo "---" >> "$AGENTS_MD"
+        echo "" >> "$AGENTS_MD"
     done
 fi
 

@@ -114,7 +114,6 @@ cat > .agents/rules/my-rule.md << 'EOF'
 ---
 name: my-rule
 description: 私のカスタムルール
-agents: [claude, cursor, copilot]
 ---
 
 # My Custom Rule
@@ -138,7 +137,6 @@ cat > .agents/skills/my-skill/SKILL.md << 'EOF'
 name: my-skill
 description: 私のカスタムスキル
 triggers: [keyword1, keyword2]
-agents: [claude]
 ---
 
 # My Skill
@@ -160,7 +158,6 @@ name: my-agent
 description: 私のカスタムエージェント
 tools: [Read, Write, Bash]
 model: sonnet
-agents: [claude]
 ---
 
 # My Agent

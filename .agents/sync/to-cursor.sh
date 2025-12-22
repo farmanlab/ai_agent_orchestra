@@ -96,7 +96,7 @@ if [ -d "$AGENTS_DIR/rules" ]; then
                 next;
             }
             # 不要なフィールドをスキップ
-            if ($0 ~ /^(name|agents|priority):/) {
+            if ($0 ~ /^name:/) {
                 next;
             }
         }

@@ -395,8 +395,10 @@ applyTo: "**/*.ts,**/*.tsx"  # カンマ区切り
 
 ## 公式ドキュメント
 
-- **Claude Skills**: https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices
-- **Cursor**: https://cursor.com/docs/context/rules
-- **Copilot (Official)**: https://docs.github.com/copilot/customizing-copilot/adding-custom-instructions-for-github-copilot
-- **Copilot (Blog)**: https://github.blog/ai-and-ml/github-copilot/5-tips-for-writing-better-custom-instructions-for-copilot/
-- **Claude API Limits**: https://support.claude.com/en/articles/7996856-what-is-the-maximum-prompt-length
+- **Agent Skills (標準仕様)**: https://agentskills.io/specification
+- **Claude Code Skills**: https://code.claude.com/docs/en/skills
+- **Claude Code Memory**: https://code.claude.com/docs/en/memory
+- **Cursor Skills**: https://cursor.com/docs/context/skills
+- **Cursor Rules**: https://cursor.com/docs/context/rules
+- **GitHub Copilot Agent Skills**: https://code.visualstudio.com/docs/copilot/customization/agent-skills
+- **GitHub Copilot Instructions**: https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions

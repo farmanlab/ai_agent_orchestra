@@ -19,9 +19,13 @@ allowed-tools: Read Grep Glob WebFetch WebSearch
 
 最新のベストプラクティスは以下の公式ドキュメントを参照：
 
-- **Claude Skills**: https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices
+- **Agent Skills (標準仕様)**: https://agentskills.io/specification
+- **Claude Code Skills**: https://code.claude.com/docs/en/skills
+- **Claude Code Memory**: https://code.claude.com/docs/en/memory
+- **Cursor Skills**: https://cursor.com/docs/context/skills
 - **Cursor Rules**: https://cursor.com/docs/context/rules
-- **GitHub Copilot**: https://docs.github.com/copilot/customizing-copilot/adding-custom-instructions-for-github-copilot
+- **GitHub Copilot Agent Skills**: https://code.visualstudio.com/docs/copilot/customization/agent-skills
+- **GitHub Copilot Instructions**: https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions
 
 ## 核心原則
 
@@ -64,9 +68,11 @@ allowed-tools: Read Grep Glob WebFetch WebSearch
 
 詳細な検証基準とベストプラクティスは以下を参照：
 
-- **[validation-criteria.md](references/validation-criteria.md)**: 14の検証観点の詳細
+- **[validation-criteria.md](references/validation-criteria.md)**: 検証観点1-7（コンテンツ品質）
+- **[validation-criteria-technical.md](references/validation-criteria-technical.md)**: 検証観点8-14（技術要件）
 - **[best-practices.md](references/best-practices.md)**: 公式推奨事項まとめ
-- **[examples.md](references/examples.md)**: 良い例・悪い例集
+- **[examples.md](references/examples.md)**: 良い例・悪い例集（基本パターン）
+- **[examples-antipatterns.md](references/examples-antipatterns.md)**: アンチパターンと全体例
 
 ## Workflow
 
@@ -127,8 +133,24 @@ name: skill-name              # 64文字以内、小文字・数字・ハイフ�
 description: Third-person description. Use when...  # 1024文字以内、第三人称、トリガー含む
 allowed-tools: [Read, Write]  # Skills のみ
 tools: [Read, Write]          # Agents のみ
-agents: [claude]              # 対象エージェント
 ---
+```
+
+### Claude Code Rules (`.claude/rules/`)
+
+```yaml
+---
+paths: src/api/**/*.ts       # パス固有のルール（グロブパターン）
+---
+
+# API 開発ルール
+- All API endpoints must include input validation
+```
+
+**インポート構文:**
+```markdown
+@docs/architecture.md        # 相対パス
+@~/.claude/preferences.md    # ホームディレクトリ
 ```
 
 ### Cursor Rules
@@ -141,12 +163,28 @@ globs: "**/*.ts"             # カンマ区切り、単一行
 ---
 ```
 
+**ルールタイプ:**
+
+| タイプ | 適用条件 | 設定 |
+|--------|---------|------|
+| Always Apply | 全チャットセッション | `alwaysApply: true` |
+| Apply Intelligently | Agent判断（説明文参考） | `description` のみ |
+| Apply to Specific Files | ファイルパターンマッチ | `globs` 指定 |
+| Apply Manually | @メンション時 | 両方なし |
+
 ### GitHub Copilot
 
 ```yaml
 ---
 applyTo: "**/*.ts"           # カンマ区切り
+excludeAgent: "code-review"  # code-review or coding-agent を除外（オプション）
 ---
+```
+
+**プロンプトファイル** (Preview):
+```
+.github/prompts/
+└── my-prompt.prompt.md      # ファイル参照: #file:path
 ```
 
 ## 使用上の注意

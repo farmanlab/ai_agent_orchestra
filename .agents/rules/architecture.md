@@ -5,8 +5,6 @@ paths:
   - "**/*.ts"
   - "**/*.js"
   - "**/*.py"
-agents: [claude, cursor, copilot]
-priority: 90
 ---
 
 # Architecture Guidelines

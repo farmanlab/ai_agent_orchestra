@@ -1,8 +1,6 @@
 ---
 name: terminology
 description: Provides business term to code mapping rules. Use when interpreting user requests that include Japanese business terms like 一覧画面, 詳細画面, etc.
-agents: [claude, cursor, copilot]
-priority: 80
 ---
 
 # Terminology Mapping

@@ -4,7 +4,6 @@ description: Creates new prompt files following official best practices for Clau
 tools: [Read, Write, Glob, WebFetch, WebSearch, Bash]
 skills: [ensuring-prompt-quality]
 model: sonnet
-agents: [claude]
 ---
 
 # Prompt Writer Agent
@@ -110,8 +109,6 @@ description: Third-person description. Use when...  # 第三人称 + トリガ�
 paths:
   - "**/*.ts"
   - "**/*.tsx"
-agents: [claude, cursor, copilot]
-priority: 80                 # 優先度（数値が大きいほど優先）
 ---
 ```
 
@@ -121,7 +118,6 @@ priority: 80                 # 優先度（数値が大きいほど優先）
 name: processing-data        # gerund形式推奨（-ing）
 description: Processes data using pandas. Use when analyzing CSV/Excel files.  # 第三人称 + トリガー
 allowed-tools: [Read, Write, Bash]
-agents: [claude]
 ---
 ```
 
@@ -133,7 +129,6 @@ description: Third-person description. Use when...  # 第三人称 + トリガ�
 tools: [Read, Write, Grep]
 skills: [skill-name]         # 使用するスキル
 model: sonnet                # 使用モデル
-agents: [claude]
 ---
 ```
 
@@ -142,7 +137,6 @@ agents: [claude]
 ---
 name: command-name
 description: What this command does
-agents: [claude]
 ---
 ```
 
@@ -253,8 +247,6 @@ description: Third-person description of what this rule enforces. Use when worki
 paths:
   - "**/*.ts"
   - "**/*.tsx"
-agents: [claude, cursor, copilot]
-priority: 80
 ---
 
 # Rule Title
@@ -309,7 +301,6 @@ priority: 80
 name: doing-something  # gerund形式
 description: Does something specific. Use when performing certain tasks or analyzing particular data types.
 allowed-tools: [Read, Write, Bash]
-agents: [claude]
 ---
 
 # Skill Title
@@ -365,7 +356,6 @@ description: Performs specific tasks as a specialized agent. Use when conducting
 tools: [Read, Write, Grep, Glob]
 skills: [relevant-skill]
 model: sonnet
-agents: [claude]
 ---
 
 # Agent Title
@@ -426,7 +416,6 @@ If validation fails, return to Step 1.
 ---
 name: command-name
 description: Executes specific operations when invoked
-agents: [claude]
 ---
 
 # Command Title

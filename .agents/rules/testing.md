@@ -6,8 +6,6 @@ paths:
   - "**/*Test.js"
   - "**/*_test.py"
   - "**/test/**"
-agents: [claude, cursor, copilot]
-priority: 85
 ---
 
 # Testing Rules

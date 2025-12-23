@@ -132,6 +132,42 @@ fi
 
 echo ""
 
+# ファイル単位でコピー（上書き確認付き）
+copy_file() {
+    local src="$1"
+    local dest="$2"
+    local rel_path="$3"
+
+    if [ -f "$dest" ]; then
+        if [ "$FORCE" = true ]; then
+            cp -f "$src" "$dest"
+            echo -e "  ${GREEN}✓${NC} $rel_path (上書き)"
+        else
+            # ファイルの差分があるか確認
+            if ! diff -q "$src" "$dest" > /dev/null 2>&1; then
+                echo -e "  ${YELLOW}?${NC} $rel_path (変更あり)"
+                read -p "    上書きしますか? (y/N): " answer
+                case $answer in
+                    [Yy]*)
+                        cp -f "$src" "$dest"
+                        echo -e "    ${GREEN}✓${NC} 上書きしました"
+                        ;;
+                    *)
+                        echo -e "    ${YELLOW}✗${NC} スキップしました"
+                        ;;
+                esac
+            else
+                echo -e "  ${GREEN}=${NC} $rel_path (同一)"
+            fi
+        fi
+    else
+        # 新規ファイル
+        mkdir -p "$(dirname "$dest")"
+        cp "$src" "$dest"
+        echo -e "  ${GREEN}+${NC} $rel_path (新規)"
+    fi
+}
+
 # 各フォルダをコピー
 for folder in "${FOLDERS[@]}"; do
     SRC="$SRC_DIR/$folder"
@@ -143,30 +179,17 @@ for folder in "${FOLDERS[@]}"; do
         continue
     fi
 
-    # コピー先フォルダの存在確認
-    if [ -d "$DEST" ]; then
-        if [ "$FORCE" = true ]; then
-            echo -e "${YELLOW}$folder を上書きコピーします...${NC}"
-            cp -rf "$SRC" "$HOME_DIR/"
-            echo -e "${GREEN}✓ $folder をコピーしました${NC}"
-        else
-            echo -e "${YELLOW}$folder は既に存在します。${NC}"
-            read -p "上書きしますか? (y/N): " answer
-            case $answer in
-                [Yy]*)
-                    cp -rf "$SRC" "$HOME_DIR/"
-                    echo -e "${GREEN}✓ $folder をコピーしました${NC}"
-                    ;;
-                *)
-                    echo -e "${YELLOW}✗ $folder のコピーをスキップしました${NC}"
-                    ;;
-            esac
-        fi
-    else
-        echo -e "${GREEN}$folder をコピーします...${NC}"
-        cp -r "$SRC" "$HOME_DIR/"
-        echo -e "${GREEN}✓ $folder をコピーしました${NC}"
-    fi
+    echo -e "${GREEN}$folder を処理中...${NC}"
+
+    # フォルダ内の全ファイルを処理
+    find "$SRC" -type f | while read -r src_file; do
+        # 相対パスを計算
+        rel_path="${src_file#$SRC/}"
+        dest_file="$DEST/$rel_path"
+
+        copy_file "$src_file" "$dest_file" "$folder/$rel_path"
+    done
+
     echo ""
 done
 

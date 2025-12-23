@@ -1,10 +1,7 @@
 ---
 name: architecture
 description: Enforces architecture principles and design patterns for clean code structure. Use when designing or refactoring application layers.
-paths:
-  - "**/*.ts"
-  - "**/*.js"
-  - "**/*.py"
+paths: "**/*.{ts,js,py}"
 ---
 
 # Architecture Guidelines

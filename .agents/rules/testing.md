@@ -1,11 +1,7 @@
 ---
 name: testing
 description: Enforces testing conventions and best practices for reliable test suites. Use when writing or reviewing test code.
-paths:
-  - "**/*Test.ts"
-  - "**/*Test.js"
-  - "**/*_test.py"
-  - "**/test/**"
+paths: "**/*Test.{ts,js}, **/*_test.py, **/test/**"
 ---
 
 # Testing Rules

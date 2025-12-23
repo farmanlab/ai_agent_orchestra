@@ -106,9 +106,7 @@ Read: 参考になるファイル
 ---
 name: rule-name              # 小文字・ハイフン、内容を明確に
 description: Third-person description. Use when...  # 第三人称 + トリガー
-paths:
-  - "**/*.ts"
-  - "**/*.tsx"
+paths: "**/*.{ts,tsx}"       # カンマ区切り、ブレース展開可
 ---
 ```
 
@@ -244,9 +242,7 @@ Read: file_path=".agents/{category}/{name}.md"
 ---
 name: descriptive-name
 description: Third-person description of what this rule enforces. Use when working with specific file types or implementing particular patterns.
-paths:
-  - "**/*.ts"
-  - "**/*.tsx"
+paths: "**/*.{ts,tsx}"
 ---
 
 # Rule Title

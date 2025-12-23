@@ -260,7 +260,44 @@ check_metadata() {
     return 0
 }
 
-# 8. 重複キーフレーズチェック
+# 8. paths フィールド形式チェック
+check_paths_format() {
+    local file="$1"
+    local filename=$(basename "$file")
+    local relative_path="${file#$AGENTS_DIR/}"
+
+    # frontmatter の抽出
+    local frontmatter=""
+    if [ "$(head -n 1 "$file")" = "---" ]; then
+        frontmatter=$(sed -n '2,/^---$/p' "$file" | sed '$d')
+    fi
+
+    if [ -z "$frontmatter" ]; then
+        return 0
+    fi
+
+    # paths フィールドの形式をチェック
+    local paths_line=$(echo "$frontmatter" | grep "^paths:")
+    if [ -z "$paths_line" ]; then
+        return 0  # paths がない場合はスキップ
+    fi
+
+    # paths: の後に値がない（次行に配列がある）場合
+    local paths_value=$(echo "$paths_line" | sed 's/^paths:\s*//')
+    if [ -z "$paths_value" ]; then
+        # 次の行が配列要素かチェック
+        local next_line=$(echo "$frontmatter" | grep -A1 "^paths:" | tail -n1)
+        if [[ "$next_line" =~ ^[[:space:]]*-[[:space:]] ]]; then
+            log_high "[$relative_path] paths uses YAML array format (use single string)"
+            log_detail "Expected: paths: \"**/*.{ts,tsx}\""
+            return 2
+        fi
+    fi
+
+    return 0
+}
+
+# 10. 重複キーフレーズチェック
 check_duplication() {
     local category="$1"
 
@@ -282,7 +319,7 @@ check_duplication() {
     fi
 }
 
-# 9. アクション指向チェック
+# 9. アクション指向チェック（Action-Oriented）
 check_action_oriented() {
     local file="$1"
     local filename=$(basename "$file")
@@ -330,6 +367,7 @@ check_file_quality() {
     check_file_size "$file" || ((issues++))
     check_progressive_disclosure "$file" || ((issues++))
     check_metadata "$file" || ((issues++))
+    check_paths_format "$file" || ((issues++))
     check_action_oriented "$file" || ((issues++))
 
     # 問題がなければ成功メッセージ

@@ -72,10 +72,7 @@ Single Source of Truth (.agents/) → 各エージェント固有形式へ変換
 # メタデータ (YAML frontmatter)
 name: rule-name
 description: ルールの説明
-paths:                              # 適用対象 (オプション)
-  - "**/*.ts"
-  - "**/*.js"
-  - "**/*.py"
+paths: "**/*.{ts,js,py}"            # 適用対象 (オプション、カンマ区切り)
 ---
 
 # Rule Content
@@ -83,7 +80,7 @@ paths:                              # 適用対象 (オプション)
 ルールの本文...
 ```
 
-**注意**: 統一形式では `paths` を YAML 配列形式で記述します。各エージェント向けに変換される際に適切な形式に自動変換されます。
+**注意**: `paths` はカンマ区切りの単一文字列で記述します（ブレース展開可）。各エージェント向けに変換される際、フィールド名のみ変換されます（Cursor: `globs`、Copilot: `applyTo`）。
 
 ### 2. Skills (.agents/skills/{name}/SKILL.md)
 

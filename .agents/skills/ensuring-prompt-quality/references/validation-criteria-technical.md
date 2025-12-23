@@ -44,9 +44,7 @@
 - documents
 
 # Rules
-paths:
-  - "**/*.ts"
-  - "**/*.tsx"
+paths: "**/*.{ts,tsx}"
 
 # 明確なファイル名
 architecture.md  # ✅ 明確

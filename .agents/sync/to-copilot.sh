@@ -79,11 +79,12 @@ if [ -d "$AGENTS_DIR/rules" ]; then
             echo "  Processing: $filename"
 
             # frontmatter を Copilot 形式に変換
+            # 単一文字列形式に対応: paths: "**/*.{ts,tsx}"
             awk '
             BEGIN {
                 in_frontmatter = 0;
                 has_frontmatter = 0;
-                globs_value = "";
+                applyTo_value = "";
             }
             /^---$/ {
                 if (NR == 1) {
@@ -94,8 +95,8 @@ if [ -d "$AGENTS_DIR/rules" ]; then
                 } else if (in_frontmatter) {
                     in_frontmatter = 0;
                     # applyTo を出力
-                    if (globs_value != "") {
-                        print "applyTo: " globs_value;
+                    if (applyTo_value != "") {
+                        print "applyTo: " applyTo_value;
                     }
                     print "---";
                     print "";
@@ -103,29 +104,16 @@ if [ -d "$AGENTS_DIR/rules" ]; then
                 }
             }
             in_frontmatter {
-                # globs を applyTo に変換
+                # globs を applyTo に変換（単一文字列形式）
                 if ($0 ~ /^globs:/) {
-                    sub(/^globs: */, "");
-                    # 配列表記を削除して文字列に変換
-                    gsub(/[\[\]]/, "");
-                    gsub(/"/, "");
-                    globs_value = $0;
+                    sub(/^globs:\s*/, "");
+                    applyTo_value = $0;
                     next;
                 }
-                # paths を applyTo に変換
+                # paths を applyTo に変換（単一文字列形式）
                 if ($0 ~ /^paths:/) {
-                    # 次の行から配列要素を読み取る
-                    collecting_paths = 1;
-                    next;
-                }
-                # 配列要素を収集
-                if ($0 ~ /^  - /) {
-                    sub(/^  - /, "");
-                    if (globs_value == "") {
-                        globs_value = $0;
-                    } else {
-                        globs_value = globs_value ", " $0;
-                    }
+                    sub(/^paths:\s*/, "");
+                    applyTo_value = $0;
                     next;
                 }
                 # 不要なフィールドをスキップ

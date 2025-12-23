@@ -131,6 +131,67 @@ validate_line_count() {
     return 0
 }
 
+# paths フィールド形式の検証（公式仕様: 単一文字列、カンマ区切り）
+# YAML配列形式は非推奨
+validate_paths_format() {
+    local frontmatter="$1"
+    local filename="$2"
+
+    # paths フィールドが存在するかチェック
+    local paths_line=$(echo "$frontmatter" | grep "^paths:")
+    if [ -z "$paths_line" ]; then
+        return 0  # paths がない場合はスキップ
+    fi
+
+    # paths: の後に値がない（次行に配列がある）場合はエラー
+    local paths_value=$(echo "$paths_line" | sed 's/^paths:\s*//')
+    if [ -z "$paths_value" ] || [ "$paths_value" = "paths:" ]; then
+        # 次の行が配列要素かチェック
+        local next_line=$(echo "$frontmatter" | grep -A1 "^paths:" | tail -n1)
+        if [[ "$next_line" =~ ^[[:space:]]*-[[:space:]] ]]; then
+            log_error "[$filename] paths field uses YAML array format (deprecated)"
+            log_info "  Use single string format: paths: \"**/*.{ts,tsx}\""
+            return 1
+        fi
+    fi
+
+    # 値が空の場合
+    if [ -z "$paths_value" ]; then
+        log_warning "[$filename] paths field is empty"
+        return 0
+    fi
+
+    return 0
+}
+
+# 配列フィールド形式の検証（単一行のインライン配列形式を推奨）
+# YAML複数行配列形式は非推奨
+validate_array_field_format() {
+    local frontmatter="$1"
+    local filename="$2"
+    local field="$3"
+
+    # フィールドが存在するかチェック
+    local field_line=$(echo "$frontmatter" | grep "^${field}:")
+    if [ -z "$field_line" ]; then
+        return 0  # フィールドがない場合はスキップ
+    fi
+
+    # field: の後に値がない（次行に配列がある）場合はエラー
+    local field_value=$(echo "$field_line" | sed "s/^${field}:\s*//")
+    if [ -z "$field_value" ] || [ "$field_value" = "${field}:" ]; then
+        # 次の行が配列要素かチェック
+        local next_line=$(echo "$frontmatter" | grep -A1 "^${field}:" | tail -n1)
+        if [[ "$next_line" =~ ^[[:space:]]*-[[:space:]] ]]; then
+            log_error "[$filename] $field field uses YAML multi-line array format (deprecated)"
+            log_info "  Use inline array format: $field: [item1, item2]"
+            return 1
+        fi
+    fi
+
+    return 0
+}
+
 # 1. ディレクトリ構造の検証
 validate_directory_structure() {
     log_info "Validating directory structure..."
@@ -197,10 +258,13 @@ validate_rules() {
             validate_description_length "$description" "$filename"
         fi
 
-        # paths フィールドの存在確認（情報提供のみ）
+        # paths フィールドの存在確認と形式検証
         local has_paths=$(echo "$frontmatter" | grep -c "^paths:" || true)
         if [ "$has_paths" -eq 0 ]; then
             log_info "[$filename] No 'paths' field (rule applies to all files)"
+        else
+            # paths 形式を検証（単一文字列であること）
+            validate_paths_format "$frontmatter" "$filename"
         fi
 
     done
@@ -257,6 +321,10 @@ validate_agents() {
         if [ -z "$tools" ]; then
             log_info "[$filename] No tools defined (inherits all tools)"
         fi
+
+        # tools と skills の形式検証（インライン配列形式を推奨）
+        validate_array_field_format "$frontmatter" "$filename" "tools"
+        validate_array_field_format "$frontmatter" "$filename" "skills"
 
         # model フィールドの検証（公式仕様: sonnet, opus, haiku, inherit）
         local model=$(get_field_value "$frontmatter" "model")

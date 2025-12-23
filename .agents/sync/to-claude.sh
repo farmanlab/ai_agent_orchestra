@@ -29,12 +29,13 @@ if [ -d "$AGENTS_DIR/rules" ]; then
 
         # frontmatter を Claude Code 形式に変換
         # globs を paths に変換し、不要なフィールドを削除
+        # 単一文字列形式に対応: paths: "**/*.{ts,tsx}"
         awk '
         BEGIN {
             in_frontmatter = 0;
             has_frontmatter = 0;
             has_paths = 0;
-            buffered_content = "";
+            paths_value = "";
             after_frontmatter = 0;
         }
         /^---$/ {
@@ -46,37 +47,32 @@ if [ -d "$AGENTS_DIR/rules" ]; then
                 in_frontmatter = 0;
                 after_frontmatter = 1;
                 # paths がある場合のみ frontmatter を出力
-                if (has_paths) {
+                if (has_paths && paths_value != "") {
                     print "---";
-                    print buffered_content;
+                    print "paths: " paths_value;
                     print "---";
                     print "";
                 }
-                buffered_content = "";
                 next;
             }
         }
         in_frontmatter {
-            # globs を paths に変換（単一行の配列形式）
-            if ($0 ~ /^globs: *\[/) {
+            # globs を paths として取得（単一文字列形式）
+            if ($0 ~ /^globs:/) {
                 has_paths = 1;
-                sub(/^globs:/, "paths:");
-                buffered_content = buffered_content $0 "\n";
+                sub(/^globs:\s*/, "");
+                paths_value = $0;
                 next;
             }
-            # paths フィールドを保持
+            # paths フィールドを取得（単一文字列形式）
             if ($0 ~ /^paths:/) {
                 has_paths = 1;
-                buffered_content = buffered_content $0 "\n";
-                next;
-            }
-            # 配列要素を保持
-            if ($0 ~ /^  - / && has_paths) {
-                buffered_content = buffered_content $0 "\n";
+                sub(/^paths:\s*/, "");
+                paths_value = $0;
                 next;
             }
             # 不要なフィールドをスキップ
-            if ($0 ~ /^(name|description|globs):/) {
+            if ($0 ~ /^(name|description):/) {
                 next;
             }
         }

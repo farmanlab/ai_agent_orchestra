@@ -8,9 +8,7 @@
 ---
 name: descriptive-name
 description: Third-person description of what this rule enforces. Use when working with specific file types or implementing particular patterns.
-paths:
-  - "**/*.ts"
-  - "**/*.tsx"
+paths: "**/*.{ts,tsx}"
 ---
 
 # Rule Title

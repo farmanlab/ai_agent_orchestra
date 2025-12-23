@@ -336,7 +336,20 @@ globs: "**/*.ts,**/*.tsx"    # カンマ区切り、単一行
 ---
 ```
 
-**注意**: `paths` ではなく `globs`、YAML配列ではなくカンマ区切り文字列
+**注意**: `paths` ではなく `globs`
+
+#### Claude Code Rules との違い
+
+Claude Code の `.claude/rules/*.md` では `paths` フィールドを使用:
+
+```yaml
+---
+description: What this rule does
+paths: "**/*.{ts,tsx}"    # カンマ区切り、ブレース展開可
+---
+```
+
+**共通**: 両方とも単一文字列（YAML配列ではない）
 
 ---
 
@@ -387,7 +400,7 @@ applyTo: "**/*.ts,**/*.tsx"  # カンマ区切り
 | **命名規則** | gerund形式 (-ing) | - | - |
 | **description** | 第三人称 + トリガー | - | - |
 | **Frontmatter** | name, description, allowed-tools | description, alwaysApply, globs | applyTo |
-| **配列形式** | YAML配列 | カンマ区切り文字列 | カンマ区切り文字列 |
+| **配列形式** | カンマ区切り文字列 | カンマ区切り文字列 | カンマ区切り文字列 |
 | **MCPツール** | 完全修飾名必須 | - | - |
 | **特記事項** | - | `.cursor/rules/` 構造 | タスク非依存性を特に強調 |
 

@@ -36,6 +36,7 @@ if [ -d "$AGENTS_DIR/rules" ]; then
         mkdir -p "$target_dir"
 
         # frontmatter を Cursor RULE.md 形式に変換
+        # 単一文字列形式に対応: paths: "**/*.{ts,tsx}"
         awk '
         BEGIN {
             in_frontmatter = 0;
@@ -43,7 +44,7 @@ if [ -d "$AGENTS_DIR/rules" ]; then
             has_paths = 0;
             has_description = 0;
             buffered_frontmatter = "";
-            globs_array = "";
+            globs_value = "";
         }
         /^---$/ {
             if (NR == 1) {
@@ -55,9 +56,9 @@ if [ -d "$AGENTS_DIR/rules" ]; then
                 # frontmatter を出力
                 print "---";
                 print buffered_frontmatter;
-                # globs をカンマ区切りの単一行形式で出力
-                if (has_paths == 1 && globs_array != "") {
-                    print "globs: " globs_array;
+                # globs を出力（単一文字列形式をそのまま使用）
+                if (has_paths == 1 && globs_value != "") {
+                    print "globs: " globs_value;
                 }
                 # alwaysApply を追加
                 # description または globs が存在する場合は false
@@ -78,21 +79,18 @@ if [ -d "$AGENTS_DIR/rules" ]; then
                 buffered_frontmatter = buffered_frontmatter $0 "\n";
                 next;
             }
-            # paths を検出（ヘッダーのみ、配列要素は後で処理）
+            # paths を検出（単一文字列形式）
             if ($0 ~ /^paths:/) {
                 has_paths = 1;
+                sub(/^paths:\s*/, "");
+                globs_value = $0;
                 next;
             }
-            # 配列要素を収集してカンマ区切りに変換
-            if ($0 ~ /^  - /) {
+            # globs を検出（単一文字列形式）
+            if ($0 ~ /^globs:/) {
                 has_paths = 1;
-                # "  - \"pattern\"" から pattern 部分を抽出
-                gsub(/^  - /, "", $0);
-                if (globs_array == "") {
-                    globs_array = $0;
-                } else {
-                    globs_array = globs_array ", " $0;
-                }
+                sub(/^globs:\s*/, "");
+                globs_value = $0;
                 next;
             }
             # 不要なフィールドをスキップ

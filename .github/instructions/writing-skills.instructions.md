@@ -1,0 +1,159 @@
+---
+applyTo:  ".agents/skills/**/*.md"
+---
+
+
+# Writing Skills
+
+`.agents/skills/` にスキルを作成・編集する際の規約。
+
+## 命名規則
+
+### Skill名
+
+**gerund形式（-ing）を使用**:
+
+```yaml
+# Good
+- processing-pdfs
+- analyzing-spreadsheets
+- managing-databases
+- testing-code
+- ensuring-prompt-quality
+
+# Avoid
+- helper
+- utils
+- pdf-processor
+- data-handler
+```
+
+### ディレクトリ/ファイル名
+
+- 小文字・数字・ハイフンのみ
+- 64文字以内
+- 予約語禁止
+
+```
+.agents/skills/
+└── skill-name/
+    ├── SKILL.md          # エントリーポイント（必須）
+    └── references/       # 詳細情報（オプション）
+        ├── patterns.md
+        └── examples.md
+```
+
+## メタデータ要件
+
+```yaml
+---
+name: doing-something           # 64文字以内、小文字・数字・ハイフン
+description: Does X. Use when Y.  # 1024文字以内、第三人称、トリガー含む
+allowed-tools: [Read, Write, Bash]  # 使用可能ツール
+---
+```
+
+### description の書き方
+
+**第三人称 + トリガー**:
+
+```yaml
+# Bad - 一人称
+description: I can help you process Excel files
+
+# Bad - 二人称
+description: You can use this to process Excel files
+
+# Bad - トリガーなし
+description: Processes data
+
+# Good
+description: Processes Excel files and generates reports. Use when analyzing spreadsheets or .xlsx files.
+```
+
+## ファイルサイズ
+
+| ファイル | 上限 | 備考 |
+|---------|------|------|
+| SKILL.md | 500行 | エントリーポイント |
+| references/*.md | 制限なし | 100行超は目次必須 |
+
+## Progressive Disclosure
+
+**参照の深さは1階層まで**:
+
+```
+# Good: 1階層
+SKILL.md → patterns.md (実際の情報)
+        → examples.md (実際の情報)
+
+# Bad: 2階層以上
+SKILL.md → advanced.md → details.md → 実際の情報
+```
+
+## 必須構成要素
+
+1. **概要**: 何をするスキルか（1-2段落）
+2. **Workflow**: チェックリスト形式の手順
+3. **具体例**: Before/After 形式
+
+## Workflow パターン
+
+````markdown
+## Workflow
+
+Copy this checklist:
+
+```
+Task Progress:
+- [ ] Step 1: Analyze requirements
+- [ ] Step 2: Design solution
+- [ ] Step 3: Validate
+```
+
+**Step 1: Analyze requirements**
+[詳細な手順]
+
+If validation fails at Step 3, return to Step 2 and revise.
+````
+
+## テンプレート
+
+```yaml
+---
+name: doing-something
+description: Does X. Use when Y or Z.
+allowed-tools: [Read, Write, Bash]
+---
+
+# Skill Title
+
+## Overview
+
+This skill provides [purpose].
+
+## Quick Start
+
+\```language
+# minimal example
+\```
+
+## References
+
+- **[patterns.md](references/patterns.md)**: Pattern collection
+
+## Workflow
+
+Copy this checklist:
+
+\```
+Progress:
+- [ ] Step 1: ...
+- [ ] Step 2: ...
+\```
+
+**Step 1: ...**
+[instructions]
+
+If Step 1 fails, [recovery action].
+```

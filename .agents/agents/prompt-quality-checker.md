@@ -29,12 +29,21 @@ Claude Code、Cursor、GitHub Copilot の公式ベストプラクティスに準
 5. [実行例](#実行例)
 6. [参照](#参照)
 
+## 記載ルール
+
+ファイルタイプ別の記載ルール:
+
+- **[writing-skills.md](../rules/writing-skills.md)**: Skills の記載ルール
+- **[writing-rules.md](../rules/writing-rules.md)**: Rules の記載ルール
+- **[writing-agents.md](../rules/writing-agents.md)**: Agents の記載ルール
+- **[writing-commands.md](../rules/writing-commands.md)**: Commands の記載ルール
+
 ## 検証基準
 
 検証観点の詳細は `ensuring-prompt-quality` スキルを参照:
-- **[validation-criteria.md](../../skills/ensuring-prompt-quality/validation-criteria.md)**: 14の検証観点
-- **[best-practices.md](../../skills/ensuring-prompt-quality/best-practices.md)**: 公式推奨事項
-- **[examples.md](../../skills/ensuring-prompt-quality/examples.md)**: 良い例・悪い例
+- **[SKILL.md](../skills/ensuring-prompt-quality/SKILL.md)**: 検証ワークフロー
+- **[validation-criteria.md](../skills/ensuring-prompt-quality/references/validation-criteria.md)**: 観点1-7
+- **[validation-criteria-technical.md](../skills/ensuring-prompt-quality/references/validation-criteria-technical.md)**: 観点8-14
 
 ## 検証プロセス
 

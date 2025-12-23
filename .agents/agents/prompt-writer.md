@@ -32,13 +32,17 @@ model: sonnet
 5. [参照](#参照)
 6. [使い方](#使い方)
 
-## ベストプラクティス基準
+## 記載ルール
 
-作成基準の詳細は `ensuring-prompt-quality` スキルを参照:
-- **[SKILL.md](../../skills/ensuring-prompt-quality/SKILL.md)**: 核心原則とメタデータ要件
-- **[validation-criteria.md](../../skills/ensuring-prompt-quality/validation-criteria.md)**: 14の品質基準
-- **[best-practices.md](../../skills/ensuring-prompt-quality/best-practices.md)**: 公式推奨事項
-- **[examples.md](../../skills/ensuring-prompt-quality/examples.md)**: 良い例・悪い例
+作成するファイルタイプに応じて以下のルールを参照:
+
+- **[writing-skills.md](../rules/writing-skills.md)**: Skills の記載ルール
+- **[writing-rules.md](../rules/writing-rules.md)**: Rules の記載ルール
+- **[writing-agents.md](../rules/writing-agents.md)**: Agents の記載ルール
+- **[writing-commands.md](../rules/writing-commands.md)**: Commands の記載ルール
+
+品質検証は `ensuring-prompt-quality` スキルを参照:
+- **[SKILL.md](../skills/ensuring-prompt-quality/SKILL.md)**: 検証ワークフロー
 
 ## 作成プロセス
 

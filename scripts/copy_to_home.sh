@@ -18,6 +18,7 @@ usage() {
     echo "  -r, --repo     GitHubリポジトリ (デフォルト: $DEFAULT_REPO)"
     echo "  -b, --branch   ブランチ名 (デフォルト: $DEFAULT_BRANCH)"
     echo "  -f, --force    既存ファイルを確認なしで上書き"
+    echo "  -v, --verbose  詳細な出力（同一ファイルも表示）"
     echo "  -h, --help     このヘルプメッセージを表示"
     echo ""
     echo "このスクリプトは以下のフォルダをホームディレクトリにコピーします:"
@@ -25,11 +26,13 @@ usage() {
     echo ""
     echo "例:"
     echo "  $0 -r username/repo -b main -f"
+    echo "  $0 -v                           # 詳細出力"
     exit 1
 }
 
 # オプション解析
 FORCE=false
+VERBOSE=false
 REPO="$DEFAULT_REPO"
 BRANCH="$DEFAULT_BRANCH"
 
@@ -45,6 +48,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -f|--force)
             FORCE=true
+            shift
+            ;;
+        -v|--verbose)
+            VERBOSE=true
             shift
             ;;
         -h|--help)
@@ -146,6 +153,11 @@ copy_file() {
             # ファイルの差分があるか確認
             if ! diff -q "$src" "$dest" > /dev/null 2>&1; then
                 echo -e "  ${YELLOW}?${NC} $rel_path (変更あり)"
+                echo ""
+                echo -e "  ${YELLOW}--- diff ---${NC}"
+                diff --color=always -u "$dest" "$src" | head -50
+                echo -e "  ${YELLOW}------------${NC}"
+                echo ""
                 read -p "    上書きしますか? (y/N): " answer
                 case $answer in
                     [Yy]*)
@@ -156,8 +168,12 @@ copy_file() {
                         echo -e "    ${YELLOW}✗${NC} スキップしました"
                         ;;
                 esac
+                echo ""
             else
-                echo -e "  ${GREEN}=${NC} $rel_path (同一)"
+                # 同一ファイルは verbose 時のみ表示
+                if [ "$VERBOSE" = true ]; then
+                    echo -e "  ${GREEN}=${NC} $rel_path (同一)"
+                fi
             fi
         fi
     else

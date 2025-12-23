@@ -158,7 +158,8 @@ copy_file() {
                 diff --color=always -u "$dest" "$src" | head -50
                 echo -e "  ${YELLOW}------------${NC}"
                 echo ""
-                read -p "    上書きしますか? (y/N): " answer
+                echo -n "    上書きしますか? (y/N): "
+                read answer < /dev/tty
                 case $answer in
                     [Yy]*)
                         cp -f "$src" "$dest"

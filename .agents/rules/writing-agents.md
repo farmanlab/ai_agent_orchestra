@@ -1,5 +1,5 @@
 ---
-description: Enforces agent file conventions. Use when creating or editing files in .agents/agents/.
+description: Enforces agent file conventions. Use when creating, editing, or reviewing files in .agents/agents/.
 paths: ".agents/agents/**/*.md"
 ---
 

@@ -1,5 +1,5 @@
 ---
-description: Enforces skill file conventions. Use when creating or editing files in .agents/skills/.
+description: Enforces skill file conventions. Use when creating, editing, or reviewing files in .agents/skills/.
 paths: ".agents/skills/**/*.md"
 ---
 

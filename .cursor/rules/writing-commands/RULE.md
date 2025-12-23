@@ -1,5 +1,5 @@
 ---
-description: Enforces command file conventions. Use when creating or editing files in .agents/commands/.
+description: Enforces command file conventions. Use when creating, editing, or reviewing files in .agents/commands/.
 
 globs:  ".agents/commands/**/*.md"
 alwaysApply: false

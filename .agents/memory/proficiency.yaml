@@ -1,0 +1,64 @@
+# Proficiency Settings
+# explain-pr コマンドで使用する習熟度設定
+#
+# レベル: beginner | intermediate | advanced
+# - beginner: 基本用語から丁寧に説明
+# - intermediate: 実装詳細と設計判断を解説
+# - advanced: アーキテクチャ影響と潜在的問題を分析
+
+# =============================================================================
+# カテゴリ別習熟度
+# =============================================================================
+
+language:
+  # プログラミング言語
+  typescript: beginner
+  javascript: beginner
+  # go: beginner
+  # python: intermediate
+  # ruby: beginner
+  # rust: beginner
+
+infrastructure:
+  # インフラ/DevOps
+  # kubernetes: beginner
+  # docker: intermediate
+  # terraform: beginner
+  datadog: beginner
+  # aws: intermediate
+  # gcp: beginner
+
+library:
+  # ライブラリ/フレームワーク
+  prisma: beginner
+  sentry: beginner
+  dd-trace: beginner
+  # react: advanced
+  # nextjs: intermediate
+  # hono: beginner
+  # express: intermediate
+
+service:
+  # サービス固有（モノレポ内のサービス名など）
+  # 例: quipper/monorepo 内のサービス
+  early-admission: intermediate
+  # study-sapuri: intermediate
+
+domain:
+  # ドメイン知識
+  observability: beginner
+  # authentication: intermediate
+  # payment: beginner
+  # education: intermediate
+
+# =============================================================================
+# デフォルト値
+# 各カテゴリで未設定の項目に適用されるレベル
+# =============================================================================
+
+defaults:
+  language: intermediate
+  infrastructure: beginner
+  library: beginner
+  service: beginner
+  domain: beginner

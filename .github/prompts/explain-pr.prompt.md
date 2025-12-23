@@ -11,44 +11,38 @@ description: Explains GitHub PR changes based on user's technical proficiency le
 2. [使用方法](#使用方法)
 3. [実行手順](#実行手順)
    - [Step 1: PR情報の取得](#step-1-pr情報の取得)
-   - [Step 2: 習熟度レベルの確認](#step-2-習熟度レベルの確認)
-   - [Step 3: レベル別の解説生成](#step-3-レベル別の解説生成)
+   - [Step 2: カテゴリ自動検出と習熟度確認](#step-2-カテゴリ自動検出と習熟度確認)
+   - [Step 3: カテゴリ別の解説生成](#step-3-カテゴリ別の解説生成)
    - [Step 4: 出力とフィードバック](#step-4-出力とフィードバック)
-4. [注意事項](#注意事項)
+4. [習熟度設定ファイル](#習熟度設定ファイル)
 5. [エラーハンドリング](#エラーハンドリング)
 
 ---
 
 ## 概要
 
-このコマンドは、GitHub PRのURLを受け取り、その変更内容をユーザーの技術レベルに応じて適切な詳細度で解説します。初心者から上級者まで、それぞれの理解度に合わせた説明を提供することで、効果的なコードレビューと学習を支援します。
+このコマンドは、GitHub PRのURLを受け取り、その変更内容をユーザーの技術レベルに応じて適切な詳細度で解説します。
+
+**特徴**:
+- PRの内容から関連カテゴリを**自動検出**
+- カテゴリ別（言語、インフラ、ライブラリ、サービス、ドメイン）に習熟度を設定可能
+- 設定は `.agents/memory/proficiency.yaml` に保存され、次回以降のデフォルト値として使用
 
 ## 使用方法
 
 ```bash
-/explain-pr <pr-url> [proficiency-level]
+/explain-pr <pr-url>
 ```
 
 **引数**:
 
 - `pr-url` (必須): GitHub PRのURL
   - 例: `https://github.com/owner/repo/pull/123`
-- `proficiency-level` (省略可、デフォルト: intermediate): ユーザーの習熟度レベル
-  - `beginner`: 初心者向け - 基本的な用語から丁寧に説明
-  - `intermediate`: 中級者向け - 実装の詳細と設計判断を解説
-  - `advanced`: 上級者向け - アーキテクチャへの影響と潜在的問題を分析
 
 **使用例**:
 
 ```bash
-# 中級者向け（デフォルト）
-/explain-pr https://github.com/facebook/react/pull/28000
-
-# 初心者向け
-/explain-pr https://github.com/facebook/react/pull/28000 beginner
-
-# 上級者向け
-/explain-pr https://github.com/facebook/react/pull/28000 advanced
+/explain-pr https://github.com/quipper/monorepo/pull/135963
 ```
 
 ## 実行手順
@@ -59,229 +53,241 @@ GitHub CLIを使用してPR情報を取得します。
 
 ```bash
 # PRの基本情報を取得
-gh pr view <pr-url> --json title,body,author,additions,deletions,changedFiles,baseRefName,headRefName
+gh pr view <pr-url> --json title,body,author,additions,deletions,files,baseRefName,headRefName
 
 # PRの差分を取得
 gh pr diff <pr-url>
-
-# PRのファイル一覧を取得
-gh pr view <pr-url> --json files --jq '.files[].path'
 ```
 
-使用ツール:
+### Step 2: カテゴリ自動検出と習熟度確認
 
-- `Bash`: GitHub CLI (`gh`) コマンドの実行
-- `Read`: 必要に応じてローカルファイルの読み込み
-- `Grep`: 特定パターンの検索
+#### 2.1 カテゴリの自動検出
 
-### Step 2: 習熟度レベルの確認
+PRの差分から関連するカテゴリを自動検出します。
 
-引数で指定されたレベル、または対話的に確認します。
+**検出ルール**:
 
-レベルが指定されていない場合、`AskUserQuestion` ツールで確認:
+| カテゴリ | 検出方法 |
+|---------|---------|
+| **language** | ファイル拡張子（`.ts`→typescript, `.go`→go, `.py`→python） |
+| **infrastructure** | パス（`kubernetes/`, `terraform/`）、キーワード（datadog, aws） |
+| **library** | package.json の dependencies、import 文 |
+| **service** | ファイルパスのトップディレクトリ（モノレポ内のサービス名） |
+| **domain** | キーワード（trace/apm→observability, auth→authentication） |
 
-```text
-あなたの技術レベルを教えてください:
-1. 初心者 (beginner) - プログラミング基礎を学習中
-2. 中級者 (intermediate) - 実務経験あり、設計パターンに興味
-3. 上級者 (advanced) - アーキテクチャ設計、パフォーマンス最適化の経験あり
+**検出例（PR #135963）**:
+
+```yaml
+detected:
+  language: [typescript, javascript]
+  infrastructure: [datadog, observability]
+  library: [prisma, dd-trace, sentry]
+  service: [early-admission]
+  domain: [observability]
 ```
 
-### Step 3: レベル別の解説生成
+#### 2.2 習熟度設定の読み込み
 
-#### Beginner (初心者向け)
+`.agents/memory/proficiency.yaml` から既存の設定を読み込みます。
 
-**焦点**:
+```bash
+Read: .agents/memory/proficiency.yaml
+```
 
-- 何が変更されたか（What）
-- なぜ変更が必要だったか（Why）
-- 基本的な用語の説明
-- コードの読み方
+#### 2.3 デフォルト値の提示と確認
 
-**解説構造**:
+検出したカテゴリごとに、設定された習熟度をデフォルト値として提示します。
+
+**設定がある場合**:
+```
+このPRに関連するカテゴリと習熟度設定:
+
+| カテゴリ | 項目 | 設定値 |
+|---------|------|--------|
+| language | typescript | intermediate (設定済み) |
+| infrastructure | datadog | beginner (デフォルト) |
+| library | prisma | intermediate (設定済み) |
+| service | early-admission | beginner (デフォルト) |
+| domain | observability | beginner (デフォルト) |
+
+この設定で解説しますか？変更したい場合は指定してください。
+```
+
+**設定がない場合（省略不可）**:
+
+`AskUserQuestion` ツールで必ず確認:
+
+```
+以下のカテゴリの習熟度を設定してください（初回のみ）:
+
+1. typescript: beginner / intermediate / advanced ?
+2. datadog: beginner / intermediate / advanced ?
+...
+```
+
+#### 2.4 設定の保存
+
+ユーザーが指定した習熟度を `.agents/memory/proficiency.yaml` に保存します。
+
+```bash
+Edit: .agents/memory/proficiency.yaml
+# 新しい設定を追加
+```
+
+### Step 3: カテゴリ別の解説生成
+
+各カテゴリの習熟度に応じて、説明の詳細度を調整します。
+
+#### 習熟度レベル別の解説方針
+
+| レベル | 焦点 | 解説スタイル |
+|--------|------|-------------|
+| **beginner** | What/Why | 用語解説、各行にコメント、参考リソース |
+| **intermediate** | How | 設計判断、ベストプラクティス、代替案との比較 |
+| **advanced** | Impact | アーキテクチャ影響、パフォーマンス、改善提案 |
+
+#### 出力構造
 
 ```markdown
 ## 変更の概要
 
-[平易な言葉で変更内容を説明]
+[全体像を簡潔に説明]
 
-## 主な変更点
+## 詳細解説
 
-### 1. [ファイル名]
+### [ファイル名]
 
-**何をしているか**:
-[変更の目的を初心者にも分かる言葉で]
+**関連カテゴリ**: language:typescript(intermediate), library:prisma(beginner)
 
-**用語解説**:
+#### TypeScript観点 (intermediate)
+[設計判断や実装の詳細を解説]
 
-- **用語1**: 説明
-- **用語2**: 説明
+#### Prisma観点 (beginner)
+[Prisma Instrumentationとは何か、各オプションの意味を丁寧に解説]
 
-**変更前**:
-[コード + 各行の説明コメント]
+---
 
-**変更後**:
-[コード + 各行の説明コメント]
-
-**なぜこの変更が必要か**:
-[ビジネス的な理由や技術的な理由を平易に]
-
-## 学習ポイント
-
-- このPRから学べる概念やパターン
-- 参考リソース（公式ドキュメントなど）
+### [次のファイル]
+...
 ```
 
-#### Intermediate (中級者向け)
+#### 解説例（PR #135963 の instrument.js）
 
-**焦点**:
-
-- どのように実装されたか（How）
-- 設計判断の理由
-- ベストプラクティスとの比較
-- 代替実装の検討
-
-**解説構造**:
-
+**dd-trace (beginner)** の場合:
 ```markdown
-## 変更サマリー
+#### Datadog APM (beginner)
 
-[変更の目的と影響範囲]
+**dd-trace とは？**
+Datadog APM（Application Performance Monitoring）用のトレーシングライブラリです。
+アプリケーション内の処理を可視化し、パフォーマンス問題を特定できます。
 
-## 実装の詳細
+**コード解説**:
+```javascript
+tracer.init({
+  profiling: true,      // CPU/メモリプロファイリングを有効化
+  logInjection: true,   // ログにトレースIDを自動挿入
+  runtimeMetrics: true, // Node.jsランタイムメトリクスを収集
+  dbmPropagationMode: 'full', // DB監視との連携を有効化
+});
+```
 
-### [ファイル名] - [変更の種類]
+**参考リソース**:
+- [Datadog APM公式ドキュメント](https://docs.datadoghq.com/tracing/)
+```
+
+**TypeScript (intermediate)** の場合:
+```markdown
+#### TypeScript/Node.js (intermediate)
 
 **設計判断**:
-[なぜこの実装方法を選択したか]
-
-**変更内容**:
-[diff形式で表示]
+- `instrument.js` を分離し、アプリケーション起動前にトレーサーを初期化
+- `--import` フラグで ESM 環境でも確実に最初に読み込まれる
 
 **ベストプラクティス**:
-
-- 適用されているパターン: [パターン名と理由]
-- 考慮点: [潜在的な懸念があれば]
-
-**代替案との比較**:
-
-- 案A: [メリット・デメリット]
-- 案B（採用）: [メリット・デメリット]
-
-## テストカバレッジ
-
-[追加されたテスト、カバレッジの変化]
-
-## 影響範囲
-
-- 影響を受けるモジュール
-- 既存機能への影響
-```
-
-#### Advanced (上級者向け)
-
-**焦点**:
-
-- アーキテクチャへの影響
-- パフォーマンス考慮事項
-- スケーラビリティ
-- 潜在的な問題と改善提案
-
-**解説構造**:
-
-```markdown
-## アーキテクチャ分析
-
-### 変更の位置づけ
-
-[システム全体における変更の役割]
-
-### 設計原則への準拠
-
-- **SOLID原則**: [適用状況]
-- **DDD**: [ドメイン境界、集約の整合性]
-- **Clean Architecture**: [レイヤー間の依存関係]
-
-## パフォーマンス影響
-
-### 計算量分析
-
-- 時間計算量: O(?) → O(?)
-- 空間計算量: O(?) → O(?)
-
-### ボトルネック評価
-
-[潜在的なボトルネックとプロファイリング推奨箇所]
-
-### スケーラビリティ
-
-- 水平スケーリング: [影響]
-- 垂直スケーリング: [影響]
-
-## セキュリティ考慮
-
-[認証、認可、入力検証、XSS/CSRF対策など]
-
-## 技術的負債
-
-**導入される負債**:
-[今回の変更で発生する技術的負債]
-
-**解消される負債**:
-[リファクタリングで改善された点]
-
-## 改善提案
-
-### 短期的改善
-
-1. [具体的な改善案]
-2. [具体的な改善案]
-
-### 長期的改善
-
-1. [アーキテクチャレベルの改善]
-2. [パフォーマンス最適化]
-
-## 関連する設計パターン/アーキテクチャ
-
-[Repository Pattern, Factory Pattern, Event Sourcingなど]
-
-## 参考文献
-
-- 関連するRFC、ADR（Architecture Decision Record）
-- 参考にした技術記事や論文
+- dd-trace は他のモジュールより先にインポートする必要がある（モンキーパッチのため）
+- blocklist で不要なトレース（Sentry通信など）を除外
 ```
 
 ### Step 4: 出力とフィードバック
-
-生成した解説をMarkdown形式で出力します。
 
 ```markdown
 # PR解説: [PR タイトル]
 
 **PR URL**: [URL]
-**習熟度レベル**: [beginner/intermediate/advanced]
 **解説日時**: [日時]
 
-[レベル別の解説内容]
+## 習熟度設定
+
+| カテゴリ | 項目 | レベル |
+|---------|------|--------|
+| language | typescript | intermediate |
+| infrastructure | datadog | beginner |
+| ... | ... | ... |
+
+[カテゴリ別の解説内容]
 
 ---
+
+## 次のステップ
+
+- 習熟度設定を変更したい場合は、`.agents/memory/proficiency.yaml` を編集
+- 特定のカテゴリだけ詳しく聞きたい場合は「datadog についてもっと詳しく」と指定
 
 ## 質問やフィードバック
 
 この解説で不明な点があれば、お気軽にご質問ください。
 ```
 
-不明点が残る場合、ユーザーに追加説明を提供します。
+---
 
-## 注意事項
+## 習熟度設定ファイル
 
-- `gh` CLIがインストールされていない場合は、インストールを案内
-- GitHub認証が必要な場合は `gh auth login` を案内
-- プライベートリポジトリの場合は適切な権限が必要
-- 大規模なPR（50ファイル以上）の場合、主要な変更に焦点を当てて解説
-- 機密情報（APIキー、パスワードなど）が含まれる場合は適切にマスク
-- 解説の長さはレベルに応じて調整（初心者: 詳細、上級者: 簡潔）
+### 保存場所
+
+```
+.agents/memory/proficiency.yaml
+```
+
+### ファイル構造
+
+```yaml
+# カテゴリ別習熟度
+language:
+  typescript: intermediate
+  javascript: intermediate
+  go: beginner
+
+infrastructure:
+  kubernetes: beginner
+  datadog: beginner
+
+library:
+  prisma: intermediate
+  react: advanced
+
+service:
+  early-admission: beginner
+
+domain:
+  observability: beginner
+  authentication: intermediate
+
+# デフォルト値（未設定の項目に適用）
+defaults:
+  language: intermediate
+  infrastructure: beginner
+  library: beginner
+  service: beginner
+  domain: beginner
+```
+
+### 設定の優先順位
+
+1. **明示的な設定** (`language.typescript: advanced`)
+2. **カテゴリのデフォルト** (`defaults.language: intermediate`)
+3. **確認必須** (どちらもない場合は省略不可、ユーザーに確認)
+
+---
 
 ## エラーハンドリング
 
@@ -302,13 +308,14 @@ GitHub CLI (gh) がインストールされていません。
 **認証エラーの場合**:
 
 ```bash
-# 認証を実行
 gh auth login
 ```
 
-**PRが見つからない場合**:
+**習熟度設定ファイルが存在しない場合**:
 
 ```text
-指定されたPRが見つかりません。URLを確認してください。
-プライベートリポジトリの場合は、アクセス権限があるか確認してください。
+習熟度設定ファイルが見つかりません。
+初期設定を行いますか？ (Y/n)
 ```
+
+→ Y の場合、`.agents/memory/proficiency.yaml` を作成

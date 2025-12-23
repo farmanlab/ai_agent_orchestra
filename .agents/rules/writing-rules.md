@@ -26,49 +26,32 @@ misc.md        # 曖昧
 
 ## メタデータ要件
 
-### Claude Code Rules (`.claude/rules/`)
+`.agents/rules/` に作成するファイルの共通形式:
 
 ```yaml
 ---
-description: What this rule enforces. Use when...
-paths: "**/*.{ts,tsx}"    # カンマ区切り、ブレース展開可
+description: What this rule enforces. Use when...  # 第三人称 + トリガー
+paths: "**/*.{ts,tsx}"                             # 対象ファイルパターン
 ---
 ```
 
-### Cursor Rules (`.cursor/rules/`)
+| フィールド | 必須 | 説明 |
+|-----------|------|------|
+| `description` | ✓ | 第三人称で記述、トリガー含む |
+| `paths` | - | 対象ファイルパターン（glob形式） |
 
-```yaml
----
-description: What this rule does
-alwaysApply: false           # description/globs があれば false
-globs: "**/*.ts,**/*.tsx"    # カンマ区切り、単一行
----
-```
+**paths の書き方**:
+- カンマ区切り: `"**/*.ts,**/*.tsx"`
+- ブレース展開: `"**/*.{ts,tsx}"`
+- 省略時: 全ファイルに適用
 
-**ルールタイプ**:
-
-| タイプ | 適用条件 | 設定 |
-|--------|---------|------|
-| Always Apply | 全チャットセッション | `alwaysApply: true` |
-| Apply Intelligently | Agent判断 | `description` のみ |
-| Apply to Specific Files | ファイルパターン | `globs` 指定 |
-| Apply Manually | @メンション時 | 両方なし |
-
-### GitHub Copilot (`.github/`)
-
-```yaml
----
-applyTo: "**/*.ts,**/*.tsx"  # カンマ区切り
----
-```
+**Note**: sync 実行時にエージェント別形式に自動変換されます。
 
 ## ファイルサイズ
 
-| エージェント | 上限 |
-|------------|------|
-| Cursor | 500行 |
-| Copilot | 2ページ (~1000行) |
-| Claude | 制限なし（500行推奨） |
+**推奨: 500行以下**
+
+超過する場合は Progressive Disclosure で分割。
 
 ## 必須構成要素
 

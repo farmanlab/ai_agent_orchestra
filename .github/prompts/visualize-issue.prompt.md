@@ -1,6 +1,6 @@
 ---
 name: visualize-issue
-description: Visualizes GitHub issue content using mermaid diagrams and tables. Use when analyzing issue specifications or tracking issue timeline.
+description: Visualizes GitHub issue content using mermaid diagrams and tables. Use when analyzing issue specifications or extracting decisions.
 ---
 
 # Visualize Issue Command
@@ -26,10 +26,10 @@ GitHub issueのURLを受け取り、その内容をmermaid図やテーブルで�
 
 **特徴**:
 - issueの仕様から**画面遷移図**、**フローチャート**、**シーケンス図**を自動生成
-- コメント履歴から**タイムライン（ガントチャート）**を生成
 - 関連issueの**依存関係図**を生成
 - 本文・コメント・sub issueから**結論・決定事項**を抽出
 - 散在する情報から**仕様を整理**して記載
+- **原文を折りたたみで保持**し、トレーサビリティを確保
 
 ## 使用方法
 
@@ -47,7 +47,6 @@ GitHub issueのURLを受け取り、その内容をmermaid図やテーブルで�
   - `flow`: フローチャートのみ
   - `sequence`: シーケンス図のみ
   - `state`: 状態遷移図のみ
-  - `timeline`: タイムラインのみ
   - `er`: ER図のみ
   - `api`: API I/F テーブルのみ
   - `arch`: アーキテクチャ図のみ
@@ -58,7 +57,7 @@ GitHub issueのURLを受け取り、その内容をmermaid図やテーブルで�
 ```bash
 /visualize-issue https://github.com/owner/repo/issues/123
 /visualize-issue https://github.com/owner/repo/issues/123 flow
-/visualize-issue https://github.com/owner/repo/issues/123 timeline
+/visualize-issue https://github.com/owner/repo/issues/123 sequence
 ```
 
 ## 実行手順
@@ -100,7 +99,6 @@ issueのbodyとコメントを解析し、図表化可能な要素を抽出し�
 | **処理フロー** | `ステップ`, `手順`, `flow`, `step` + 条件分岐 | mermaid flowchart TD |
 | **シーケンス** | `リクエスト`, `レスポンス`, `呼び出し`, 複数システム名 | mermaid sequenceDiagram |
 | **状態遷移** | `状態`, `ステータス`, `state`, `status`, `→` + 状態名 | mermaid stateDiagram |
-| **タイムライン** | `期限`, `deadline`, `milestone`, 日付 | mermaid gantt |
 | **タスク** | `## タスク`, `1.`, `2.`, チェックボックス | **リスト形式のまま** |
 
 ##### データ系パターン
@@ -235,23 +233,7 @@ sequenceDiagram
     F-->>U: 表示
 ```
 
-#### 3.4 タイムライン（gantt）
-
-issue作成からの経過・マイルストーンを可視化:
-
-```mermaid
-gantt
-    title Issue Timeline
-    dateFormat YYYY-MM-DD
-    section Phase 1
-    Issue作成     :done, 2024-01-01, 1d
-    初回コメント  :done, 2024-01-03, 1d
-    section Phase 2
-    実装開始      :active, 2024-01-10, 5d
-    レビュー      :2024-01-15, 3d
-```
-
-#### 3.5 状態遷移図（stateDiagram-v2）
+#### 3.4 状態遷移図（stateDiagram-v2）
 
 状態の変化を可視化:
 
@@ -265,7 +247,7 @@ stateDiagram-v2
     Open --> Closed: クローズ
 ```
 
-#### 3.6 ER図（erDiagram）
+#### 3.5 ER図（erDiagram）
 
 テーブル設計・リレーションを可視化:
 
@@ -287,7 +269,7 @@ erDiagram
     }
 ```
 
-#### 3.7 API エンドポイント（table）
+#### 3.6 API エンドポイント（table）
 
 REST API 設計を表形式で可視化:
 
@@ -297,7 +279,7 @@ REST API 設計を表形式で可視化:
 | POST | `/api/users` | ユーザー作成 | `{name, email}` | `User` |
 | GET | `/api/users/:id` | ユーザー詳細取得 | - | `User` |
 
-#### 3.8 アーキテクチャ図（flowchart）
+#### 3.7 アーキテクチャ図（flowchart）
 
 システム構成・マイクロサービス間の関係を可視化:
 
@@ -330,7 +312,7 @@ flowchart TB
     API --> Cache
 ```
 
-#### 3.9 認証・認可フロー（sequenceDiagram）
+#### 3.8 認証・認可フロー（sequenceDiagram）
 
 OAuth/JWT などの認証フローを可視化:
 
@@ -352,6 +334,18 @@ sequenceDiagram
     R-->>C: リソース
 ```
 
+#### Mermaid記述ルール
+
+mermaid図を生成する際は以下のルールに従う：
+
+| ルール | 説明 | 例 |
+|--------|------|-----|
+| 改行禁止 | ノード内で `\n` を使用しない | ❌ `A["行1\n行2"]` → ✅ `A["行1 行2"]` |
+| 日本語はダブルクォート | 日本語テキストは必ず `"` で囲む | ✅ `A["ログイン画面"]` |
+| 1行で完結 | 各ノード・エッジは1行で記述 | ✅ `A --> B --> C` |
+
+**理由**: GitHubのMarkdownレンダラーでは `\n` が正しく解釈されない場合がある。
+
 ### Step 4: 出力
 
 生成した図表をMarkdown形式で出力します。
@@ -359,23 +353,9 @@ sequenceDiagram
 ```markdown
 # Issue Visualization: [Issue Title]
 
-**URL**: [issue-url]
-**Status**: [open/closed]
-**Labels**: [labels]
-**Milestone**: [milestone]
+## サマリー
 
----
-
-## サマリーテーブル
-
-| 項目 | 内容 |
-|------|------|
-| 作成者 | @author |
-| 作成日 | YYYY-MM-DD |
-| 更新日 | YYYY-MM-DD |
-| コメント数 | N |
-| 関連issue | #xx, #yy |
-| 関連PR | #xxx, #yyy |
+[issueの目的・概要を1-2文で簡潔に記述。「〜を実現するため、〜を実装する」形式で書く]
 
 ---
 
@@ -385,8 +365,13 @@ sequenceDiagram
 
 | 項目 | 決定 | 却下案 | 根拠 |
 |------|------|--------|------|
-| [検討項目1] | [採用案] | [不採用案] | [理由] |
-| [検討項目2] | [採用案] | [不採用案] | [理由] |
+| [検討項目1] | [採用案] | [不採用案1] / [不採用案2] | [コメント#N (@user)](comment-url) |
+| [検討項目2] | [採用案] | - | [本文](issue-url) |
+
+**根拠列のルール**:
+- 可能な限りコメントや本文へのパーマリンクを貼る
+- 複数の却下案がある場合は `/` で区切る
+- 却下案がない場合は `-` を記載
 
 ### 前提条件
 - [前提1]
@@ -438,9 +423,6 @@ sequenceDiagram
 ### 状態遷移図
 [mermaid diagram]
 
-### タイムライン
-[mermaid diagram]
-
 ---
 
 ## タスク
@@ -453,20 +435,39 @@ sequenceDiagram
 
 | 種別 | 内容 | ソース |
 |------|------|--------|
-| 決定 | [決定事項] | 本文 / コメント#N |
-| 仕様 | [仕様項目] | 本文 / コメント#N |
-| 画面 | [画面名] | 本文 |
-| API | [エンドポイント] | コメント#N |
-| ... | ... | ... |
+| 決定 | [決定事項] | [コメント#N (@user)](comment-url) |
+| 仕様 | [仕様項目] | [本文](issue-url) |
+| 画面 | [画面名] | [本文](issue-url) |
+| API | [エンドポイント] | [コメント#N (@user)](comment-url) |
+
+**ソース列のルール**:
+- 可能な限りパーマリンクを貼る
+- コメントの場合はコメント番号と投稿者を記載
+
+---
+
+## 原文
+
+<details>
+<summary>📄 原文（YYYY-MM-DD ビジュアライズ前）</summary>
+
+[元のissue本文をそのまま保持。変更前の内容をトレーサビリティのために残す]
+
+</details>
 ```
 
 **出力順序**:
-1. サマリー（基本情報）
+1. サマリー（目的の簡潔な説明）
 2. 結論・決定事項（最重要）
 3. 仕様（整理された要件）
 4. 図表（視覚化）
 5. タスク（実装項目）
 6. 抽出した要素（トレーサビリティ）
+7. 原文（折りたたみで保持）
+
+**除外する項目**:
+- サマリーテーブル（メタデータはGitHubのUIで確認可能）
+- タイムライン（ganttチャート）
 
 If diagram generation fails, output a simplified table instead.
 
@@ -482,7 +483,6 @@ If diagram generation fails, output a simplified table instead.
 | `flow` | 処理フロー（条件分岐あり） | flowchart TD |
 | `sequence` | API/通信 | sequenceDiagram |
 | `state` | 状態遷移 | stateDiagram-v2 |
-| `timeline` | 経過・履歴 | gantt |
 
 ### 拡張タイプ
 
@@ -494,7 +494,7 @@ If diagram generation fails, output a simplified table instead.
 | `auth` | 認証・認可フロー | sequenceDiagram |
 | `data` | データフロー | flowchart LR |
 | `deploy` | デプロイ・環境構成 | flowchart |
-| `job` | ジョブ/バッチ処理 | gantt / flowchart |
+| `job` | ジョブ/バッチ処理 | flowchart |
 
 ### 特殊タイプ
 

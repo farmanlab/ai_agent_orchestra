@@ -17,22 +17,25 @@ usage() {
     echo "オプション:"
     echo "  -r, --repo     GitHubリポジトリ (デフォルト: $DEFAULT_REPO)"
     echo "  -b, --branch   ブランチ名 (デフォルト: $DEFAULT_BRANCH)"
+    echo "  -d, --here     カレントディレクトリにコピー（デフォルトはホームディレクトリ）"
     echo "  -f, --force    既存ファイルを確認なしで上書き"
     echo "  -v, --verbose  詳細な出力（同一ファイルも表示）"
     echo "  -h, --help     このヘルプメッセージを表示"
     echo ""
-    echo "このスクリプトは以下のフォルダをホームディレクトリにコピーします:"
+    echo "このスクリプトは以下のフォルダをコピーします:"
     echo "  .agents, .claude, .cursor, .github"
     echo ""
     echo "例:"
     echo "  $0 -r username/repo -b main -f"
     echo "  $0 -v                           # 詳細出力"
+    echo "  $0 --here                       # カレントディレクトリにコピー"
     exit 1
 }
 
 # オプション解析
 FORCE=false
 VERBOSE=false
+HERE=false
 REPO="$DEFAULT_REPO"
 BRANCH="$DEFAULT_BRANCH"
 
@@ -45,6 +48,10 @@ while [[ $# -gt 0 ]]; do
         -b|--branch)
             BRANCH="$2"
             shift 2
+            ;;
+        -d|--here)
+            HERE=true
+            shift
             ;;
         -f|--force)
             FORCE=true
@@ -64,7 +71,12 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-HOME_DIR="$HOME"
+# コピー先ディレクトリの決定
+if [ "$HERE" = true ]; then
+    TARGET_DIR="$(pwd)"
+else
+    TARGET_DIR="$HOME"
+fi
 TEMP_DIR=$(mktemp -d)
 ZIP_FILE="$TEMP_DIR/repo.zip"
 
@@ -82,7 +94,7 @@ FOLDERS=(".agents" ".claude" ".cursor" ".github")
 echo -e "${GREEN}=== フォルダコピースクリプト ===${NC}"
 echo "リポジトリ: $REPO"
 echo "ブランチ: $BRANCH"
-echo "コピー先: $HOME_DIR"
+echo "コピー先: $TARGET_DIR"
 echo ""
 
 # スクリプトがローカルリポジトリ内で実行されているかチェック
@@ -188,7 +200,7 @@ copy_file() {
 # 各フォルダをコピー
 for folder in "${FOLDERS[@]}"; do
     SRC="$SRC_DIR/$folder"
-    DEST="$HOME_DIR/$folder"
+    DEST="$TARGET_DIR/$folder"
 
     # コピー元フォルダの存在確認
     if [ ! -d "$SRC" ]; then

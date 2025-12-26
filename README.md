@@ -35,7 +35,7 @@ git clone https://github.com/farmanlab/ai_agent_orchestra.git
 cd ai_agent_orchestra
 
 # 設定を生成
-.agents/sync/sync.sh all
+.agents/scripts/sync/sync.sh all
 
 # 動作確認
 cat CLAUDE.md
@@ -48,8 +48,8 @@ cat CLAUDE.md
 cp -r /path/to/ai_agent_orchestra/.agents .
 
 # 初期化と同期
-.agents/sync/sync.sh init
-.agents/sync/sync.sh all
+.agents/scripts/sync/sync.sh init
+.agents/scripts/sync/sync.sh all
 
 # Git に追加
 git add .agents/ .claude/ .cursor/ .github/ CLAUDE.md AGENTS.md
@@ -122,7 +122,7 @@ description: 私のカスタムルール
 EOF
 
 # 同期して各エージェント向けに変換
-.agents/sync/sync.sh all
+.agents/scripts/sync/sync.sh all
 ```
 
 ### スキルを追加する
@@ -145,7 +145,7 @@ triggers: [keyword1, keyword2]
 EOF
 
 # 同期
-.agents/sync/sync.sh all
+.agents/scripts/sync/sync.sh all
 ```
 
 ### エージェントを追加する
@@ -166,7 +166,7 @@ model: sonnet
 EOF
 
 # 同期
-.agents/sync/sync.sh all
+.agents/scripts/sync/sync.sh all
 ```
 
 ### コマンドを追加する
@@ -187,7 +187,7 @@ argument-hint: [引数のヒント]
 EOF
 
 # 同期
-.agents/sync/sync.sh all
+.agents/scripts/sync/sync.sh all
 
 # 使用方法：Claude Code や Cursor で
 # /my-command [引数]
@@ -251,24 +251,24 @@ AGENTS.md                        # Copilot エージェント定義
 
 ```bash
 # 全エージェントに同期
-.agents/sync/sync.sh all
+.agents/scripts/sync/sync.sh all
 
 # 特定エージェントのみ
-.agents/sync/sync.sh claude
-.agents/sync/sync.sh cursor
-.agents/sync/sync.sh copilot
+.agents/scripts/sync/sync.sh claude
+.agents/scripts/sync/sync.sh cursor
+.agents/scripts/sync/sync.sh copilot
 
 # Git hooks をインストール（コミット時に自動同期）
-.agents/sync/sync.sh install-hooks
+.agents/scripts/sync/sync.sh install-hooks
 
 # 生成ファイルをクリーンアップ
-.agents/sync/sync.sh clean
+.agents/scripts/sync/sync.sh clean
 
 # 詳細ログ表示
-.agents/sync/sync.sh --verbose all
+.agents/scripts/sync/sync.sh --verbose all
 
 # ドライラン（変更せず確認のみ）
-.agents/sync/sync.sh --dry-run all
+.agents/scripts/sync/sync.sh --dry-run all
 ```
 
 ## トラブルシューティング
@@ -277,10 +277,10 @@ AGENTS.md                        # Copilot エージェント定義
 
 ```bash
 # 実行権限を確認
-chmod +x .agents/sync/*.sh
+chmod +x .agents/scripts/sync/*.sh
 
 # 詳細ログで実行
-.agents/sync/sync.sh --verbose all
+.agents/scripts/sync/sync.sh --verbose all
 ```
 
 ### 変更が反映されない

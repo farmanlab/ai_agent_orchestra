@@ -134,7 +134,7 @@ Session Learning Workflow:
 ユーザーが承認したら：
 
 1. **ファイル作成**: 指定の保存先に新規ファイルを作成
-2. **Sync実行**: `.agents/sync/sync.sh all` で全ツールに反映
+2. **Sync実行**: `.agents/scripts/sync/sync.sh all` で全ツールに反映
 3. **報告**: 作成したファイルパスを通知
 
 ## 提案のガイドライン

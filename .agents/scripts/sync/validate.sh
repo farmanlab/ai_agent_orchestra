@@ -6,7 +6,7 @@
 # Note: set -e is not used here to allow proper error counting
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 AGENTS_DIR="$REPO_ROOT/.agents"
 
 # カラー定義
@@ -200,7 +200,7 @@ validate_directory_structure() {
         "$AGENTS_DIR/rules"
         "$AGENTS_DIR/agents"
         "$AGENTS_DIR/commands"
-        "$AGENTS_DIR/sync"
+        "$AGENTS_DIR/scripts/sync"
     )
 
     local all_valid=true
@@ -226,21 +226,23 @@ validate_rules() {
         return
     fi
 
-    if ! compgen -G "$AGENTS_DIR/rules/*.md" > /dev/null 2>&1; then
+    # 再帰的に .md ファイルを検索
+    local rule_files=$(find "$AGENTS_DIR/rules" -type f -name "*.md" 2>/dev/null)
+    if [ -z "$rule_files" ]; then
         log_warning "No rule files found"
         return
     fi
 
     find "$AGENTS_DIR/rules" -type f -name "*.md" | while IFS= read -r file; do
-        local filename=$(basename "$file")
+        local relative_path="${file#$AGENTS_DIR/rules/}"
         local frontmatter=$(extract_frontmatter "$file")
 
         # 行数チェック（公式仕様: Cursor推奨 500行以下）
-        validate_line_count "$file" "$filename"
+        validate_line_count "$file" "rules/$relative_path"
 
         # frontmatter はオプション（Claude Code公式仕様）
         if [ -z "$frontmatter" ]; then
-            log_info "[$filename] No frontmatter (optional for rules)"
+            log_info "[rules/$relative_path] No frontmatter (optional for rules)"
             continue
         fi
 
@@ -250,21 +252,21 @@ validate_rules() {
 
         # name がある場合は形式を検証
         if [ -n "$name" ]; then
-            validate_name_format "$name" "$filename"
+            validate_name_format "$name" "rules/$relative_path"
         fi
 
         # description がある場合は文字数を検証
         if [ -n "$description" ]; then
-            validate_description_length "$description" "$filename"
+            validate_description_length "$description" "rules/$relative_path"
         fi
 
         # paths フィールドの存在確認と形式検証
         local has_paths=$(echo "$frontmatter" | grep -c "^paths:" || true)
         if [ "$has_paths" -eq 0 ]; then
-            log_info "[$filename] No 'paths' field (rule applies to all files)"
+            log_info "[rules/$relative_path] No 'paths' field (rule applies to all files)"
         else
             # paths 形式を検証（単一文字列であること）
-            validate_paths_format "$frontmatter" "$filename"
+            validate_paths_format "$frontmatter" "rules/$relative_path"
         fi
 
     done
@@ -282,20 +284,22 @@ validate_agents() {
         return
     fi
 
-    if ! compgen -G "$AGENTS_DIR/agents/*.md" > /dev/null 2>&1; then
+    # 再帰的に .md ファイルを検索
+    local agent_files=$(find "$AGENTS_DIR/agents" -type f -name "*.md" 2>/dev/null)
+    if [ -z "$agent_files" ]; then
         log_warning "No agent files found"
         return
     fi
 
     find "$AGENTS_DIR/agents" -type f -name "*.md" | while IFS= read -r file; do
-        local filename=$(basename "$file")
+        local relative_path="${file#$AGENTS_DIR/agents/}"
         local frontmatter=$(extract_frontmatter "$file")
 
         # 行数チェック
-        validate_line_count "$file" "$filename"
+        validate_line_count "$file" "agents/$relative_path"
 
         if [ -z "$frontmatter" ]; then
-            log_error "[$filename] No frontmatter found"
+            log_error "[agents/$relative_path] No frontmatter found"
             continue
         fi
 
@@ -305,31 +309,31 @@ validate_agents() {
         local tools=$(get_array_field "$frontmatter" "tools")
 
         if [ -z "$name" ]; then
-            log_error "[$filename] Missing required field: name"
+            log_error "[agents/$relative_path] Missing required field: name"
         else
             # name フォーマット検証（公式仕様: lowercase letters and hyphens）
-            validate_name_format "$name" "$filename"
+            validate_name_format "$name" "agents/$relative_path"
         fi
 
         if [ -z "$description" ]; then
-            log_error "[$filename] Missing required field: description"
+            log_error "[agents/$relative_path] Missing required field: description"
         else
-            validate_description_length "$description" "$filename"
+            validate_description_length "$description" "agents/$relative_path"
         fi
 
         # tools はオプション（省略時は全ツール継承）
         if [ -z "$tools" ]; then
-            log_info "[$filename] No tools defined (inherits all tools)"
+            log_info "[agents/$relative_path] No tools defined (inherits all tools)"
         fi
 
         # tools と skills の形式検証（インライン配列形式を推奨）
-        validate_array_field_format "$frontmatter" "$filename" "tools"
-        validate_array_field_format "$frontmatter" "$filename" "skills"
+        validate_array_field_format "$frontmatter" "agents/$relative_path" "tools"
+        validate_array_field_format "$frontmatter" "agents/$relative_path" "skills"
 
         # model フィールドの検証（公式仕様: sonnet, opus, haiku, inherit）
         local model=$(get_field_value "$frontmatter" "model")
         if [ -n "$model" ] && [[ ! "$model" =~ ^(sonnet|opus|haiku|inherit)$ ]]; then
-            log_warning "[$filename] Unusual model value: '$model' (expected: sonnet, opus, haiku, or inherit)"
+            log_warning "[agents/$relative_path] Unusual model value: '$model' (expected: sonnet, opus, haiku, or inherit)"
         fi
 
     done
@@ -347,28 +351,26 @@ validate_skills() {
         return
     fi
 
-    # 各スキルディレクトリをチェック
-    for skill_dir in "$AGENTS_DIR/skills"/*/; do
-        if [ ! -d "$skill_dir" ]; then
-            continue
-        fi
+    # 再帰的に SKILL.md ファイルを検索
+    local skill_files=$(find "$AGENTS_DIR/skills" -type f -name "SKILL.md" 2>/dev/null)
+    if [ -z "$skill_files" ]; then
+        log_warning "No skill files found"
+        return
+    fi
 
-        local skill_name=$(basename "$skill_dir")
-        local skill_file="$skill_dir/SKILL.md"
-
-        # SKILL.md の存在チェック（公式仕様: 必須）
-        if [ ! -f "$skill_file" ]; then
-            log_error "[skills/$skill_name] Missing required SKILL.md file"
-            continue
-        fi
+    # 各 SKILL.md ファイルをチェック
+    find "$AGENTS_DIR/skills" -type f -name "SKILL.md" | while IFS= read -r skill_file; do
+        local skill_dir=$(dirname "$skill_file")
+        local relative_dir="${skill_dir#$AGENTS_DIR/skills/}"
+        local relative_path="skills/$relative_dir/SKILL.md"
 
         local frontmatter=$(extract_frontmatter "$skill_file")
 
         # 行数チェック
-        validate_line_count "$skill_file" "skills/$skill_name/SKILL.md"
+        validate_line_count "$skill_file" "$relative_path"
 
         if [ -z "$frontmatter" ]; then
-            log_error "[skills/$skill_name/SKILL.md] No frontmatter found"
+            log_error "[$relative_path] No frontmatter found"
             continue
         fi
 
@@ -377,39 +379,34 @@ validate_skills() {
         local description=$(get_field_value "$frontmatter" "description")
 
         if [ -z "$name" ]; then
-            log_error "[skills/$skill_name/SKILL.md] Missing required field: name"
+            log_error "[$relative_path] Missing required field: name"
         else
             # name フォーマット検証（公式仕様: max 64 chars, lowercase/numbers/hyphens）
-            validate_name_format "$name" "skills/$skill_name/SKILL.md" 64
+            validate_name_format "$name" "$relative_path" 64
         fi
 
         if [ -z "$description" ]; then
-            log_error "[skills/$skill_name/SKILL.md] Missing required field: description"
+            log_error "[$relative_path] Missing required field: description"
         else
             # description 文字数検証（公式仕様: max 1024 chars）
-            validate_description_length "$description" "skills/$skill_name/SKILL.md" 1024
+            validate_description_length "$description" "$relative_path" 1024
 
             # description にトリガーキーワードが含まれているか確認（推奨）
             if [[ ! "$description" =~ [Uu]se\ when|[Uu]se\ for|[Ww]hen\ working ]]; then
-                log_warning "[skills/$skill_name/SKILL.md] description should include trigger keywords (e.g., 'Use when...')"
+                log_warning "[$relative_path] description should include trigger keywords (e.g., 'Use when...')"
             fi
         fi
 
         # allowed-tools の検証（オプション）
         local allowed_tools=$(get_field_value "$frontmatter" "allowed-tools")
         if [ -n "$allowed_tools" ]; then
-            log_info "[skills/$skill_name/SKILL.md] allowed-tools: $allowed_tools"
+            log_info "[$relative_path] allowed-tools: $allowed_tools"
         fi
 
-        # 参照ファイルの存在チェック
-        local ref_count=0
-        for ref_file in "$skill_dir"*.md; do
-            if [ -f "$ref_file" ] && [ "$ref_file" != "$skill_file" ]; then
-                ((ref_count++))
-            fi
-        done
+        # 参照ファイルの存在チェック（再帰的）
+        local ref_count=$(find "$skill_dir" -type f -name "*.md" ! -name "SKILL.md" 2>/dev/null | wc -l | tr -d ' ')
         if [ "$ref_count" -gt 0 ]; then
-            log_info "[skills/$skill_name] Found $ref_count additional reference file(s)"
+            log_info "[skills/$relative_dir] Found $ref_count additional reference file(s)"
         fi
 
     done
@@ -426,17 +423,19 @@ validate_commands() {
         return
     fi
 
-    if ! compgen -G "$AGENTS_DIR/commands/*.md" > /dev/null 2>&1; then
+    # 再帰的に .md ファイルを検索
+    local command_files=$(find "$AGENTS_DIR/commands" -type f -name "*.md" 2>/dev/null)
+    if [ -z "$command_files" ]; then
         log_warning "No command files found"
         return
     fi
 
     find "$AGENTS_DIR/commands" -type f -name "*.md" | while IFS= read -r file; do
-        local filename=$(basename "$file")
+        local relative_path="${file#$AGENTS_DIR/commands/}"
         local frontmatter=$(extract_frontmatter "$file")
 
         if [ -z "$frontmatter" ]; then
-            log_error "[$filename] No frontmatter found"
+            log_error "[commands/$relative_path] No frontmatter found"
             continue
         fi
 
@@ -444,7 +443,7 @@ validate_commands() {
         local description=$(get_field_value "$frontmatter" "description")
 
         if [ -z "$description" ]; then
-            log_error "[$filename] Missing required field: description"
+            log_error "[commands/$relative_path] Missing required field: description"
         fi
 
         # name フィールドはオプション（descriptionがあれば十分）
@@ -458,8 +457,8 @@ validate_commands() {
 validate_file_naming() {
     log_info "Validating file naming conventions..."
 
-    # すべての .md ファイルをチェック（skillsはシンボリックリンクで管理、tmpは作業用）
-    find "$AGENTS_DIR" -type f -name "*.md" ! -path "*/sync/*" ! -path "*/skills/*" ! -path "*/tmp/*" | while IFS= read -r file; do
+    # すべての .md ファイルをチェック（skillsはシンボリックリンクで管理、tmpは作業用、promptsは参照ファイル）
+    find "$AGENTS_DIR" -type f -name "*.md" ! -path "*/sync/*" ! -path "*/skills/*" ! -path "*/tmp/*" ! -path "*/prompts/*" ! -path "*/scripts/*" | while IFS= read -r file; do
         local filename=$(basename "$file")
 
         # ファイル名に空白やアルファベット以外の特殊文字が含まれていないかチェック
@@ -481,7 +480,7 @@ validate_file_naming() {
 validate_yaml_syntax() {
     log_info "Validating YAML syntax..."
 
-    find "$AGENTS_DIR" -type f -name "*.md" ! -path "*/sync/*" ! -path "*/skills/*" ! -path "*/tmp/*" ! -name "README.md" | while IFS= read -r file; do
+    find "$AGENTS_DIR" -type f -name "*.md" ! -path "*/sync/*" ! -path "*/skills/*" ! -path "*/tmp/*" ! -path "*/prompts/*" ! -path "*/scripts/*" ! -name "README.md" | while IFS= read -r file; do
         local filename=$(basename "$file")
         local dirname=$(basename "$(dirname "$file")")
 

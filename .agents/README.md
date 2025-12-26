@@ -151,19 +151,19 @@ allowed-tools: [Tool1, Tool2, ...]  # Claude Code用（オプション）
 
 ```bash
 # リポジトリルートで実行
-.agents/sync/sync.sh init
+.agents/scripts/sync/sync.sh init
 ```
 
 ### 同期実行
 
 ```bash
 # 全エージェント向けに同期
-.agents/sync/sync.sh all
+.agents/scripts/sync/sync.sh all
 
 # 特定エージェントのみ
-.agents/sync/sync.sh claude
-.agents/sync/sync.sh cursor
-.agents/sync/sync.sh copilot
+.agents/scripts/sync/sync.sh claude
+.agents/scripts/sync/sync.sh cursor
+.agents/scripts/sync/sync.sh copilot
 ```
 
 ### 設定ファイルの検証
@@ -172,7 +172,7 @@ allowed-tools: [Tool1, Tool2, ...]  # Claude Code用（オプション）
 
 ```bash
 # 設定ファイルを検証
-.agents/sync/sync.sh validate
+.agents/scripts/sync/sync.sh validate
 ```
 
 **検証項目**:
@@ -190,7 +190,7 @@ allowed-tools: [Tool1, Tool2, ...]  # Claude Code用（オプション）
 
 ```bash
 # プロンプトサイズをチェック
-.agents/sync/sync.sh check-size
+.agents/scripts/sync/sync.sh check-size
 ```
 
 **チェック項目**:
@@ -213,7 +213,7 @@ allowed-tools: [Tool1, Tool2, ...]  # Claude Code用（オプション）
 
 ```bash
 # 高速な静的チェック
-.agents/sync/sync.sh check-quality
+.agents/scripts/sync/sync.sh check-quality
 ```
 
 **検証観点**:
@@ -274,7 +274,7 @@ allowed-tools: [Tool1, Tool2, ...]  # Claude Code用（オプション）
 
 ```bash
 # pre-commit hookで自動同期
-.agents/sync/sync.sh install-hooks
+.agents/scripts/sync/sync.sh install-hooks
 ```
 
 コミット時に自動的に同期されるようになります。
@@ -283,13 +283,13 @@ allowed-tools: [Tool1, Tool2, ...]  # Claude Code用（オプション）
 
 ```bash
 # 詳細ログ表示
-.agents/sync/sync.sh --verbose all
+.agents/scripts/sync/sync.sh --verbose all
 
 # ドライラン（実際には変更しない）
-.agents/sync/sync.sh --dry-run all
+.agents/scripts/sync/sync.sh --dry-run all
 
 # 生成ファイルをクリーンアップ
-.agents/sync/sync.sh clean
+.agents/scripts/sync/sync.sh clean
 ```
 
 ## 変換ルール
@@ -391,7 +391,7 @@ project/
 vim .agents/rules/new-rule.md
 
 # 2. 同期
-.agents/sync/sync.sh all
+.agents/scripts/sync/sync.sh all
 
 # 3. コミット
 git add .agents/ .claude/ .cursor/ .github/ CLAUDE.md AGENTS.md
@@ -418,7 +418,7 @@ triggers: [keyword1, keyword2]
 EOF
 
 # 3. 同期
-.agents/sync/sync.sh all
+.agents/scripts/sync/sync.sh all
 ```
 
 ## ベストプラクティス
@@ -449,13 +449,13 @@ EOF
 
 ```bash
 # 権限確認
-ls -la .agents/sync/sync.sh
+ls -la .agents/scripts/sync/sync.sh
 
 # 実行権限付与
-chmod +x .agents/sync/*.sh
+chmod +x .agents/scripts/sync/*.sh
 
 # 詳細ログで実行
-.agents/sync/sync.sh --verbose all
+.agents/scripts/sync/sync.sh --verbose all
 ```
 
 ### 特定エージェントで認識されない

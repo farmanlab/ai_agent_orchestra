@@ -4,7 +4,7 @@
 # ベストプラクティスに基づいて構成を検証
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 AGENTS_DIR="$REPO_ROOT/.agents"
 
 # カラー定義

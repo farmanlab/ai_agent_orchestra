@@ -165,6 +165,267 @@ Review Progress:
 ---
 
 
+## comparing-figma-html
+
+# Figma-HTML Comparison Agent
+
+FigmaデザインのスクリーンショットとHTMLを視覚的に比較し、差分を指摘するエージェントです。
+
+## 役割
+
+`converting-figma-to-html` エージェントで生成したHTMLがFigmaデザインと一致しているかを検証し、差分があれば具体的に指摘します。
+
+## 目次
+
+1. [タスク](#タスク)
+2. [プロセス](#プロセス)
+3. [比較観点](#比較観点)
+4. [出力形式](#出力形式)
+5. [使い方](#使い方)
+
+## タスク
+
+以下のタスクを実行:
+
+1. Figmaスクリーンショットの取得
+2. ローカルHTMLの読み込みと表示
+3. 視覚的な比較分析
+4. 差分レポートの生成
+
+## プロセス
+
+### Step 0: 入力確認
+
+**必要な入力**:
+- Figma URL または `fileKey` + `nodeId`
+- 生成済みHTMLファイルのパス
+
+**URLからの抽出**:
+```
+URL: https://figma.com/design/{fileKey}/{fileName}?node-id={nodeId}
+抽出: fileKey, nodeId（ハイフンをコロンに変換: 1-2 → 1:2）
+```
+
+---
+
+### Step 1: Figmaスクリーンショット取得
+
+```bash
+mcp__figma__get_screenshot(fileKey, nodeId)
+```
+
+取得した画像を視覚的な参照基準として保持。
+
+---
+
+### Step 2: HTML読み込み
+
+```bash
+Read: file_path="[HTMLファイルパス]"
+```
+
+HTMLの構造とスタイルを確認。
+
+---
+
+### Step 3: 視覚比較
+
+Figmaスクリーンショットと生成HTMLを以下の観点で比較:
+
+#### 3.1 レイアウト比較
+- 要素の配置（上下左右）
+- 要素間のスペーシング（gap, margin, padding）
+- 全体的な構造（Flexbox/Grid）
+
+#### 3.2 サイズ比較
+- 幅・高さ
+- アスペクト比
+- コンテナサイズ
+
+#### 3.3 スタイル比較
+- 背景色
+- テキストカラー
+- ボーダー・シャドウ
+- 角丸（border-radius）
+
+#### 3.4 タイポグラフィ比較
+- フォントサイズ
+- フォントウェイト
+- 行間（line-height）
+- 文字間隔（letter-spacing）
+
+#### 3.5 アイコン・画像比較
+- 配置位置
+- サイズ
+- 色（アイコンカラー）
+
+#### 3.6 コンテンツ比較
+- テキスト内容の一致
+- 要素の有無
+- 順序の一致
+
+---
+
+### Step 4: 差分レポート生成
+
+検出した差分を重大度別に分類してレポートを生成。
+
+**差分がある場合**:
+1. 修正チェックリストを提示
+2. 修正後、Step 1 から再比較を実行
+
+If no differences found, report as "一致" and complete.
+
+---
+
+## 比較観点
+
+| カテゴリ | 確認項目 | 重大度基準 |
+|---------|---------|-----------|
+| レイアウト | 配置・スペーシング | 高: 配置が大きくずれている |
+| サイズ | 幅・高さ | 高: 見た目に明らかな違い |
+| カラー | 背景・テキスト色 | 中: 色が異なる |
+| タイポグラフィ | フォントサイズ・ウェイト | 中: サイズ差が顕著 |
+| アイコン | 位置・サイズ | 低: 軽微な差異 |
+| コンテンツ | テキスト一致 | 高: 内容が異なる |
+
+### 重大度の定義
+
+- **高 (Critical)**: デザインの意図が伝わらないレベルの差異
+- **中 (Major)**: 目視で明確に違いがわかる差異
+- **低 (Minor)**: 細かく見ないとわからない差異
+
+---
+
+## 出力形式
+
+```markdown
+# Figma-HTML 比較レポート
+
+## 概要
+
+| 項目 | 値 |
+|------|-----|
+| Figma URL | [URL] |
+| HTMLファイル | [パス] |
+| 比較日時 | YYYY-MM-DD HH:mm |
+| 総合判定 | ✅ 一致 / ⚠️ 軽微な差異あり / ❌ 要修正 |
+
+---
+
+## 検出された差分
+
+### 高優先度 (Critical)
+
+#### [差分1のタイトル]
+- **カテゴリ**: レイアウト / サイズ / カラー / タイポグラフィ / アイコン / コンテンツ
+- **場所**: [要素の特定（data-figma-node または説明）]
+- **Figma**: [期待される状態]
+- **HTML**: [現在の状態]
+- **修正提案**: [具体的な修正方法]
+
+---
+
+### 中優先度 (Major)
+
+#### [差分2のタイトル]
+- **カテゴリ**: ...
+- **場所**: ...
+- **Figma**: ...
+- **HTML**: ...
+- **修正提案**: ...
+
+---
+
+### 低優先度 (Minor)
+
+#### [差分3のタイトル]
+- **カテゴリ**: ...
+- **場所**: ...
+- **Figma**: ...
+- **HTML**: ...
+- **修正提案**: ...
+
+---
+
+## 一致している点
+
+以下の点は正しく実装されています:
+
+- ✅ [一致点1]
+- ✅ [一致点2]
+- ✅ [一致点3]
+
+---
+
+## 修正チェックリスト
+
+修正後、以下を確認してください:
+
+```
+- [ ] [高優先度の差分1]を修正
+- [ ] [高優先度の差分2]を修正
+- [ ] [中優先度の差分]を修正（推奨）
+- [ ] 修正後、再度比較を実行
+```
+
+---
+
+## 補足情報
+
+### 確認できなかった項目
+- [アニメーション、ホバー状態など動的な要素]
+
+### 注意事項
+- [その他の留意点]
+```
+
+---
+
+## 使い方
+
+### 基本的な使い方
+
+```
+@comparing-figma-html
+
+Figma URL: https://figma.com/design/XXXXX/Project?node-id=1234-5678
+HTMLファイル: path/to/screen-name/index.html
+```
+
+### 複数画面の比較
+
+```
+@comparing-figma-html
+
+以下の画面を比較してください:
+
+1. Figma: https://figma.com/design/XXXXX/Project?node-id=1234-5678
+   HTML: path/to/screen-a/index.html
+
+2. Figma: https://figma.com/design/XXXXX/Project?node-id=5678-1234
+   HTML: path/to/screen-b/index.html
+```
+
+---
+
+## トラブルシューティング
+
+| 問題 | 対処法 |
+|------|--------|
+| Figma MCP接続エラー | `/mcp` で再接続を試行 |
+| HTMLファイルが見つからない | パスを確認、Glob で検索 |
+| 画像が表示されない | Figmaアセット期限切れの可能性 |
+
+---
+
+## 参照
+
+- **[converting-figma-to-html](../skills/converting-figma-to-html/SKILL.md)**: HTML変換スキル
+
+---
+
+
 ## converting-figma-to-html
 
 # Figma to HTML 変換エージェント
@@ -324,6 +585,258 @@ mcp__figma__get_design_context(fileKey, nodeId, clientLanguages="html,css")
 - FigmaアセットURLは7日で期限切れ - プロダクション前にダウンロード
 - デフォルト出力は静的HTML - "React"や"Vue"が必要な場合は指定
 - 位置/サイズの正確性が優先 - 完璧な視覚的一致は二次的
+
+---
+
+
+## mapping-html-to-api
+
+# HTML to API Mapping Agent
+
+Figma生成HTMLのコンテンツ要素をAPIレスポンスフィールドにマッピングし、データバインディング設計書を作成するエージェントです。
+
+## 役割
+
+`converting-figma-to-html` で生成したHTMLの `data-figma-content-*` 属性を OpenAPI 仕様書のフィールドにマッピングし、フロントエンド実装に必要なデータバインディング設計書を作成します。
+
+## 目次
+
+1. [タスク](#タスク)
+2. [プロセス](#プロセス)
+3. [マッピングルール](#マッピングルール)
+4. [出力形式](#出力形式)
+5. [使い方](#使い方)
+
+## タスク
+
+以下のタスクを実行:
+
+1. content_analysis.md からコンテンツ要素を抽出
+2. OpenAPI 仕様書から API フィールドを解析
+3. 自動マッピングと再分類
+4. データ変換ロジックの特定
+5. マッピングレポート生成
+6. オーバーレイスクリプト生成（任意）
+
+## プロセス
+
+### Step 0: 入力確認
+
+**必要な入力**:
+- `content_analysis.md`: Figma変換時に生成されたコンテンツ分析
+- OpenAPI 仕様書（YAML/JSON）: API スキーマ定義
+- HTMLファイル（任意）: 生成済みHTML
+
+---
+
+### Step 1: データ収集
+
+```bash
+Read: content_analysis.md
+Read: openapi/index.yaml  # or swagger.yaml, api-spec.json
+```
+
+**抽出項目**:
+
+| ソース | 抽出内容 |
+|--------|---------|
+| content_analysis.md | Content ID, data-figma-content属性, 分類, データ型 |
+| OpenAPI | フィールド名, 型, 必須/任意, ネスト構造 |
+
+---
+
+### Step 2: 自動マッピング
+
+以下の優先度でマッチングを実行:
+
+| 優先度 | ルール | 例 |
+|--------|--------|-----|
+| 1 | 完全一致（snake↔kebab） | `user_id` ↔ `user-id` |
+| 2 | 部分一致（接尾辞除去） | `name_value` → `name` |
+| 3 | 意味的一致 | `title` ↔ `name` |
+
+**再分類条件（static → dynamic）**:
+- APIフィールドにマッチした
+- 値の変動可能性あり
+- 配列要素の一部
+
+---
+
+### Step 3: データ変換分析
+
+マッピングされた要素のデータ変換要否を分析:
+
+| パターン | 検出方法 | 変換例 |
+|---------|---------|--------|
+| 日付 | ISO8601形式 | `formatDate(value, 'yyyy/MM/dd')` |
+| 結合 | 複数フィールド | `${lastName} ${firstName}` |
+| 列挙 | コード値 | `STATUS_MAP[value]` |
+| 条件 | 分岐ロジック | `score >= 80 ? '合格' : '不合格'` |
+
+---
+
+### Step 4: レポート生成
+
+`{screen}_api_mapping.md` を生成。
+
+If unmatched elements exist, list them in "未マッチ要素" section and ask user for manual mapping.
+
+---
+
+### Step 5: オーバーレイ生成（任意）
+
+ユーザーが要求した場合、`mapping-overlay.js` を生成:
+
+1. テンプレートを読み込み: `templates/mapping-overlay.js`
+2. `{{MAPPING_ENTRIES}}` にマッピングデータを挿入
+3. HTMLに `<script src="mapping-overlay.js"></script>` を追加
+
+If overlay generation fails, report error and continue.
+
+---
+
+## マッピングルール
+
+### タイプ分類
+
+| タイプ | 説明 | 色 |
+|--------|------|-----|
+| static | 固定ラベル・UI文言 | グレー |
+| dynamic | APIから取得 | 緑 |
+| dynamic_list | API配列データ | 青 |
+| local | ローカルステート | 紫 |
+| asset | 画像・アイコン | 黄 |
+
+### マッピングデータ形式
+
+```javascript
+'data-figma-content-{attr}': {
+  type: 'static|dynamic|dynamic_list|local|asset',
+  endpoint: 'GET /api/endpoint/{id}' | null,
+  apiField: 'response.field.path' | null,
+  transform: '変換ロジック' | null,
+  label: '日本語ラベル'
+}
+```
+
+---
+
+## 出力形式
+
+```markdown
+# データバインディング設計書: {画面名}
+
+## 概要
+
+| 項目 | 値 |
+|------|-----|
+| 対象画面 | {画面名} |
+| APIエンドポイント | `{method} {path}` |
+| 生成日時 | YYYY-MM-DD HH:mm |
+
+---
+
+## マッピング一覧
+
+### 確定マッピング
+
+| Content ID | data-figma-content | API Field | 型 | 変換 |
+|------------|-------------------|-----------|-----|------|
+| user-name | user-name-dynamic | user.display_name | string | そのまま |
+| created-at | created-date | created_at | datetime | formatDate |
+
+### リスト要素
+
+**リストID**: `course-list`
+**APIフィールド**: `courses[]`
+
+| 子要素 | API Field | 変換 |
+|--------|-----------|------|
+| course-title | courses[].title | そのまま |
+| course-progress | courses[].progress | パーセント表示 |
+
+### 確定した静的要素
+
+| Content ID | 表示値 | 備考 |
+|------------|--------|------|
+| nav-title | マイページ | 固定 |
+| submit-btn | 送信する | 固定 |
+
+---
+
+## データ変換ロジック
+
+| Content ID | API Field | 変換種別 | ロジック |
+|------------|-----------|---------|---------|
+| created-date | created_at | 日付 | `formatDate(value, 'yyyy/MM/dd')` |
+| full-name | first_name, last_name | 結合 | `${last_name} ${first_name}` |
+
+---
+
+## 未マッチ要素
+
+| Content ID | 分類 | 備考 |
+|------------|------|------|
+| badge-count | dynamic | 対応するAPIフィールドなし |
+
+---
+
+## 未使用APIフィールド
+
+| Field | 型 | 未使用理由 |
+|-------|-----|-----------|
+| user.email | string | UIに表示なし |
+| user.phone | string | UIに表示なし |
+
+---
+
+## 実装メモ
+
+- [ ] badge-count の API フィールドを確認
+- [ ] 日付フォーマットのロケール対応
+```
+
+---
+
+## 使い方
+
+### 基本的な使い方
+
+```
+@mapping-html-to-api
+
+content_analysis.md: path/to/screen-name/content_analysis.md
+OpenAPI: openapi/index.yaml
+```
+
+### オーバーレイ付き
+
+```
+@mapping-html-to-api
+
+content_analysis.md: path/to/screen-name/content_analysis.md
+OpenAPI: openapi/index.yaml
+HTML: path/to/screen-name/index.html
+
+オーバーレイスクリプトも生成してください
+```
+
+---
+
+## トラブルシューティング
+
+| 問題 | 対処法 |
+|------|--------|
+| content_analysis.md が見つからない | Glob で検索、converting-figma-to-html を先に実行 |
+| OpenAPI 仕様書がない | API ドキュメントの場所を確認 |
+| マッチ率が低い | 手動マッピングを追加、命名規則を確認 |
+
+---
+
+## 参照
+
+- **[mapping-html-to-api スキル](../skills/mapping-html-to-api/SKILL.md)**: 詳細なワークフロー
+- **[converting-figma-to-html](../skills/converting-figma-to-html/SKILL.md)**: HTML生成スキル
 
 ---
 

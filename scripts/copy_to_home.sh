@@ -18,15 +18,21 @@ usage() {
     echo "  -r, --repo     GitHubリポジトリ (デフォルト: $DEFAULT_REPO)"
     echo "  -b, --branch   ブランチ名 (デフォルト: $DEFAULT_BRANCH)"
     echo "  -d, --here     カレントディレクトリにコピー（デフォルトはホームディレクトリ）"
-    echo "  -f, --force    既存ファイルを確認なしで上書き"
+    echo "  -a, --all      全フォルダを確認なしでコピー"
+    echo "  -f, --force    既存ファイルを確認なしで上書き（--all を含む）"
     echo "  -v, --verbose  詳細な出力（同一ファイルも表示）"
     echo "  -h, --help     このヘルプメッセージを表示"
     echo ""
     echo "このスクリプトは以下のフォルダをコピーします:"
     echo "  .agents, .claude, .cursor, .github"
     echo ""
+    echo "デフォルトでは各フォルダのコピー前に確認を求めます。"
+    echo "-a または -f オプションで確認をスキップできます。"
+    echo ""
     echo "例:"
-    echo "  $0 -r username/repo -b main -f"
+    echo "  $0                              # フォルダごとに確認"
+    echo "  $0 -a                           # 全フォルダを確認なしでコピー"
+    echo "  $0 -r username/repo -b main -f  # 強制上書き"
     echo "  $0 -v                           # 詳細出力"
     echo "  $0 --here                       # カレントディレクトリにコピー"
     exit 1
@@ -36,6 +42,7 @@ usage() {
 FORCE=false
 VERBOSE=false
 HERE=false
+ALL=false
 REPO="$DEFAULT_REPO"
 BRANCH="$DEFAULT_BRANCH"
 
@@ -53,8 +60,13 @@ while [[ $# -gt 0 ]]; do
             HERE=true
             shift
             ;;
+        -a|--all)
+            ALL=true
+            shift
+            ;;
         -f|--force)
             FORCE=true
+            ALL=true  # --force は --all を含む
             shift
             ;;
         -v|--verbose)
@@ -206,6 +218,28 @@ for folder in "${FOLDERS[@]}"; do
     if [ ! -d "$SRC" ]; then
         echo -e "${YELLOW}警告: $folder が見つかりません。スキップします。${NC}"
         continue
+    fi
+
+    # フォルダごとに確認（--all または --force がない場合）
+    if [ "$ALL" = false ]; then
+        # フォルダ内のファイル数をカウント
+        file_count=$(find "$SRC" -type f | wc -l | tr -d ' ')
+        echo -e "${YELLOW}$folder${NC} ($file_count ファイル) をコピーしますか? (y/N/a=全てyes): "
+        read answer < /dev/tty
+        case $answer in
+            [Aa]*)
+                ALL=true
+                echo -e "  ${GREEN}✓${NC} 以降のフォルダは確認なしでコピーします"
+                ;;
+            [Yy]*)
+                # このフォルダはコピーする
+                ;;
+            *)
+                echo -e "  ${YELLOW}✗${NC} $folder をスキップしました"
+                echo ""
+                continue
+                ;;
+        esac
     fi
 
     echo -e "${GREEN}$folder を処理中...${NC}"

@@ -16,7 +16,16 @@ Figmaデザインをプロダクション対応のHTMLファイルに変換し�
 - セマンティックHTML + Tailwind CSS
 - Figmaトレーサビリティ用のdata属性
 - 複数状態対応（デフォルト、空、エラー、ダイアログ）
-- コンテンツ分類とAPI仕様書
+- コンテンツ分類（static/dynamic の識別のみ）
+
+## 禁止事項
+
+**以下は絶対に行わないこと：**
+- API仕様の提案（エンドポイント、リクエスト/レスポンス形式）
+- データモデル設計の提案（エンティティ、スキーマ、型定義）
+- バックエンド実装に関する提案
+
+コンテンツ分析では「このUIに動的データが必要」という**事実の識別のみ**を行い、「どのようなAPIで取得すべきか」は提案しません。
 
 ## スキル参照
 
@@ -153,7 +162,7 @@ mcp__figma__get_design_context(fileKey, nodeId, clientLanguages="html,css")
 | ファイル | 内容 |
 |----------|------|
 | `{name}.html` | Tailwind CSS付き完全なHTML、全要素にdata属性 |
-| `{name}_content_analysis.md` | コンテンツ分類、デザイントークン、API仕様 |
+| `{name}_content_analysis.md` | コンテンツ分類（static/dynamic識別）、デザイントークン |
 | `{name}-{state}.html` | 各状態ごとの別HTML（該当する場合） |
 
 ---

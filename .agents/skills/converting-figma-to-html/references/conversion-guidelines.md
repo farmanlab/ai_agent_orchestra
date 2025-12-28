@@ -202,7 +202,7 @@
 ### 推奨構成
 
 ```
-.agents/tmp/{short-screen-name}/
+.outputs/{short-screen-name}/
 ├── index.html                   # 変換後のHTML
 ├── content_analysis.md          # コンテンツ分析
 └── assets/

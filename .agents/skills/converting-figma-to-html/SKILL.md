@@ -54,13 +54,16 @@ https://figma.com/design/XXXXX/Project?node-id=1234-5678
 ### 生成されるファイル
 
 ```
-.agents/tmp/{short-screen-name}/
-├── index.html                  # メインHTML（data属性付き）
-├── content_analysis.md         # コンテンツ分析
-└── preview.html                # デバイスフレーム付きプレビュー（オプション）
+.outputs/{short-screen-name}/
+├── index.html          # メインHTML（data属性付き）
+├── spec.md             # 画面仕様書（構造・スタイル、コンテンツ分析セクションを更新）
+└── preview.html        # デバイスフレーム付きプレビュー（オプション）
 ```
 
 `{short-screen-name}` はFigmaの画面名から生成した短い識別名（例: `homework-modal`）
+
+> **注意**: spec.md 内の static/dynamic 分類は**仮決定**です。
+> 実装時にレビューしてください。
 
 ## 詳細ガイド
 
@@ -71,7 +74,7 @@ https://figma.com/design/XXXXX/Project?node-id=1234-5678
 
 - Step 1: Figmaデータ取得（screenshot, design_context, metadata）
 - Step 2: HTML生成ルール（Tailwind CSS、data属性、レイアウト）
-- Step 3: コンテンツ分析（static/dynamic分類、データ要件）
+- Step 3: spec.md 更新（構造・スタイル、コンテンツ分析セクション）
 - Step 4: 品質チェック（ビジュアル確認、属性確認）
 
 ### 変換ガイドライン
@@ -95,8 +98,8 @@ https://figma.com/design/XXXXX/Project?node-id=1234-5678
 **[assets/](assets/)**: 各種テンプレートファイル
 
 - **[html-output.html](assets/html-output.html)**: HTMLテンプレート（変数付き）
-- **[content-analysis.md](assets/content-analysis.md)**: コンテンツ分析テンプレート
 - **[preview.html](assets/preview.html)**: プレビュー用ラッパー
+- **[../../templates/screen-spec.md](../../templates/screen-spec.md)**: 画面仕様書テンプレート
 
 ## 主要な機能
 
@@ -152,6 +155,19 @@ HTMLの各コンテンツを以下のカテゴリで整理：
 - Dynamic Island
 - Home Indicator
 
+### 6. mapping-overlay.js
+
+APIマッピング可視化のためのオーバーレイスクリプトを自動付与：
+
+```html
+<!-- HTMLの末尾に自動追加 -->
+<script src="mapping-overlay.js"></script>
+</body>
+</html>
+```
+
+マウスオーバーでコンテンツのマッピング情報（static/dynamic、APIフィールド等）を表示。
+
 ## ワークフロー（概要）
 
 ```
@@ -169,10 +185,10 @@ HTMLの各コンテンツを以下のカテゴリで整理：
    ├─> data属性を全要素に付与
    └─> プレースホルダーアイコンを配置
 
-5. コンテンツ分析
-   ├─> static/dynamic分類
-   ├─> データ要件抽出
-   └─> HTMLマッピング作成
+5. spec.md 更新
+   ├─> 「構造・スタイル」セクション
+   ├─> 「コンテンツ分析」セクション（static/dynamic分類）
+   └─> 完了チェックリストを更新
 
 6. プレビュー生成（オプション）
    └─> デバイスフレーム付きプレビュー
@@ -190,7 +206,8 @@ HTMLの各コンテンツを以下のカテゴリで整理：
 - [ ] コンテンツ要素にdata-figma-content-XXX属性がある
 - [ ] アイコンにdata-figma-icon-svg属性がある
 - [ ] ステータスバー等のOSネイティブUIが除外されている
-- [ ] コンテンツ分析が完成している
+- [ ] spec.md の「構造・スタイル」セクションが更新されている
+- [ ] spec.md の「コンテンツ分析」セクションが更新されている
 - [ ] プレビューHTMLが正しく表示される（オプション）
 ```
 

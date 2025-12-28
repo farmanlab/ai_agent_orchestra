@@ -19,7 +19,7 @@ FigmaデザインからUI状態バリエーション（default, empty, error, lo
 **重要**: 単独ファイル（ui_states.md）は生成しません。
 
 ```
-.agents/tmp/{screen-id}/
+.outputs/{screen-id}/
 ├── spec.md             # ← このエージェントが「UI状態」セクションを更新
 ├── index.html          # 参照用HTML
 └── assets/
@@ -58,10 +58,10 @@ UI States Documentation Progress:
 
 ```bash
 # 確認
-ls .agents/tmp/{screen-id}/spec.md
+ls .outputs/{screen-id}/spec.md
 
 # なければテンプレートから初期化
-cp .agents/templates/screen-spec.md .agents/tmp/{screen-id}/spec.md
+cp .agents/templates/screen-spec.md .outputs/{screen-id}/spec.md
 ```
 
 ---
@@ -99,7 +99,7 @@ Figma URL: https://figma.com/design/XXXXX/Project?node-id=1234-5678
 @documenting-ui-states
 
 先ほど生成した講座一覧画面の状態バリエーションを整理してください。
-spec.md は .agents/tmp/course-list/ にあります。
+spec.md は .outputs/course-list/ にあります。
 ```
 
 ---

@@ -28,7 +28,7 @@ model: sonnet
 ## 出力先
 
 ```
-.agents/tmp/{screen-id}/
+.outputs/{screen-id}/
 ├── spec.md             # ← このエージェントが「画面フロー」セクションを更新
 ├── index.html
 └── assets/
@@ -64,7 +64,7 @@ Screen Flow Documentation Progress:
 ### Step 0: spec.md の存在確認
 
 ```bash
-ls .agents/tmp/{screen-id}/spec.md
+ls .outputs/{screen-id}/spec.md
 ```
 
 ### Step 1-5: フロー情報の収集
@@ -98,7 +98,7 @@ Figma URL: https://figma.com/design/XXXXX/Project?node-id=1234-5678
 @documenting-screen-flows
 
 講座一覧画面の画面フローを整理してください。
-spec.md は .agents/tmp/course-list/ にあります。
+spec.md は .outputs/course-list/ にあります。
 ```
 
 ---

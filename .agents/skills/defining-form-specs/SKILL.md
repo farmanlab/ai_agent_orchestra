@@ -61,7 +61,7 @@ allowed-tools: [Read, Write, Glob, mcp__figma__get_screenshot, mcp__figma__get_d
 このスキルは**画面仕様書（spec.md）の「フォーム仕様」セクション**を更新します。
 
 ```
-.agents/tmp/{screen-id}/
+.outputs/{screen-id}/
 ├── spec.md                 # ← このスキルが「フォーム仕様」セクションを更新
 ├── index.html              # 参照用HTML
 └── assets/
@@ -109,7 +109,7 @@ Form Specification Progress:
 ### Step 0: spec.md の存在確認
 
 ```bash
-ls .agents/tmp/{screen-id}/spec.md
+ls .outputs/{screen-id}/spec.md
 ```
 
 ### Step 1: 入力フィールドを検出

@@ -62,7 +62,7 @@ UIのアクセシビリティ要件（セマンティックマークアップ、
 このスキルは**画面仕様書（spec.md）の「アクセシビリティ」セクション**を更新します。
 
 ```
-.agents/tmp/{screen-id}/
+.outputs/{screen-id}/
 ├── spec.md                 # ← このスキルが「アクセシビリティ」セクションを更新
 ├── index.html              # 参照用HTML
 └── assets/
@@ -111,7 +111,7 @@ Accessibility Requirements Progress:
 ### Step 0: spec.md の存在確認
 
 ```bash
-ls .agents/tmp/{screen-id}/spec.md
+ls .outputs/{screen-id}/spec.md
 ```
 
 ### Step 1: 画面構造を分析

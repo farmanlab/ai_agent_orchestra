@@ -19,7 +19,7 @@ Figmaデザインからインタラクション仕様（hover、遷移、アニ�
 **重要**: 単独ファイルは生成しません。
 
 ```
-.agents/tmp/{screen-id}/
+.outputs/{screen-id}/
 ├── spec.md             # ← このエージェントが「インタラクション」セクションを更新
 ├── index.html          # 参照用HTML
 └── assets/
@@ -71,7 +71,7 @@ Interaction Extraction Progress:
 ### Step 0: spec.md の存在確認
 
 ```bash
-ls .agents/tmp/{screen-id}/spec.md
+ls .outputs/{screen-id}/spec.md
 ```
 
 ### Step 1-6: インタラクション情報の収集
@@ -105,7 +105,7 @@ Figma URL: https://figma.com/design/XXXXX/Project?node-id=1234-5678
 @extracting-interactions
 
 講座一覧画面のインタラクション仕様を抽出してください。
-spec.md は .agents/tmp/course-list/ にあります。
+spec.md は .outputs/course-list/ にあります。
 ```
 
 ---

@@ -17,7 +17,7 @@ Figmaデザインからデザイントークン（色、タイポグラフィ、
 ## 出力先
 
 ```
-.agents/tmp/{screen-id}/
+.outputs/{screen-id}/
 ├── spec.md             # ← このエージェントが「デザイントークン」セクションを更新
 ├── index.html
 └── assets/
@@ -66,7 +66,7 @@ Design Token Extraction Progress:
 ### Step 0: spec.md の存在確認
 
 ```bash
-ls .agents/tmp/{screen-id}/spec.md
+ls .outputs/{screen-id}/spec.md
 ```
 
 ### Step 1: Figma Variablesを取得
@@ -106,7 +106,7 @@ Figma URL: https://figma.com/design/XXXXX/Project?node-id=1234-5678
 @extracting-design-tokens
 
 講座一覧画面で使用されているデザイントークンを抽出してください。
-spec.md は .agents/tmp/course-list/ にあります。
+spec.md は .outputs/course-list/ にあります。
 ```
 
 ---

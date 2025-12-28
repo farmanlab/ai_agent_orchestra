@@ -33,7 +33,7 @@
 ### 実行
 
 ```bash
-ls .agents/tmp/{screen-id}/spec.md
+ls .outputs/{screen-id}/spec.md
 ```
 
 ### 遷移がない場合

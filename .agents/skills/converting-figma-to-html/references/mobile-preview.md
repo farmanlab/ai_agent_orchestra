@@ -75,7 +75,7 @@
 ## 出力ファイル構成
 
 ```
-.agents/tmp/{short-screen-name}/
+.outputs/{short-screen-name}/
 ├── index.html              # 元のモバイルHTML
 ├── preview.html            # プレビュー用ラッパー
 └── tokens.md               # トークンマッピング

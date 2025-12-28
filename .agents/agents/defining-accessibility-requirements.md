@@ -17,7 +17,7 @@ WCAG 2.1 Level AA 準拠を目標に、アクセシビリティ要件を整理�
 ## 出力先
 
 ```
-.agents/tmp/{screen-id}/
+.outputs/{screen-id}/
 ├── spec.md             # ← このエージェントが「アクセシビリティ」セクションを更新
 ├── index.html
 └── assets/
@@ -66,7 +66,7 @@ Accessibility Requirements Progress:
 ### Step 0: spec.md の存在確認
 
 ```bash
-ls .agents/tmp/{screen-id}/spec.md
+ls .outputs/{screen-id}/spec.md
 ```
 
 ### Step 1-7: アクセシビリティ情報の収集
@@ -100,7 +100,7 @@ Figma URL: https://figma.com/design/XXXXX/Project?node-id=1234-5678
 @defining-accessibility-requirements
 
 講座一覧画面のアクセシビリティ要件を定義してください。
-spec.md は .agents/tmp/course-list/ にあります。
+spec.md は .outputs/course-list/ にあります。
 ```
 
 ---

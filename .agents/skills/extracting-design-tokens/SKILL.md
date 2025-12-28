@@ -59,7 +59,7 @@ Figmaデザインからデザイントークン（色、タイポグラフィ、
 このスキルは**画面仕様書（spec.md）の「デザイントークン」セクション**を更新します。
 
 ```
-.agents/tmp/{screen-id}/
+.outputs/{screen-id}/
 ├── spec.md                 # ← このスキルが「デザイントークン」セクションを更新
 ├── index.html              # 参照用HTML
 └── assets/
@@ -108,7 +108,7 @@ Design Token Extraction Progress:
 ### Step 0: spec.md の存在確認
 
 ```bash
-ls .agents/tmp/{screen-id}/spec.md
+ls .outputs/{screen-id}/spec.md
 ```
 
 ### Step 1: Figma Variablesを取得

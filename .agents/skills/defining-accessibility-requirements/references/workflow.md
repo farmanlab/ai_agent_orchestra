@@ -39,7 +39,7 @@ UIのアクセシビリティ要件を定義する詳細な手順です。
 ### 実行
 
 ```bash
-ls .agents/tmp/{screen-id}/spec.md
+ls .outputs/{screen-id}/spec.md
 ```
 
 ---

@@ -146,7 +146,7 @@ nav-home-label     ナビのホームラベル
 ## 📁 出力ファイル
 
 ```
-.agents/tmp/{short-screen-name}/
+.outputs/{short-screen-name}/
 ├── index.html              # メインHTML
 ├── content_analysis.md     # コンテンツ分析
 ├── preview.html            # プレビュー（オプション）

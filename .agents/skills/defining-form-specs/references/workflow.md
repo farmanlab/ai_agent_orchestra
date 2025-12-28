@@ -36,7 +36,7 @@
 ### 実行
 
 ```bash
-ls .agents/tmp/{screen-id}/spec.md
+ls .outputs/{screen-id}/spec.md
 ```
 
 ### フォームがない場合

@@ -100,11 +100,21 @@ mcp__figma__get_design_context(fileKey, nodeId, clientLanguages="html,css")
 - 全要素に `data-figma-node` 属性
 - アイコンは簡略化してインラインSVG
 - 画像はプレースホルダー使用
+- **mapping-overlay.js を `</body>` 直前に読み込み** ← APIマッピング可視化用
+
+**HTMLテンプレート（末尾）**:
+```html
+  <!-- Mapping Overlay Script -->
+  <script src="mapping-overlay.js"></script>
+</body>
+</html>
+```
 
 **検証**:
 - [ ] Figmaスクリーンショットと視覚的に一致
 - [ ] 全要素にdata-figma-node属性がある
 - [ ] アイコンは簡略化されているが正しく配置
+- [ ] mapping-overlay.js が読み込まれている
 
 ---
 
@@ -161,9 +171,12 @@ mcp__figma__get_design_context(fileKey, nodeId, clientLanguages="html,css")
 
 | ファイル | 内容 |
 |----------|------|
-| `{name}.html` | Tailwind CSS付き完全なHTML、全要素にdata属性 |
-| `{name}_content_analysis.md` | コンテンツ分類（static/dynamic識別）、デザイントークン |
-| `{name}-{state}.html` | 各状態ごとの別HTML（該当する場合） |
+| `{name}.html` | Tailwind CSS付き完全なHTML、全要素にdata属性、mapping-overlay.js読み込み |
+| `{name}_content_analysis.md` | コンテンツ分類（static/dynamic識別 ※仮決定）、デザイントークン |
+| `{name}-{state}.html` | 各状態ごとの別HTML（該当する場合、mapping-overlay.js読み込み含む） |
+
+> **注意**: `{name}_content_analysis.md` 内の static/dynamic 分類は**仮決定**です。
+> API仕様確定後にレビューし、`-static` / `-dynamic` サフィックスを確定してください。
 
 ---
 

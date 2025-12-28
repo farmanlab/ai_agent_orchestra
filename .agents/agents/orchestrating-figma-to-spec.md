@@ -78,7 +78,7 @@ URL: https://figma.com/design/{fileKey}/{fileName}?node-id={nodeId}
 ### Step 0.3: 出力ディレクトリの準備
 
 ```bash
-mkdir -p .agents/tmp/{screen-id}
+mkdir -p .outputs/{screen-id}
 ```
 
 ---
@@ -89,7 +89,7 @@ mkdir -p .agents/tmp/{screen-id}
 
 **入力**:
 - Figma URL
-- 出力先: `.agents/tmp/{screen-id}/`
+- 出力先: `.outputs/{screen-id}/`
 
 **期待される出力**:
 - `{screen-id}.html`
@@ -166,7 +166,7 @@ Read: .agents/templates/screen-spec.md
 - `{{SCREEN_PURPOSE}}`: content_analysis.md から抽出
 
 ```bash
-Write: .agents/tmp/{screen-id}/spec.md
+Write: .outputs/{screen-id}/spec.md
 ```
 
 ---
@@ -205,7 +205,7 @@ Write: .agents/tmp/{screen-id}/spec.md
 
 **判定ロジック**:
 ```bash
-Grep: pattern="input|form|text-field|checkbox|radio|select" path=".agents/tmp/{screen-id}/{screen-id}_content_analysis.md"
+Grep: pattern="input|form|text-field|checkbox|radio|select" path=".outputs/{screen-id}/{screen-id}_content_analysis.md"
 ```
 
 - マッチあり → 実行
@@ -223,7 +223,7 @@ Grep: pattern="input|form|text-field|checkbox|radio|select" path=".agents/tmp/{s
 
 **判定ロジック**:
 ```bash
-Grep: pattern="type.*dynamic" path=".agents/tmp/{screen-id}/{screen-id}_content_analysis.md"
+Grep: pattern="type.*dynamic" path=".outputs/{screen-id}/{screen-id}_content_analysis.md"
 ```
 
 **更新セクション**: `## APIマッピング`
@@ -289,7 +289,7 @@ Grep: pattern="type.*dynamic" path=".agents/tmp/{screen-id}/{screen-id}_content_
 ### Step 5.1: spec.md の完成度確認
 
 ```bash
-Read: .agents/tmp/{screen-id}/spec.md
+Read: .outputs/{screen-id}/spec.md
 ```
 
 **チェックリスト更新**:
@@ -333,10 +333,10 @@ Read: .agents/tmp/{screen-id}/spec.md
 
 | ファイル | 説明 | パス |
 |----------|------|------|
-| spec.md | 画面仕様書 | `.agents/tmp/{screen-id}/spec.md` |
-| {screen-id}.html | メインHTML | `.agents/tmp/{screen-id}/{screen-id}.html` |
-| content_analysis.md | コンテンツ分析 | `.agents/tmp/{screen-id}/{screen-id}_content_analysis.md` |
-| api_mapping.md | APIマッピング | `.agents/tmp/{screen-id}/{screen-id}_api_mapping.md` |
+| spec.md | 画面仕様書 | `.outputs/{screen-id}/spec.md` |
+| {screen-id}.html | メインHTML | `.outputs/{screen-id}/{screen-id}.html` |
+| content_analysis.md | コンテンツ分析 | `.outputs/{screen-id}/{screen-id}_content_analysis.md` |
+| api_mapping.md | APIマッピング | `.outputs/{screen-id}/{screen-id}_api_mapping.md` |
 
 ### 完了セクション
 
@@ -353,7 +353,7 @@ Read: .agents/tmp/{screen-id}/spec.md
 
 ### 次のステップ
 
-1. `open .agents/tmp/{screen-id}/spec.md` で仕様書を確認
+1. `open .outputs/{screen-id}/spec.md` で仕様書を確認
 2. 必要に応じて手動で調整
 3. 実装チームに仕様書を共有
 

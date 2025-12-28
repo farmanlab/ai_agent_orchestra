@@ -38,7 +38,7 @@ Figmaデザインから全てのUI状態バリエーション（default, empty, 
 このスキルは**画面仕様書（spec.md）の「UI状態」セクション**を更新します。
 
 ```
-.agents/tmp/{screen-id}/
+.outputs/{screen-id}/
 ├── spec.md                 # ← このスキルが「UI状態」セクションを更新
 ├── index.html              # converting-figma-to-htmlで生成済み
 └── assets/                 # 画像等
@@ -89,10 +89,10 @@ UI States Documentation Progress:
 
 ```bash
 # spec.md が存在するか確認
-ls .agents/tmp/{screen-id}/spec.md
+ls .outputs/{screen-id}/spec.md
 
 # 存在しない場合はテンプレートから初期化
-cp .agents/templates/screen-spec.md .agents/tmp/{screen-id}/spec.md
+cp .agents/templates/screen-spec.md .outputs/{screen-id}/spec.md
 # 基本情報（{{SCREEN_NAME}}等）を置換
 ```
 

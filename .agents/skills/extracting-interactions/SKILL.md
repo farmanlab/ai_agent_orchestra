@@ -58,7 +58,7 @@ Figmaデザインからインタラクション仕様（hover状態、遷移、�
 このスキルは**画面仕様書（spec.md）の「インタラクション」セクション**を更新します。
 
 ```
-.agents/tmp/{screen-id}/
+.outputs/{screen-id}/
 ├── spec.md                 # ← このスキルが「インタラクション」セクションを更新
 ├── index.html              # 参照用HTML
 └── assets/
@@ -107,10 +107,10 @@ Interaction Extraction Progress:
 
 ```bash
 # 確認
-ls .agents/tmp/{screen-id}/spec.md
+ls .outputs/{screen-id}/spec.md
 
 # なければテンプレートから初期化
-cp .agents/templates/screen-spec.md .agents/tmp/{screen-id}/spec.md
+cp .agents/templates/screen-spec.md .outputs/{screen-id}/spec.md
 ```
 
 ### Step 1: インタラクティブ要素を特定

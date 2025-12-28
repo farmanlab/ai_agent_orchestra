@@ -59,7 +59,7 @@ allowed-tools: [Read, Write, Glob, mcp__figma__get_screenshot, mcp__figma__get_d
 このスキルは**画面仕様書（spec.md）の「画面フロー」セクション**を更新します。
 
 ```
-.agents/tmp/{screen-id}/
+.outputs/{screen-id}/
 ├── spec.md                 # ← このスキルが「画面フロー」セクションを更新
 ├── index.html              # 参照用HTML
 └── assets/
@@ -107,7 +107,7 @@ Screen Flow Documentation Progress:
 ### Step 0: spec.md の存在確認
 
 ```bash
-ls .agents/tmp/{screen-id}/spec.md
+ls .outputs/{screen-id}/spec.md
 ```
 
 ### Step 1: 遷移トリガーを検出

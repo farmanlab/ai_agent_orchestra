@@ -80,6 +80,10 @@
 - ステータスバー（時刻、電波、バッテリー）は省略
 - Dynamic Island、Home Indicatorも省略
 
+■ mapping-overlay.js
+- `</body>` 直前に `<script src="mapping-overlay.js"></script>` を追加
+- APIマッピング可視化のためのオーバーレイスクリプト
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【Step 3: 出力ファイル】
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -139,7 +143,8 @@ HTMLの各コンテンツを以下の分類で整理：
 □ コンテンツ要素にdata-figma-content-XXX属性がある
 □ アイコンにdata-figma-icon-svg属性がある
 □ ステータスバー等のOSネイティブUIが除外されている
-□ コンテンツ分析が完成している
+□ mapping-overlay.js が読み込まれている
+□ コンテンツ分析が完成している（※static/dynamicは仮決定）
 ```
 
 ---
@@ -246,12 +251,15 @@ HTMLで使用されているデザイントークンの一覧を作成してく�
 ## 出力ファイル構成
 
 ```
-.agents/tmp/{short-screen-name}/
-├── index.html                    # メインHTML
+.outputs/{short-screen-name}/
+├── index.html                    # メインHTML（mapping-overlay.js読み込み含む）
 ├── preview.html                  # プレビュー用（オプション）
-├── content_analysis.md           # コンテンツ分析
+├── content_analysis.md           # コンテンツ分析（※static/dynamic は仮決定）
 └── tokens.md                     # トークンマッピング（オプション）
 ```
+
+> **注意**: `content_analysis.md` 内の static/dynamic 分類は**仮決定**です。
+> API仕様確定後にレビューし、`-static` / `-dynamic` サフィックスを確定してください。
 
 `{short-screen-name}` はFigmaの画面名から生成した短い識別名
 

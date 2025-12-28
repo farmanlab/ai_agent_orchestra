@@ -37,10 +37,10 @@ Figmaデザインからインタラクション仕様を抽出する詳細な手
 
 ```bash
 # 確認
-ls .agents/tmp/{screen-id}/spec.md
+ls .outputs/{screen-id}/spec.md
 
 # なければ初期化
-cp .agents/templates/screen-spec.md .agents/tmp/{screen-id}/spec.md
+cp .agents/templates/screen-spec.md .outputs/{screen-id}/spec.md
 ```
 
 ### 検証

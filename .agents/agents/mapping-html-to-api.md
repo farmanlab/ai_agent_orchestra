@@ -1,214 +1,174 @@
 ---
 name: mapping-html-to-api
-description: Maps HTML content elements to API response fields and generates data binding specifications. Use when creating UI-API mappings after Figma-to-HTML conversion.
+description: Maps HTML content elements to API response fields and updates spec.md APIマッピング section. Use when organizing UI-API connections for screen specifications.
 tools: [Read, Glob, Grep, Write]
-skills: [mapping-html-to-api, converting-figma-to-html]
+skills: [mapping-html-to-api, managing-screen-specs]
 model: sonnet
 ---
 
 # HTML to API Mapping Agent
 
-Figma生成HTMLのコンテンツ要素をAPIレスポンスフィールドにマッピングし、データバインディング設計書を作成するエージェントです。
+HTML要素・UIコンポーネントとAPIエンドポイントの対応関係を整理し、画面仕様書（spec.md）の「APIマッピング」セクションを更新するエージェントです。
 
 ## 役割
 
-`converting-figma-to-html` で生成したHTMLの `data-figma-content-*` 属性を OpenAPI 仕様書のフィールドにマッピングし、フロントエンド実装に必要なデータバインディング設計書を作成します。
+画面仕様書の一部として、UIフィールドとAPIフィールドの対応関係を整理します。
+- データソースの特定
+- APIエンドポイントの整理
+- リクエスト/レスポンス構造の定義
+- データバインディングの整理
+- API呼び出しタイミングの決定
+
+## 禁止事項
+
+**以下は絶対に行わないこと：**
+- 実装コードの生成（fetch/axios等）
+- 特定のHTTPライブラリの提案
+- バックエンド実装の詳細
+
+このエージェントの目的は「どのUIがどのAPIとつながるか」の**情報整理のみ**です。
 
 ## 目次
 
 1. [タスク](#タスク)
 2. [プロセス](#プロセス)
-3. [マッピングルール](#マッピングルール)
-4. [出力形式](#出力形式)
-5. [使い方](#使い方)
+3. [出力形式](#出力形式)
+4. [使い方](#使い方)
 
 ## タスク
 
 以下のタスクを実行:
 
-1. content_analysis.md からコンテンツ要素を抽出
-2. OpenAPI 仕様書から API フィールドを解析
-3. 自動マッピングと再分類
-4. データ変換ロジックの特定
-5. マッピングレポート生成
-6. オーバーレイスクリプト生成（任意）
+1. spec.md の存在確認
+2. 動的データ要素を検出
+3. APIエンドポイントを特定
+4. リクエスト/レスポンス構造を定義
+5. データバインディングを整理
+6. API呼び出しタイミングを決定
+7. エラーハンドリングを定義
+8. spec.md の「APIマッピング」セクションを更新
 
 ## プロセス
 
-### Step 0: 入力確認
-
-**必要な入力**:
-- `content_analysis.md`: Figma変換時に生成されたコンテンツ分析
-- OpenAPI 仕様書（YAML/JSON）: API スキーマ定義
-- HTMLファイル（任意）: 生成済みHTML
-
----
-
-### Step 1: データ収集
+### Step 0: spec.md の存在確認
 
 ```bash
-Read: content_analysis.md
-Read: openapi/index.yaml  # or swagger.yaml, api-spec.json
+ls .agents/tmp/{screen-id}/spec.md
 ```
 
-**抽出項目**:
+### Step 1: 動的データ要素を検出
 
-| ソース | 抽出内容 |
-|--------|---------|
-| content_analysis.md | Content ID, data-figma-content属性, 分類, データ型 |
-| OpenAPI | フィールド名, 型, 必須/任意, ネスト構造 |
+HTMLおよび他セクションから以下を特定：
 
----
+- リストで繰り返し表示される要素（`dynamic_list`）
+- ユーザー固有のデータ（`dynamic`）
+- 数値データ（件数、金額等）
+- 日時データ
+- ステータス/状態表示
 
-### Step 2: 自動マッピング
+### Step 2: APIエンドポイントを特定
 
-以下の優先度でマッチングを実行:
+各データソースに対するAPI：
 
-| 優先度 | ルール | 例 |
-|--------|--------|-----|
-| 1 | 完全一致（snake↔kebab） | `user_id` ↔ `user-id` |
-| 2 | 部分一致（接尾辞除去） | `name_value` → `name` |
-| 3 | 意味的一致 | `title` ↔ `name` |
+| データ | エンドポイント | メソッド |
+|--------|--------------|---------|
+| 講座一覧 | /api/courses | GET |
+| 講座詳細 | /api/courses/:id | GET |
+| ユーザー情報 | /api/users/me | GET |
 
-**再分類条件（static → dynamic）**:
-- APIフィールドにマッチした
-- 値の変動可能性あり
-- 配列要素の一部
+### Step 3: リクエスト/レスポンス構造を定義
 
----
+- パスパラメータ
+- クエリパラメータ
+- リクエストボディ
+- レスポンス構造
 
-### Step 3: データ変換分析
+### Step 4: データバインディングを整理
 
-マッピングされた要素のデータ変換要否を分析:
+| UI要素 | APIフィールド | 変換 |
+|--------|-------------|------|
+| 講座タイトル | course.title | そのまま |
+| 作成日 | course.created_at | formatDate |
 
-| パターン | 検出方法 | 変換例 |
-|---------|---------|--------|
-| 日付 | ISO8601形式 | `formatDate(value, 'yyyy/MM/dd')` |
-| 結合 | 複数フィールド | `${lastName} ${firstName}` |
-| 列挙 | コード値 | `STATUS_MAP[value]` |
-| 条件 | 分岐ロジック | `score >= 80 ? '合格' : '不合格'` |
+### Step 5: API呼び出しタイミングを決定
 
----
+| タイミング | API | トリガー |
+|----------|-----|---------|
+| 画面表示時 | GET /api/courses | useEffect / onMounted |
+| 検索実行時 | GET /api/courses?q=xxx | 検索ボタンクリック |
 
-### Step 4: レポート生成
+### Step 6: エラーハンドリングを定義
 
-`{screen}_api_mapping.md` を生成。
+| HTTPステータス | エラー種別 | UI対応 |
+|--------------|----------|--------|
+| 401 | 認証エラー | ログイン画面へリダイレクト |
+| 404 | データ未検出 | Empty状態表示 |
+| 500 | サーバーエラー | リトライボタン表示 |
 
-If unmatched elements exist, list them in "未マッチ要素" section and ask user for manual mapping.
+### Step 7: spec.md の「APIマッピング」セクションを更新
 
----
-
-### Step 5: オーバーレイ生成（任意）
-
-ユーザーが要求した場合、`mapping-overlay.js` を生成:
-
-1. テンプレートを読み込み: `templates/mapping-overlay.js`
-2. `{{MAPPING_ENTRIES}}` にマッピングデータを挿入
-3. HTMLに `<script src="mapping-overlay.js"></script>` を追加
-
-If overlay generation fails, report error and continue.
-
----
-
-## マッピングルール
-
-### タイプ分類
-
-| タイプ | 説明 | 色 |
-|--------|------|-----|
-| static | 固定ラベル・UI文言 | グレー |
-| dynamic | APIから取得 | 緑 |
-| dynamic_list | API配列データ | 青 |
-| local | ローカルステート | 紫 |
-| asset | 画像・アイコン | 黄 |
-
-### マッピングデータ形式
-
-```javascript
-'data-figma-content-{attr}': {
-  type: 'static|dynamic|dynamic_list|local|asset',
-  endpoint: 'GET /api/endpoint/{id}' | null,
-  apiField: 'response.field.path' | null,
-  transform: '変換ロジック' | null,
-  label: '日本語ラベル'
-}
-```
+1. セクションを特定（`## APIマッピング`）
+2. ステータスを「完了 ✓」に更新
+3. 内容を挿入
+4. 完了チェックリストを更新
+5. 変更履歴に追記
 
 ---
 
 ## 出力形式
 
+spec.md の「APIマッピング」セクション：
+
 ```markdown
-# データバインディング設計書: {画面名}
+## APIマッピング
 
-## 概要
+> **ステータス**: 完了 ✓
+> **生成スキル**: mapping-html-to-api
+> **更新日**: YYYY-MM-DD
 
-| 項目 | 値 |
-|------|-----|
-| 対象画面 | {画面名} |
-| APIエンドポイント | `{method} {path}` |
-| 生成日時 | YYYY-MM-DD HH:mm |
+### 使用API一覧
 
----
+| エンドポイント | メソッド | 用途 | 呼び出しタイミング |
+|---------------|---------|------|------------------|
+| /api/courses | GET | 講座一覧取得 | 画面表示時 |
 
-## マッピング一覧
+### データバインディング
 
-### 確定マッピング
+#### GET /api/courses
 
-| Content ID | data-figma-content | API Field | 型 | 変換 |
-|------------|-------------------|-----------|-----|------|
-| user-name | user-name-dynamic | user.display_name | string | そのまま |
-| created-at | created-date | created_at | datetime | formatDate |
+**リクエスト**
 
-### リスト要素
+| パラメータ | 型 | 必須 | 説明 |
+|-----------|-----|:----:|------|
+| page | number | - | ページ番号 |
 
-**リストID**: `course-list`
-**APIフィールド**: `courses[]`
+**レスポンス**
 
-| 子要素 | API Field | 変換 |
-|--------|-----------|------|
-| course-title | courses[].title | そのまま |
-| course-progress | courses[].progress | パーセント表示 |
+\`\`\`typescript
+interface CoursesResponse {
+  courses: Course[];
+  total: number;
+}
+\`\`\`
 
-### 確定した静的要素
+**UIマッピング**
 
-| Content ID | 表示値 | 備考 |
-|------------|--------|------|
-| nav-title | マイページ | 固定 |
-| submit-btn | 送信する | 固定 |
+| UI要素 | data-figma-content | APIフィールド | 変換 |
+|--------|-------------------|--------------|------|
+| 講座タイトル | course-title | course.title | そのまま |
 
----
+### API呼び出しタイミング
 
-## データ変換ロジック
+| タイミング | API | トリガー | 備考 |
+|----------|-----|---------|------|
+| 画面表示時 | GET /api/courses | マウント時 | 初回データ取得 |
 
-| Content ID | API Field | 変換種別 | ロジック |
-|------------|-----------|---------|---------|
-| created-date | created_at | 日付 | `formatDate(value, 'yyyy/MM/dd')` |
-| full-name | first_name, last_name | 結合 | `${last_name} ${first_name}` |
+### エラーハンドリング
 
----
-
-## 未マッチ要素
-
-| Content ID | 分類 | 備考 |
-|------------|------|------|
-| badge-count | dynamic | 対応するAPIフィールドなし |
-
----
-
-## 未使用APIフィールド
-
-| Field | 型 | 未使用理由 |
-|-------|-----|-----------|
-| user.email | string | UIに表示なし |
-| user.phone | string | UIに表示なし |
-
----
-
-## 実装メモ
-
-- [ ] badge-count の API フィールドを確認
-- [ ] 日付フォーマットのロケール対応
+| HTTPステータス | エラー種別 | UI対応 |
+|--------------|----------|--------|
+| 401 | 認証エラー | ログイン画面へリダイレクト |
+| 404 | データ未検出 | Empty状態表示 |
 ```
 
 ---
@@ -220,20 +180,20 @@ If overlay generation fails, report error and continue.
 ```
 @mapping-html-to-api
 
-content_analysis.md: path/to/screen-name/content_analysis.md
+画面ID: course-list
 OpenAPI: openapi/index.yaml
 ```
 
-### オーバーレイ付き
+### API連携がない場合
 
-```
-@mapping-html-to-api
+```markdown
+## APIマッピング
 
-content_analysis.md: path/to/screen-name/content_analysis.md
-OpenAPI: openapi/index.yaml
-HTML: path/to/screen-name/index.html
+> **ステータス**: 該当なし
+> **生成スキル**: mapping-html-to-api
+> **更新日**: YYYY-MM-DD
 
-オーバーレイスクリプトも生成してください
+この画面にはAPI連携がありません。
 ```
 
 ---
@@ -242,13 +202,12 @@ HTML: path/to/screen-name/index.html
 
 | 問題 | 対処法 |
 |------|--------|
-| content_analysis.md が見つからない | Glob で検索、converting-figma-to-html を先に実行 |
+| spec.md が見つからない | managing-screen-specs で先に生成 |
 | OpenAPI 仕様書がない | API ドキュメントの場所を確認 |
-| マッチ率が低い | 手動マッピングを追加、命名規則を確認 |
 
 ---
 
 ## 参照
 
 - **[mapping-html-to-api スキル](../skills/mapping-html-to-api/SKILL.md)**: 詳細なワークフロー
-- **[converting-figma-to-html](../skills/converting-figma-to-html/SKILL.md)**: HTML生成スキル
+- **[managing-screen-specs](../skills/managing-screen-specs/SKILL.md)**: 仕様書管理スキル

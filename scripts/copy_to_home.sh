@@ -23,8 +23,9 @@ usage() {
     echo "  -v, --verbose  詳細な出力（同一ファイルも表示）"
     echo "  -h, --help     このヘルプメッセージを表示"
     echo ""
-    echo "このスクリプトは以下のフォルダをコピーします:"
-    echo "  .agents, .claude, .cursor, .github"
+    echo "このスクリプトは以下のフォルダとファイルをコピーします:"
+    echo "  フォルダ: .agents, .claude, .cursor, .github"
+    echo "  ファイル: AGENTS.md, CLAUDE.md"
     echo ""
     echo "デフォルトでは各フォルダのコピー前に確認を求めます。"
     echo "-a または -f オプションで確認をスキップできます。"
@@ -102,6 +103,9 @@ trap cleanup EXIT
 
 # コピー対象のフォルダ
 FOLDERS=(".agents" ".claude" ".cursor" ".github")
+
+# コピー対象のファイル（ルートレベル）
+ROOT_FILES=("AGENTS.md" "CLAUDE.md")
 
 echo -e "${GREEN}=== フォルダコピースクリプト ===${NC}"
 echo "リポジトリ: $REPO"
@@ -255,5 +259,22 @@ for folder in "${FOLDERS[@]}"; do
 
     echo ""
 done
+
+# ルートレベルのファイルをコピー
+echo -e "${GREEN}ルートファイルを処理中...${NC}"
+for file in "${ROOT_FILES[@]}"; do
+    SRC_FILE="$SRC_DIR/$file"
+    DEST_FILE="$TARGET_DIR/$file"
+
+    if [ ! -f "$SRC_FILE" ]; then
+        if [ "$VERBOSE" = true ]; then
+            echo -e "  ${YELLOW}-${NC} $file が見つかりません。スキップします。"
+        fi
+        continue
+    fi
+
+    copy_file "$SRC_FILE" "$DEST_FILE" "$file"
+done
+echo ""
 
 echo -e "${GREEN}=== コピー完了 ===${NC}"

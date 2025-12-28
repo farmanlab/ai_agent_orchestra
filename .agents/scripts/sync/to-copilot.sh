@@ -131,63 +131,7 @@ if [ -d "$AGENTS_DIR/rules" ]; then
     done
 fi
 
-# AGENTS.md 生成
-echo ""
-echo "Generating AGENTS.md..."
-AGENTS_MD="$REPO_ROOT/AGENTS.md"
-
-cat > "$AGENTS_MD" << 'EOF'
-# AI Agent Instructions
-
-<!-- Auto-generated from .agents/agents/ - Do not edit directly -->
-
-EOF
-
-if [ -d "$AGENTS_DIR/agents" ]; then
-    find "$AGENTS_DIR/agents" -type f -name "*.md" | sort | while read -r agent_file; do
-        # エージェント名を取得
-        agent_name=$(awk '/^name:/ { sub(/^name: */, ""); print; exit }' "$agent_file")
-        if [ -z "$agent_name" ]; then
-            agent_name=$(basename "$agent_file" .md)
-        fi
-
-        echo "" >> "$AGENTS_MD"
-        echo "## $agent_name" >> "$AGENTS_MD"
-        echo "" >> "$AGENTS_MD"
-
-        # frontmatter を除いてコンテンツを出力
-        awk '
-        BEGIN { in_frontmatter = 0; skip = 0; }
-        /^---$/ {
-            if (NR == 1) {
-                in_frontmatter = 1;
-                skip = 1;
-                next;
-            } else if (in_frontmatter) {
-                in_frontmatter = 0;
-                skip = 1;
-                next;
-            }
-        }
-        in_frontmatter { next; }
-        !skip { print $0; }
-        skip {
-            if (NF > 0) {
-                skip = 0;
-                print $0;
-            }
-        }
-        ' "$agent_file" >> "$AGENTS_MD"
-
-        echo "" >> "$AGENTS_MD"
-        echo "---" >> "$AGENTS_MD"
-        echo "" >> "$AGENTS_MD"
-    done
-fi
-
-echo "  → $AGENTS_MD"
-
-# CLAUDE.md をシンボリックリンクとして作成
+# CLAUDE.md をシンボリックリンクとして作成（AGENTS.md は手動管理）
 echo ""
 echo "Creating CLAUDE.md symlink..."
 CLAUDE_MD="$REPO_ROOT/CLAUDE.md"
@@ -228,5 +172,4 @@ echo "Generated files:"
 echo "  .github/copilot-instructions.md"
 echo "  .github/instructions/*.instructions.md"
 echo "  .github/prompts/*.prompt.md"
-echo "  AGENTS.md"
 echo "  CLAUDE.md -> AGENTS.md"

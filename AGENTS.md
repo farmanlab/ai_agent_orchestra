@@ -173,7 +173,72 @@ FigmaデザインのスクリーンショットとHTMLを視覚的に比較し�
 
 ## 役割
 
-`converting-figma-to-html` エージェントで生成したHTMLがFigmaデザインと一致しているかを検証し、差分があれば具体的に指摘します。
+`converting-figma-to-html` エージェントで生成したHTMLがFigmaデザインと**ピクセルパーフェクト**で一致しているかを検証し、差分があれば具体的に指摘します。
+
+### ピクセルパーフェクトの定義
+
+- **数値の完全一致**: サイズ、間隔、位置はFigmaの値と完全に一致すること
+- **色の完全一致**: カラーコード（HEX/RGBA）が完全に一致すること
+- **スタイルの完全一致**: ボーダー、シャドウ、角丸などが完全に一致すること
+- **許容誤差: 0px** - 1pxの差異も報告対象
+
+### 重要な原則: Figmaの視覚情報が唯一の正（Single Source of Truth）
+
+**🔴 最重要: 視覚情報 > コード分析**
+
+```
+正しい検証: Figmaスクリーンショット → 目視確認 → HTMLを修正
+間違った検証: コード比較 → 「一致している」と判断 → 見落とし発生
+```
+
+**⚠️ コード分析だけで判断しない**
+
+以下は**必ず視覚的に確認**すること：
+
+1. **text-align**: CSSクラスではなく、**複数行テキストの実際の見た目**で確認
+   - 1行テキストは左寄せも中央寄せも同じに見える
+   - 複数行テキストで初めて差異が顕在化
+   - `<button>`のデフォルトは中央寄せ（ブラウザ依存）
+
+2. **要素の配置**: Flexbox/Grid設定ではなく、**実際のピクセル位置**で確認
+   - `justify-end` でも内部の `flex-1` スペーサーで左寄せに見える場合がある
+   - コードの意図と視覚的結果は異なることがある
+
+3. **線・区切り線**: CSSプロパティではなく、**拡大して目視**で確認
+   - `h-px bg-[color]` は常に実線（破線不可）
+   - Figmaで破線なら `border-dashed` が必要
+
+4. **色**: HEXコードではなく、**スクリーンショット上の実際の色**で確認
+   - 透明度が適用されている場合がある
+   - 背景との合成で見た目が変わる場合がある
+
+**⚠️ 既存HTMLを信頼しない**
+
+比較時は以下の原則を厳守すること：
+
+1. **Figmaスクリーンショットを基準にゼロベースで検証**
+   - 既存HTMLを「正しい前提」として扱わない
+   - Figmaの**視覚情報**と**HTMLのレンダリング結果**を比較する
+   - CSSクラスの比較だけで判断しない
+
+2. **双方向の検証**
+   - ❌ 悪い例: 「HTMLにある要素がFigmaと一致するか」だけを確認
+   - ✅ 良い例: 「Figmaにある要素がHTMLに存在するか」「HTMLにある要素がFigmaに存在するか」の両方を確認
+
+3. **要素の有無を明示的に確認**
+   - HTMLに存在するがFigmaにない要素 → **削除対象**
+   - Figmaに存在するがHTMLにない要素 → **追加対象**
+
+4. **デフォルトスタイルを考慮**
+   - HTML要素のブラウザデフォルト（`<button>`の`text-align: center`など）
+   - Tailwindのリセットスタイル
+   - 継承されるプロパティ
+
+**なぜこの原則が重要か**:
+- コード分析では見落とす差異がある（デフォルトスタイル、継承など）
+- 元のHTMLが間違っている可能性がある
+- 変換時に余分な要素が追加されている可能性がある
+- Figmaの更新がHTMLに反映されていない可能性がある
 
 ## 目次
 
@@ -190,7 +255,8 @@ FigmaデザインのスクリーンショットとHTMLを視覚的に比較し�
 1. Figmaスクリーンショットの取得
 2. ローカルHTMLの読み込みと表示
 3. 視覚的な比較分析
-4. 差分レポートの生成
+4. **ユーザー確認**（複数ファイルの場合は1ファイルごと）
+5. 差分レポートの生成
 
 ## プロセス
 
@@ -198,13 +264,17 @@ FigmaデザインのスクリーンショットとHTMLを視覚的に比較し�
 
 **必要な入力**:
 - Figma URL または `fileKey` + `nodeId`
-- 生成済みHTMLファイルのパス
+- 生成済みHTMLファイルのパス（単一または複数）
 
 **URLからの抽出**:
 ```
 URL: https://figma.com/design/{fileKey}/{fileName}?node-id={nodeId}
 抽出: fileKey, nodeId（ハイフンをコロンに変換: 1-2 → 1:2）
 ```
+
+**複数ファイルの場合**:
+- content_analysis.md などから対応表を取得
+- 1ファイルずつ順番に比較（バッチ処理しない）
 
 ---
 
@@ -228,45 +298,189 @@ HTMLの構造とスタイルを確認。
 
 ---
 
-### Step 3: 視覚比較
+### Step 2.5: HTMLスクリーンショット取得（自動比較用）
 
-Figmaスクリーンショットと生成HTMLを以下の観点で比較:
+**セットアップ**（初回のみ）:
+```bash
+cd ~/.agents/scripts/html-screenshot && npm install
+```
 
-#### 3.1 レイアウト比較
-- 要素の配置（上下左右）
-- 要素間のスペーシング（gap, margin, padding）
-- 全体的な構造（Flexbox/Grid）
+**スクリーンショット取得**:
+```bash
+node ~/.agents/scripts/html-screenshot/screenshot.js [HTMLファイルパス]
+```
 
-#### 3.2 サイズ比較
-- 幅・高さ
-- アスペクト比
-- コンテナサイズ
+**画像比較**（オプション）:
+```bash
+node ~/.agents/scripts/html-screenshot/compare.js [HTML screenshot] [Figma screenshot] [diff.png]
+```
 
-#### 3.3 スタイル比較
-- 背景色
-- テキストカラー
-- ボーダー・シャドウ
-- 角丸（border-radius）
-
-#### 3.4 タイポグラフィ比較
-- フォントサイズ
-- フォントウェイト
-- 行間（line-height）
-- 文字間隔（letter-spacing）
-
-#### 3.5 アイコン・画像比較
-- 配置位置
-- サイズ
-- 色（アイコンカラー）
-
-#### 3.6 コンテンツ比較
-- テキスト内容の一致
-- 要素の有無
-- 順序の一致
+**出力結果の解釈**:
+- ✅ PIXEL PERFECT (0%): 完全一致
+- 🟡 NEARLY PERFECT (< 1%): 軽微な差異
+- 🟠 NOTICEABLE (< 5%): 目立つ差異
+- 🔴 SIGNIFICANT (>= 5%): 大きな差異
 
 ---
 
-### Step 4: 差分レポート生成
+### Step 3: 視覚比較
+
+**🔴 必須: 視覚情報を正として検証**
+
+```
+1. Figmaスクリーンショットを目視で詳細確認
+2. HTMLスクリーンショットを目視で詳細確認
+3. 両者を並べて差異を特定
+4. 差異が見つかったらHTMLを修正（Figmaが正）
+```
+
+**⚠️ やってはいけないこと**:
+- CSSクラスやコードだけを比較して「一致」と判断
+- デフォルトスタイルを考慮せずに「指定なし=同じ」と判断
+- 1行テキストだけを見て text-align が同じと判断
+
+Figmaスクリーンショットと生成HTMLを以下の観点で比較:
+
+#### 3.1 レイアウト比較（ピクセル単位）
+- 要素の配置（top, left, right, bottom）- **正確なpx値**
+- 要素間のスペーシング
+  - gap: **正確なpx値**
+  - margin: **上下左右それぞれの正確なpx値**
+  - padding: **上下左右それぞれの正確なpx値**
+- Flexbox/Grid設定
+  - justify-content / align-items の正確な値
+  - flex-direction の正確な値
+
+#### 3.2 サイズ比較（ピクセル単位）
+- 幅（width）: **Figmaの値と完全一致**
+- 高さ（height）: **Figmaの値と完全一致**
+- min-width / max-width
+- min-height / max-height
+- アスペクト比
+
+#### 3.3 スタイル比較（完全一致）
+- 背景色: **HEXコード完全一致**
+- テキストカラー: **HEXコード完全一致**
+- ボーダー
+  - 色: **HEXコード完全一致**
+  - 太さ: **正確なpx値**
+  - スタイル: **solid / dashed / dotted 完全一致**
+- シャドウ: **x, y, blur, spread, color すべて完全一致**
+- 角丸（border-radius）: **正確なpx値（各角個別に確認）**
+- 透明度（opacity）: **正確な値（0.3 vs 1.0 など）**
+
+#### 3.4 タイポグラフィ比較（完全一致）
+- フォントサイズ: **正確なpx値**
+- フォントウェイト: **正確な数値（400, 500, 600, 700など）**
+- 行間（line-height）: **正確な値（px または倍率）**
+- 文字間隔（letter-spacing）: **正確なpx/em値**
+- フォントファミリー: **正確なフォント名**
+- text-align: **left / center / right**
+
+**⚠️ text-align の検証（必ず視覚確認）**:
+
+1. **複数行テキストで確認**: 1行テキストでは左寄せ・中央寄せの差が見えない
+2. **ブラウザデフォルトを考慮**:
+   - `<button>`: デフォルト `text-align: center`
+   - `<div>`, `<span>`: デフォルト `text-align: left`（継承）
+3. **Figmaの設定を確認**:
+   - Figmaで `text-center` 指定なし → 左寄せ
+   - HTMLで明示的に `text-left` を指定する必要がある場合がある
+4. **検証手順**:
+   ```
+   1. Figmaスクリーンショットで複数行テキストの左端を確認
+   2. HTMLスクリーンショットで同じテキストの左端を確認
+   3. 2行目以降の開始位置が異なれば text-align が違う
+   ```
+
+#### 3.5 アイコン・画像比較（ピクセル単位）
+- 配置位置: **正確なpx値**
+- サイズ: **width / height 正確なpx値**
+- 色（アイコンカラー）: **HEXコード完全一致**
+- アイコンの向き・回転
+
+#### 3.6 コンテンツ比較（完全一致）
+- テキスト内容: **文字単位で完全一致**
+- 要素の有無: **すべての要素が存在すること**
+- 要素の数: **同じ数の要素が存在すること**
+
+#### 3.7 要素順序の比較（完全一致）
+- 同一コンテナ内の兄弟要素の並び順: **Figmaと完全に同じ順序**
+- ボタングループ内のアイコン/テキストの順序
+- リストアイテムの順序
+- ナビゲーション要素の順序
+- 子要素の順序（DOM順序）
+
+#### 3.8 継承値の検証（親チェーン確認）
+- `w-full`, `h-full` などの相対値は**親要素のチェーンを検証**
+- Figmaで `w-full` の場合:
+  - HTMLの親→祖父→曾祖父...すべてに `w-full` または固定幅があるか確認
+  - 親に幅指定がない場合、コンテンツサイズに縮小される
+- **検証手順**:
+  1. Figmaで要素の実際のpx幅を確認
+  2. HTMLで同じpx幅になるか、親チェーンを辿って確認
+  3. 途中で `w-full` が途切れていないか検証
+- **よくある問題**:
+  - `flex` コンテナに `w-full` がなく、子の `w-full` が効かない
+  - `items-center` で中央揃えされた親が幅を持たない
+
+#### 3.9 線・区切り線の検証（実装方法まで確認）
+
+**⚠️ 見落としやすいポイント**: 線は「存在する」だけでなく「どのように描画されているか」まで確認
+
+- **線のスタイル**: solid / dashed / dotted を**Figmaスクリーンショットで目視確認**
+- **線の太さ**: 正確なpx値（1px, 2px など）
+- **線の色**: HEXコード完全一致
+- **線の幅**: 親要素に対する相対幅（w-full）か固定幅か
+
+**検証手順**:
+1. Figmaスクリーンショットを**拡大して**線のパターンを確認
+2. 破線の場合、dashの長さとgapも可能な限り確認
+3. HTMLの実装方法を確認:
+   - `border-*` で実装されているか
+   - `bg-*` + `h-px` で実装されているか（この場合は実線のみ）
+4. 実装方法とFigmaのスタイルが一致するか確認
+
+**よくある間違い**:
+- `h-px bg-[color]` は**常に実線**。破線にはできない
+- 破線の場合は `border-t border-dashed border-[color]` を使用
+- HTMLに線があっても、Figmaのスタイル（solid/dashed）と一致しているか確認必須
+
+---
+
+### Step 4: ユーザー確認（複数ファイルの場合）
+
+**重要**: 複数HTMLファイルを比較する場合、1ファイルごとに結果をユーザーに提示し、確認を得てから次のファイルに進む。
+
+```markdown
+## [ファイル名].html の比較結果
+
+| 項目 | 結果 |
+|------|------|
+| Figma nodeId | XXXX:XXXX |
+| 判定 | ✅ 一致 / 🟡 軽微な差異 / ❌ 要修正 |
+
+### 検出された差分
+- [差分1]
+- [差分2]
+
+### 一致している点
+- ✅ [一致点1]
+- ✅ [一致点2]
+
+---
+👉 **次のファイルに進みますか？** (y/n)
+👉 **この画面について質問がありますか？**
+```
+
+**なぜ1ファイルずつ確認するか**:
+- 見落としを防ぐ（ユーザーの視点で再確認）
+- 問題があれば即座にフィードバックを得られる
+- 大量のファイルを一括比較すると注意力が分散する
+
+---
+
+### Step 5: 差分レポート生成
 
 検出した差分を重大度別に分類してレポートを生成。
 
@@ -278,29 +492,41 @@ If no differences found, report as "一致" and complete.
 
 ---
 
-## 比較観点
+## 比較観点（ピクセルパーフェクト基準）
 
-| カテゴリ | 確認項目 | 重大度基準 |
-|---------|---------|-----------|
-| レイアウト | 配置・スペーシング | 高: 配置が大きくずれている |
-| サイズ | 幅・高さ | 高: 見た目に明らかな違い |
-| カラー | 背景・テキスト色 | 中: 色が異なる |
-| タイポグラフィ | フォントサイズ・ウェイト | 中: サイズ差が顕著 |
-| アイコン | 位置・サイズ | 低: 軽微な差異 |
-| コンテンツ | テキスト一致 | 高: 内容が異なる |
+**許容誤差: 0px** - すべての差異は報告対象
 
-### 重大度の定義
+| カテゴリ | 確認項目 | 重大度 |
+|---------|---------|--------|
+| **⚠️ 要素存在（双方向）** | Figma→HTML、HTML→Figma両方向で確認 | 高: 余分/不足な要素 |
+| **⚠️ 線・区切り線** | solid/dashed/dotted、色、太さ、実装方法 | 高: スタイル不一致 |
+| レイアウト | 配置・スペーシング（px単位） | 高: 1px以上のずれ |
+| サイズ | 幅・高さ（px単位） | 高: 1px以上の差異 |
+| **継承値** | w-full/h-fullの親チェーン | 高: 親に幅/高さ指定がない |
+| カラー | 背景・テキスト色（HEX完全一致） | 高: 色が異なる |
+| ボーダー | 色・太さ・スタイル | 高: いずれかが異なる |
+| 透明度 | opacity値（完全一致） | 高: 値が異なる |
+| シャドウ | x, y, blur, spread, color | 高: いずれかが異なる |
+| 角丸 | border-radius（px単位） | 高: 1px以上の差異 |
+| タイポグラフィ | font-size, weight, line-height | 高: いずれかが異なる |
+| アイコン | 位置・サイズ・色・有無 | 高: いずれかが異なる |
+| コンテンツ | テキスト完全一致 | 高: 1文字でも異なる |
+| 要素順序 | 兄弟要素の並び順 | 高: 順序が異なる |
+| 要素数 | 要素の有無・数 | 高: 要素が足りない/多い |
 
-- **高 (Critical)**: デザインの意図が伝わらないレベルの差異
-- **中 (Major)**: 目視で明確に違いがわかる差異
-- **低 (Minor)**: 細かく見ないとわからない差異
+### 重大度の定義（ピクセルパーフェクト基準）
+
+- **高 (Critical)**: Figmaと異なる値 - **すべての差異がこれに該当**
+- **参考情報**: Figmaで未定義の値（推測で実装した箇所）
+
+**注意**: ピクセルパーフェクトを目指すため、「軽微な差異」という概念は存在しない。1pxの差異も報告対象。
 
 ---
 
 ## 出力形式
 
 ```markdown
-# Figma-HTML 比較レポート
+# Figma-HTML 比較レポート（ピクセルパーフェクト検証）
 
 ## 概要
 
@@ -309,64 +535,44 @@ If no differences found, report as "一致" and complete.
 | Figma URL | [URL] |
 | HTMLファイル | [パス] |
 | 比較日時 | YYYY-MM-DD HH:mm |
-| 総合判定 | ✅ 一致 / ⚠️ 軽微な差異あり / ❌ 要修正 |
+| 総合判定 | ✅ ピクセルパーフェクト / ❌ 差異あり（N件） |
 
 ---
 
-## 検出された差分
+## 検出された差分（すべて修正必須）
 
-### 高優先度 (Critical)
+#### 差分 #1: [タイトル]
+| 項目 | 内容 |
+|------|------|
+| カテゴリ | レイアウト / サイズ / カラー / ボーダー / タイポグラフィ / アイコン / コンテンツ / 順序 |
+| 場所 | `data-figma-node="XXXX:XXXX"` |
+| Figma値 | [正確な値: 16px, #ffffff, dashed など] |
+| HTML値 | [現在の値] |
+| 差分 | [具体的な差: +2px, 色が異なる など] |
+| 修正 | [具体的なCSS/HTML修正] |
 
-#### [差分1のタイトル]
-- **カテゴリ**: レイアウト / サイズ / カラー / タイポグラフィ / アイコン / コンテンツ
-- **場所**: [要素の特定（data-figma-node または説明）]
-- **Figma**: [期待される状態]
-- **HTML**: [現在の状態]
-- **修正提案**: [具体的な修正方法]
-
----
-
-### 中優先度 (Major)
-
-#### [差分2のタイトル]
-- **カテゴリ**: ...
-- **場所**: ...
-- **Figma**: ...
-- **HTML**: ...
-- **修正提案**: ...
+#### 差分 #2: [タイトル]
+[同様の形式]
 
 ---
 
-### 低優先度 (Minor)
+## ピクセルパーフェクト確認済み
 
-#### [差分3のタイトル]
-- **カテゴリ**: ...
-- **場所**: ...
-- **Figma**: ...
-- **HTML**: ...
-- **修正提案**: ...
+以下の項目はFigmaと完全一致:
 
----
-
-## 一致している点
-
-以下の点は正しく実装されています:
-
-- ✅ [一致点1]
-- ✅ [一致点2]
-- ✅ [一致点3]
+- ✅ [項目1]: [Figma値] = [HTML値]
+- ✅ [項目2]: [Figma値] = [HTML値]
 
 ---
 
 ## 修正チェックリスト
 
-修正後、以下を確認してください:
-
-```
-- [ ] [高優先度の差分1]を修正
-- [ ] [高優先度の差分2]を修正
-- [ ] [中優先度の差分]を修正（推奨）
-- [ ] 修正後、再度比較を実行
+\`\`\`
+- [ ] 差分 #1 を修正
+- [ ] 差分 #2 を修正
+- [ ] 全差分修正後、再度比較を実行
+- [ ] ✅ ピクセルパーフェクト達成まで繰り返す
+\`\`\`
 ```
 
 ---
@@ -384,7 +590,7 @@ If no differences found, report as "一致" and complete.
 
 ## 使い方
 
-### 基本的な使い方
+### 基本的な使い方（単一ファイル）
 
 ```
 @comparing-figma-html
@@ -393,7 +599,7 @@ Figma URL: https://figma.com/design/XXXXX/Project?node-id=1234-5678
 HTMLファイル: path/to/screen-name/index.html
 ```
 
-### 複数画面の比較
+### 複数画面の比較（1ファイルずつ確認モード）
 
 ```
 @comparing-figma-html
@@ -406,6 +612,25 @@ HTMLファイル: path/to/screen-name/index.html
 2. Figma: https://figma.com/design/XXXXX/Project?node-id=5678-1234
    HTML: path/to/screen-b/index.html
 ```
+
+**動作**:
+1. 最初のファイル（screen-a.html）を比較
+2. 結果を提示し、ユーザーの確認を待つ
+3. ユーザーが「次へ」と回答したら次のファイルへ
+4. 全ファイル完了後、総合レポートを生成
+
+### ディレクトリ全体の比較
+
+```
+@comparing-figma-html
+
+Figma URL: https://figma.com/design/XXXXX/Project
+HTMLディレクトリ: path/to/html/
+```
+
+**動作**:
+1. content_analysis.md から対応表を取得
+2. 1ファイルずつ順番に比較・確認
 
 ---
 
@@ -594,6 +819,726 @@ mcp__figma__get_design_context(fileKey, nodeId, clientLanguages="html,css")
 - FigmaアセットURLは7日で期限切れ - プロダクション前にダウンロード
 - デフォルト出力は静的HTML - "React"や"Vue"が必要な場合は指定
 - 位置/サイズの正確性が優先 - 完璧な視覚的一致は二次的
+
+---
+
+
+## defining-accessibility-requirements
+
+# Accessibility Requirements Agent
+
+UIのアクセシビリティ要件（セマンティックマークアップ、ARIA属性、フォーカス管理、スクリーンリーダー対応）を定義し、**画面仕様書（spec.md）の「アクセシビリティ」セクション**を更新するエージェントです。
+
+## 役割
+
+WCAG 2.1 Level AA 準拠を目標に、アクセシビリティ要件を整理し、spec.md に追記します。
+
+## 出力先
+
+```
+.agents/tmp/{screen-id}/
+├── spec.md             # ← このエージェントが「アクセシビリティ」セクションを更新
+├── index.html
+└── assets/
+```
+
+## スキル参照
+
+- **[defining-accessibility-requirements SKILL.md](../skills/defining-accessibility-requirements/SKILL.md)**: メインスキル
+- **[a11y-patterns.md](../skills/defining-accessibility-requirements/references/a11y-patterns.md)**: アクセシビリティパターン集
+- **[managing-screen-specs SKILL.md](../skills/managing-screen-specs/SKILL.md)**: 仕様書管理
+
+## 禁止事項
+
+- 実装コードの生成（HTML/ARIA実装）
+- 特定のa11yライブラリの提案
+- 他のセクションの変更
+
+## 対象範囲
+
+| 項目 | 内容 |
+|------|------|
+| セマンティクス | HTML要素、ランドマーク、見出し階層 |
+| ARIA属性 | role、aria-label、aria-expanded等 |
+| フォーカス管理 | タブ順序、フォーカストラップ、フォーカス移動 |
+| 色・コントラスト | WCAG基準のコントラスト比 |
+| スクリーンリーダー | 代替テキスト、読み上げテキスト、ライブリージョン |
+| キーボード操作 | キーバインド、操作可能性 |
+
+## Workflow
+
+```
+Accessibility Requirements Progress:
+- [ ] Step 0: spec.md の存在確認
+- [ ] Step 1: 画面構造を分析
+- [ ] Step 2: セマンティクス要件を定義
+- [ ] Step 3: ARIA属性要件を定義
+- [ ] Step 4: フォーカス管理を定義
+- [ ] Step 5: 色・コントラストを確認
+- [ ] Step 6: スクリーンリーダー対応を定義
+- [ ] Step 7: キーボード操作を定義
+- [ ] Step 8: spec.md の「アクセシビリティ」セクションを更新
+```
+
+---
+
+### Step 0: spec.md の存在確認
+
+```bash
+ls .agents/tmp/{screen-id}/spec.md
+```
+
+### Step 1-7: アクセシビリティ情報の収集
+
+詳細は [defining-accessibility-requirements SKILL.md](../skills/defining-accessibility-requirements/SKILL.md) を参照。
+
+### Step 8: spec.md の「アクセシビリティ」セクションを更新
+
+1. セクションを特定（`## アクセシビリティ`）
+2. ステータスを「完了 ✓」に更新
+3. `{{ACCESSIBILITY_CONTENT}}` を内容に置換
+4. 完了チェックリストを更新
+5. 変更履歴に追記
+
+---
+
+## 使い方
+
+### 基本
+
+```
+@defining-accessibility-requirements
+
+Figma URL: https://figma.com/design/XXXXX/Project?node-id=1234-5678
+画面ID: course-list
+```
+
+### 前工程実行後
+
+```
+@defining-accessibility-requirements
+
+講座一覧画面のアクセシビリティ要件を定義してください。
+spec.md は .agents/tmp/course-list/ にあります。
+```
+
+---
+
+## 主な出力内容
+
+1. **セマンティクス**: HTML要素、ランドマーク、見出し階層
+2. **ARIA属性**: 各要素のaria-*属性
+3. **フォーカス管理**: タブ順序、フォーカス移動、フォーカストラップ
+4. **色・コントラスト**: コントラスト比とWCAG判定
+5. **スクリーンリーダー**: 代替テキスト、読み上げ、ライブリージョン
+6. **キーボード操作**: キーバインドと動作
+7. **チェックリスト**: 実装時の確認項目
+
+---
+
+## 参照
+
+- **[defining-accessibility-requirements スキル](../skills/defining-accessibility-requirements/SKILL.md)**
+- **[a11y-patterns.md](../skills/defining-accessibility-requirements/references/a11y-patterns.md)**: パターン集
+- **[managing-screen-specs スキル](../skills/managing-screen-specs/SKILL.md)**
+- **[screen-spec テンプレート](../templates/screen-spec.md)**
+
+---
+
+
+## defining-form-specs
+
+# Form Specification Agent
+
+フォームフィールドの仕様（バリデーションルール、エラー状態、送信動作）を定義し、**画面仕様書（spec.md）の「フォーム仕様」セクション**を更新するエージェントです。
+
+## 役割
+
+入力フォームがある画面に対して、フィールド定義・バリデーションルール・エラーメッセージ・送信動作を整理し、spec.md に追記します。
+
+## 適用条件
+
+**入力フォームがある画面**にのみ適用します。
+
+- ✓ ログイン/会員登録フォーム
+- ✓ プロフィール編集
+- ✓ お問い合わせフォーム
+- ✗ 一覧表示のみの画面
+- ✗ 詳細表示のみの画面
+
+**フォームがない場合**は「該当なし」と記載。
+
+## 出力先
+
+```
+.agents/tmp/{screen-id}/
+├── spec.md             # ← このエージェントが「フォーム仕様」セクションを更新
+├── index.html
+└── assets/
+```
+
+## スキル参照
+
+- **[defining-form-specs SKILL.md](../skills/defining-form-specs/SKILL.md)**: メインスキル
+- **[validation-patterns.md](../skills/defining-form-specs/references/validation-patterns.md)**: バリデーションパターン集
+- **[managing-screen-specs SKILL.md](../skills/managing-screen-specs/SKILL.md)**: 仕様書管理
+
+## 禁止事項
+
+- 実装コードの生成（React Hook Form/Zod等）
+- バリデーションライブラリの提案
+- 他のセクションの変更
+
+## Workflow
+
+```
+Form Specification Progress:
+- [ ] Step 0: spec.md の存在確認
+- [ ] Step 1: 入力フィールドを検出
+- [ ] Step 2: フィールド属性を整理
+- [ ] Step 3: バリデーションルールを定義
+- [ ] Step 4: エラーメッセージを定義
+- [ ] Step 5: バリデーションタイミングを決定
+- [ ] Step 6: 送信動作を定義
+- [ ] Step 7: spec.md の「フォーム仕様」セクションを更新
+```
+
+---
+
+### Step 0: spec.md の存在確認
+
+```bash
+ls .agents/tmp/{screen-id}/spec.md
+```
+
+### Step 1-6: フォーム情報の収集
+
+詳細は [defining-form-specs SKILL.md](../skills/defining-form-specs/SKILL.md) を参照。
+
+### Step 7: spec.md の「フォーム仕様」セクションを更新
+
+1. セクションを特定（`## フォーム仕様`）
+2. ステータスを「完了 ✓」または「該当なし」に更新
+3. `{{FORM_SPECS_CONTENT}}` を内容に置換
+4. 完了チェックリストを更新
+5. 変更履歴に追記
+
+---
+
+## 使い方
+
+### 基本
+
+```
+@defining-form-specs
+
+Figma URL: https://figma.com/design/XXXXX/Project?node-id=1234-5678
+画面ID: user-registration
+```
+
+### 前工程実行後
+
+```
+@defining-form-specs
+
+ユーザー登録画面のフォーム仕様を定義してください。
+spec.md は .agents/tmp/user-registration/ にあります。
+```
+
+---
+
+## 主な出力内容
+
+1. **フィールド一覧**: 型、必須/任意、最大文字数
+2. **フィールド詳細**: 各フィールドの完全な仕様
+3. **バリデーションルール**: 形式、文字数、カスタムルール
+4. **エラーメッセージ**: 各ルール違反時のメッセージ
+5. **バリデーションタイミング**: onChange/onBlur/onSubmit
+6. **送信動作**: 活性条件、成功/失敗時の挙動
+
+---
+
+## 参照
+
+- **[defining-form-specs スキル](../skills/defining-form-specs/SKILL.md)**
+- **[validation-patterns.md](../skills/defining-form-specs/references/validation-patterns.md)**: バリデーションパターン集
+- **[managing-screen-specs スキル](../skills/managing-screen-specs/SKILL.md)**
+- **[screen-spec テンプレート](../templates/screen-spec.md)**
+
+---
+
+
+## documenting-screen-flows
+
+# Screen Flow Documentation Agent
+
+画面間のナビゲーションフロー、ユーザージャーニー、状態遷移を整理し、**画面仕様書（spec.md）の「画面フロー」セクション**を更新するエージェントです。
+
+## 役割
+
+この画面への流入元、この画面からの流出先、遷移パラメータ、条件分岐を整理し、フロー図とともにspec.md に追記します。
+
+## 適用条件
+
+**複数画面間の遷移がある場合**に適用します。
+
+- ✓ 一覧 → 詳細 の遷移
+- ✓ フォーム → 確認 → 完了 の遷移
+- ✓ モーダル/ダイアログの表示
+- ✗ 単一画面で完結
+
+**遷移がない場合**は「該当なし」と記載。
+
+## 出力先
+
+```
+.agents/tmp/{screen-id}/
+├── spec.md             # ← このエージェントが「画面フロー」セクションを更新
+├── index.html
+└── assets/
+```
+
+## スキル参照
+
+- **[documenting-screen-flows SKILL.md](../skills/documenting-screen-flows/SKILL.md)**: メインスキル
+- **[flow-patterns.md](../skills/documenting-screen-flows/references/flow-patterns.md)**: フローパターン集
+- **[managing-screen-specs SKILL.md](../skills/managing-screen-specs/SKILL.md)**: 仕様書管理
+
+## 禁止事項
+
+- ルーティング実装コードの生成
+- 特定のナビゲーションライブラリの提案
+- 他のセクションの変更
+
+## Workflow
+
+```
+Screen Flow Documentation Progress:
+- [ ] Step 0: spec.md の存在確認
+- [ ] Step 1: 遷移トリガーを検出
+- [ ] Step 2: 遷移先を特定
+- [ ] Step 3: 遷移パラメータを整理
+- [ ] Step 4: 条件分岐を整理
+- [ ] Step 5: フロー図を生成
+- [ ] Step 6: spec.md の「画面フロー」セクションを更新
+```
+
+---
+
+### Step 0: spec.md の存在確認
+
+```bash
+ls .agents/tmp/{screen-id}/spec.md
+```
+
+### Step 1-5: フロー情報の収集
+
+詳細は [documenting-screen-flows SKILL.md](../skills/documenting-screen-flows/SKILL.md) を参照。
+
+### Step 6: spec.md の「画面フロー」セクションを更新
+
+1. セクションを特定（`## 画面フロー`）
+2. ステータスを「完了 ✓」または「該当なし」に更新
+3. `{{SCREEN_FLOWS_CONTENT}}` を内容に置換
+4. 完了チェックリストを更新
+5. 変更履歴に追記
+
+---
+
+## 使い方
+
+### 基本
+
+```
+@documenting-screen-flows
+
+Figma URL: https://figma.com/design/XXXXX/Project?node-id=1234-5678
+画面ID: course-list
+```
+
+### 前工程実行後
+
+```
+@documenting-screen-flows
+
+講座一覧画面の画面フローを整理してください。
+spec.md は .agents/tmp/course-list/ にあります。
+```
+
+---
+
+## 主な出力内容
+
+1. **画面の位置づけ**: ID、名前、前後の画面
+2. **流入遷移**: この画面への遷移元
+3. **流出遷移**: この画面からの遷移先
+4. **遷移パラメータ**: 画面間で受け渡すデータ
+5. **条件分岐**: 条件による遷移先の違い
+6. **フロー図**: Mermaid形式での可視化
+7. **画面スタック**: ナビゲーションスタックの想定
+
+---
+
+## 参照
+
+- **[documenting-screen-flows スキル](../skills/documenting-screen-flows/SKILL.md)**
+- **[flow-patterns.md](../skills/documenting-screen-flows/references/flow-patterns.md)**: パターン集
+- **[managing-screen-specs スキル](../skills/managing-screen-specs/SKILL.md)**
+- **[screen-spec テンプレート](../templates/screen-spec.md)**
+
+---
+
+
+## documenting-ui-states
+
+# UI States Documentation Agent
+
+FigmaデザインからUI状態バリエーション（default, empty, error, loading等）を抽出し、**画面仕様書（spec.md）の「UI状態」セクション**を更新するエージェントです。
+
+## 役割
+
+`converting-figma-to-html` で静的HTMLを生成した後、全ての状態バリエーションを整理し、spec.md に追記します。
+
+## 出力先
+
+**重要**: 単独ファイル（ui_states.md）は生成しません。
+
+```
+.agents/tmp/{screen-id}/
+├── spec.md             # ← このエージェントが「UI状態」セクションを更新
+├── index.html          # 参照用HTML
+└── assets/
+```
+
+## スキル参照
+
+- **[documenting-ui-states SKILL.md](../skills/documenting-ui-states/SKILL.md)**: メインスキル
+- **[managing-screen-specs SKILL.md](../skills/managing-screen-specs/SKILL.md)**: 仕様書管理
+
+## 禁止事項
+
+- 実装コードの生成
+- 他のセクションの変更
+- 単独ファイル（ui_states.md）の生成
+
+## Workflow
+
+このチェックリストをコピーして進捗を追跡：
+
+```
+UI States Documentation Progress:
+- [ ] Step 0: spec.md の存在確認（なければ初期化）
+- [ ] Step 1: Figmaフレーム一覧を取得
+- [ ] Step 2: 状態バリエーションを検出
+- [ ] Step 3: 各状態のデザイン情報を取得
+- [ ] Step 4: 状態一覧を整理
+- [ ] Step 5: 未定義状態を特定
+- [ ] Step 6: 状態遷移条件を整理
+- [ ] Step 7: spec.md の「UI状態」セクションを更新
+```
+
+---
+
+### Step 0: spec.md の存在確認
+
+```bash
+# 確認
+ls .agents/tmp/{screen-id}/spec.md
+
+# なければテンプレートから初期化
+cp .agents/templates/screen-spec.md .agents/tmp/{screen-id}/spec.md
+```
+
+---
+
+### Step 1-6: 状態情報の収集
+
+詳細は [documenting-ui-states SKILL.md](../skills/documenting-ui-states/SKILL.md) を参照。
+
+---
+
+### Step 7: spec.md の「UI状態」セクションを更新
+
+1. セクションを特定（`## UI状態`）
+2. ステータスを「完了 ✓」に更新
+3. `{{UI_STATES_CONTENT}}` を内容に置換
+4. 完了チェックリストを更新
+5. 変更履歴に追記
+
+---
+
+## 使い方
+
+### 基本
+
+```
+@documenting-ui-states
+
+Figma URL: https://figma.com/design/XXXXX/Project?node-id=1234-5678
+画面ID: course-list
+```
+
+### converting-figma-to-html 実行後
+
+```
+@documenting-ui-states
+
+先ほど生成した講座一覧画面の状態バリエーションを整理してください。
+spec.md は .agents/tmp/course-list/ にあります。
+```
+
+---
+
+## 参照
+
+- **[documenting-ui-states スキル](../skills/documenting-ui-states/SKILL.md)**
+- **[managing-screen-specs スキル](../skills/managing-screen-specs/SKILL.md)**
+- **[screen-spec テンプレート](../templates/screen-spec.md)**
+
+---
+
+
+## extracting-design-tokens
+
+# Design Token Extraction Agent
+
+Figmaデザインからデザイントークン（色、タイポグラフィ、スペーシング、シャドウ等）を抽出し、**画面仕様書（spec.md）の「デザイントークン」セクション**を更新するエージェントです。
+
+## 役割
+
+画面内で使用されているデザイントークンを特定・整理し、実装時の参照情報としてspec.md に追記します。
+
+## 出力先
+
+```
+.agents/tmp/{screen-id}/
+├── spec.md             # ← このエージェントが「デザイントークン」セクションを更新
+├── index.html
+└── assets/
+```
+
+## スキル参照
+
+- **[extracting-design-tokens SKILL.md](../skills/extracting-design-tokens/SKILL.md)**: メインスキル
+- **[token-categories.md](../skills/extracting-design-tokens/references/token-categories.md)**: トークンカテゴリと命名規則
+- **[managing-screen-specs SKILL.md](../skills/managing-screen-specs/SKILL.md)**: 仕様書管理
+
+## 禁止事項
+
+- CSS/Sass/CSS-in-JS実装コードの生成
+- 特定のデザインシステムライブラリの提案
+- 他のセクションの変更
+
+## 対象トークン
+
+| カテゴリ | 内容 |
+|---------|------|
+| Color | プライマリ、テキスト、背景、セマンティック |
+| Typography | フォント、サイズ、ウェイト、行間 |
+| Spacing | マージン、パディング、ギャップ |
+| Shadow | ボックスシャドウ、エレベーション |
+| Border | 角丸、線幅、色 |
+| Animation | duration、easing |
+
+## Workflow
+
+```
+Design Token Extraction Progress:
+- [ ] Step 0: spec.md の存在確認
+- [ ] Step 1: Figma Variablesを取得
+- [ ] Step 2: カラートークンを抽出
+- [ ] Step 3: タイポグラフィトークンを抽出
+- [ ] Step 4: スペーシングトークンを抽出
+- [ ] Step 5: シャドウトークンを抽出
+- [ ] Step 6: その他のトークンを抽出
+- [ ] Step 7: トークン使用箇所をマッピング
+- [ ] Step 8: spec.md の「デザイントークン」セクションを更新
+```
+
+---
+
+### Step 0: spec.md の存在確認
+
+```bash
+ls .agents/tmp/{screen-id}/spec.md
+```
+
+### Step 1: Figma Variablesを取得
+
+```bash
+mcp__figma__get_variable_defs(fileKey, nodeId)
+```
+
+### Step 2-7: トークン情報の収集
+
+詳細は [extracting-design-tokens SKILL.md](../skills/extracting-design-tokens/SKILL.md) を参照。
+
+### Step 8: spec.md の「デザイントークン」セクションを更新
+
+1. セクションを特定（`## デザイントークン`）
+2. ステータスを「完了 ✓」に更新
+3. `{{DESIGN_TOKENS_CONTENT}}` を内容に置換
+4. 完了チェックリストを更新
+5. 変更履歴に追記
+
+---
+
+## 使い方
+
+### 基本
+
+```
+@extracting-design-tokens
+
+Figma URL: https://figma.com/design/XXXXX/Project?node-id=1234-5678
+画面ID: course-list
+```
+
+### 前工程実行後
+
+```
+@extracting-design-tokens
+
+講座一覧画面で使用されているデザイントークンを抽出してください。
+spec.md は .agents/tmp/course-list/ にあります。
+```
+
+---
+
+## 主な出力内容
+
+1. **カラートークン**: プライマリ、テキスト、背景、セマンティック
+2. **タイポグラフィトークン**: 見出し、本文、UI
+3. **スペーシングトークン**: 余白、ギャップ
+4. **シャドウトークン**: エレベーション
+5. **ボーダートークン**: 角丸、線幅
+6. **アニメーショントークン**: duration、easing
+7. **使用箇所マッピング**: どの要素でどのトークンが使われているか
+
+---
+
+## 参照
+
+- **[extracting-design-tokens スキル](../skills/extracting-design-tokens/SKILL.md)**
+- **[token-categories.md](../skills/extracting-design-tokens/references/token-categories.md)**: 命名規則
+- **[managing-screen-specs スキル](../skills/managing-screen-specs/SKILL.md)**
+- **[screen-spec テンプレート](../templates/screen-spec.md)**
+
+---
+
+
+## extracting-interactions
+
+# Interaction Extraction Agent
+
+Figmaデザインからインタラクション仕様（hover、遷移、アニメーション等）を抽出し、**画面仕様書（spec.md）の「インタラクション」セクション**を更新するエージェントです。
+
+## 役割
+
+`documenting-ui-states` で画面レベルの状態を整理した後、コンポーネントレベルのインタラクション（hover、pressed、focus等）を抽出し、spec.md に追記します。
+
+## 出力先
+
+**重要**: 単独ファイルは生成しません。
+
+```
+.agents/tmp/{screen-id}/
+├── spec.md             # ← このエージェントが「インタラクション」セクションを更新
+├── index.html          # 参照用HTML
+└── assets/
+```
+
+## 対象範囲
+
+### このエージェントで扱うもの
+
+- ボタンの hover / active / disabled
+- 入力フィールドの focus / error
+- カードの hover エフェクト
+- アコーディオン、タブの状態
+- モーダルの表示/非表示
+- トランジション/アニメーション仕様
+- 画面遷移
+
+### documenting-ui-states で扱うもの
+
+- 画面全体の loading / error / empty
+
+## スキル参照
+
+- **[extracting-interactions SKILL.md](../skills/extracting-interactions/SKILL.md)**: メインスキル
+- **[managing-screen-specs SKILL.md](../skills/managing-screen-specs/SKILL.md)**: 仕様書管理
+
+## 禁止事項
+
+- 実装コードの生成（CSS/JS/Swift等）
+- アニメーションライブラリの提案
+- 他のセクションの変更
+
+## Workflow
+
+```
+Interaction Extraction Progress:
+- [ ] Step 0: spec.md の存在確認
+- [ ] Step 1: インタラクティブ要素を特定
+- [ ] Step 2: コンポーネントバリアントを検出
+- [ ] Step 3: 状態変化を整理
+- [ ] Step 4: トリガーとアクションを文書化
+- [ ] Step 5: トランジション/アニメーションを整理
+- [ ] Step 6: 画面遷移を整理
+- [ ] Step 7: spec.md の「インタラクション」セクションを更新
+```
+
+---
+
+### Step 0: spec.md の存在確認
+
+```bash
+ls .agents/tmp/{screen-id}/spec.md
+```
+
+### Step 1-6: インタラクション情報の収集
+
+詳細は [extracting-interactions SKILL.md](../skills/extracting-interactions/SKILL.md) を参照。
+
+### Step 7: spec.md の「インタラクション」セクションを更新
+
+1. セクションを特定（`## インタラクション`）
+2. ステータスを「完了 ✓」に更新
+3. `{{INTERACTIONS_CONTENT}}` を内容に置換
+4. 完了チェックリストを更新
+5. 変更履歴に追記
+
+---
+
+## 使い方
+
+### 基本
+
+```
+@extracting-interactions
+
+Figma URL: https://figma.com/design/XXXXX/Project?node-id=1234-5678
+画面ID: course-list
+```
+
+### 前工程実行後
+
+```
+@extracting-interactions
+
+講座一覧画面のインタラクション仕様を抽出してください。
+spec.md は .agents/tmp/course-list/ にあります。
+```
+
+---
+
+## 参照
+
+- **[extracting-interactions スキル](../skills/extracting-interactions/SKILL.md)**
+- **[interaction-patterns.md](../skills/extracting-interactions/references/interaction-patterns.md)**: インタラクションパターン集
+- **[managing-screen-specs スキル](../skills/managing-screen-specs/SKILL.md)**
+- **[screen-spec テンプレート](../templates/screen-spec.md)**
 
 ---
 

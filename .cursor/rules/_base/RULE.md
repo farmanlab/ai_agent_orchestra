@@ -1,0 +1,54 @@
+---
+description: Provides base project rules for all files. Use when common coding standards and communication guidelines apply.
+
+alwaysApply: false
+---
+
+
+# Project Base Rules
+
+## Communication
+- 日本語でコミュニケーション
+- 技術用語は英語のまま使用可
+
+## Core Principles
+- 推測せず、不明点は確認してから実装
+- 既存パターンを尊重し、一貫性を保つ
+- 最小限の変更で目的を達成
+
+## Before Implementation
+1. 要件の理解を確認
+2. 影響範囲を特定
+3. 既存コードのパターンを確認
+
+## Code Quality
+- 自己文書化コードを心がける
+- マジックナンバー禁止
+- 適切なエラーハンドリング
+
+### Example: Magic Numbers
+
+**Bad**:
+```typescript
+if (retries > 3) {
+  throw new Error("Failed");
+}
+```
+
+**Good**:
+```typescript
+const MAX_RETRIES = 3;
+if (retries > MAX_RETRIES) {
+  throw new Error("Failed after maximum retries");
+}
+```
+
+## Testing
+- 変更には対応するテストを含める
+- 既存テストを壊さない
+- エッジケースを考慮
+
+## Git Workflow
+- コミットは論理的な単位で
+- コミットメッセージは変更内容を明確に
+- WIP コミットはsquash前提

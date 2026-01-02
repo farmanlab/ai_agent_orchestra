@@ -12,9 +12,46 @@
 
 | 状況 | 対応 |
 |------|------|
-| SVGアイコン | プレースホルダーSVGを仮置きし、`data-figma-icon-svg`属性でFigmaアセットURLを埋め込む |
+| SVGアイコン | プレースホルダーSVGを仮置きし、**`data-figma-icon-svg`属性でアイコンの親ノードIDを必須設定** |
 | PNG/JPG画像 | プレースホルダーを使用し、`data-figma-asset-src`属性でFigmaアセットURLを埋め込む |
 | ロゴ等のブランドアセット | 同上 |
+
+### data-figma-icon-svg の必須設定（重要）
+
+**アイコン要素には必ず `data-figma-icon-svg` 属性を設定すること。**
+
+値は `get_design_context` または `get_metadata` で取得した**アイコンの親ノードID**を設定する。
+このノードIDは Figma API `getImages` でSVGをダウンロードする際に使用する。
+
+```javascript
+// get_design_context の出力例
+<div data-node-id="3428:18627" data-name="Common/Home(Outlined)">
+  <img src="https://www.figma.com/api/mcp/asset/..." />  // MCP URLは7日で期限切れ
+</div>
+```
+
+```html
+<!-- HTML出力: data-figma-icon-svg にノードIDを設定 -->
+<span class="icon" data-figma-icon-svg="3428:18627" data-figma-node="3428:18626">
+  <svg><!-- placeholder --></svg>
+</span>
+```
+
+### ノードIDの取得方法
+
+1. `get_design_context` を呼び出す
+2. アイコン要素の `data-node-id` または `data-name` からノードIDを特定
+3. 対応するアイコン要素の `data-figma-icon-svg` 属性に設定
+
+### getImages APIでのダウンロード
+
+```bash
+# Figma API でSVGをエクスポート
+curl -H "X-Figma-Token: $FIGMA_TOKEN" \
+  "https://api.figma.com/v1/images/{file_key}?ids=3428:18627&format=svg"
+```
+
+**注意**: インスタンスノードの場合、親コンポーネントのノードIDを使用する必要がある場合がある。
 
 ### プレースホルダー方針
 
@@ -36,7 +73,7 @@
 
 ```html
 <span class="w-6 h-6"
-      data-figma-icon-svg="https://www.figma.com/api/mcp/asset/ea960857-7d7c-48e8-a9d5-bf863835ea2f"
+      data-figma-icon-svg="3428:18627"
       data-figma-icon-color="Icon/Main/Default">
   <!-- Placeholder SVG -->
   <svg viewBox="0 0 24 24">...</svg>
@@ -45,11 +82,11 @@
 
 ### data属性仕様
 
-| 属性 | 用途 | 値の例 |
-|------|------|--------|
-| `data-figma-icon-svg` | FigmaアセットURL（SVG、7日間有効） | `https://www.figma.com/api/mcp/asset/xxx-xxx` |
-| `data-figma-icon-color` | Figmaのカラートークン名 | `Icon/Main/Default` |
-| `data-figma-asset-src` | FigmaアセットURL（画像、7日間有効） | `https://www.figma.com/api/mcp/asset/xxx-xxx` |
+| 属性 | 用途 | 値の例 | 必須 |
+|------|------|--------|:----:|
+| `data-figma-icon-svg` | **アイコンの親ノードID（getImages用）** | `3428:18627` | **必須** |
+| `data-figma-icon-color` | Figmaのカラートークン名 | `Icon/Main/Default` | 任意 |
+| `data-figma-asset-src` | FigmaアセットURL（画像、7日間有効） | `https://www.figma.com/api/mcp/asset/xxx-xxx` | 任意 |
 
 ### 注意事項
 

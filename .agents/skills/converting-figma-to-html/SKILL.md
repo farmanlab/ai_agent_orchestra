@@ -113,7 +113,7 @@ https://figma.com/design/XXXXX/Project?node-id=1234-5678
 | `data-figma-content-XXX` | コンテンツ識別子 | `nav-title`, `course-item` |
 | `data-figma-tokens` | デザイントークン | `"background: darkblue"` |
 | `data-figma-font` | フォントトークン | `"JP/16 - Bold"` |
-| `data-figma-icon-svg` | アイコンURL | `"https://figma.com/api/..."` |
+| `data-figma-icon-svg` | アイコンノードID（getImages用） | `"3428:18627"` |
 
 ### 2. コンテンツ分類
 
@@ -139,7 +139,7 @@ HTMLの各コンテンツを以下のカテゴリで整理：
 
 ```html
 <div class="w-6 h-6"
-     data-figma-icon-svg="https://figma.com/api/..."
+     data-figma-icon-svg="3428:18627"
      data-figma-content-settings-icon>
   <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
     <rect x="4" y="4" width="16" height="16" rx="2"

@@ -1,3 +1,7 @@
+---
+name: code-reviewer
+model: fast
+---
 
 ---
 name: code-reviewer

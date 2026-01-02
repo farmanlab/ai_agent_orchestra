@@ -14,6 +14,62 @@ Figmaデザインから画面仕様書を完成させるまでの一連のフロ
 
 複数の専門エージェントを適切な順序で呼び出し、Figmaデザインから完全な画面仕様書（spec.md）を生成します。各エージェントの出力を検証し、次のステップに進むかどうかを判断します。
 
+---
+
+## 重要な制約
+
+### 1. API仕様は推測禁止
+
+**絶対に推測でAPI仕様を記述してはいけません。**
+
+| 状況 | 対応 |
+|------|------|
+| OpenAPI仕様書が提供された | 仕様書に基づいてAPIマッピングを記述 |
+| OpenAPI仕様書がない | 「## APIマッピング」セクションは「API仕様書未提供のためスキップ」と記載 |
+
+**禁止例**:
+```json
+// ❌ これは推測 - 絶対にやらない
+{
+  "endpoint": "/api/dashboard",
+  "response": { "courses": [...] }
+}
+```
+
+### 2. 根拠の明示義務
+
+すべての仕様項目について、**データソース**を明示すること:
+
+| ラベル | 意味 | 例 |
+|--------|------|-----|
+| `[Figma]` | Figmaデザインから直接取得 | ノードID、テキスト、色、サイズ |
+| `[推奨]` | ベストプラクティスからの提案 | ARIA属性、キーボード操作 |
+| `[要確認]` | 別途確認が必要な仮定 | 遷移先URL、状態の発火条件 |
+| `[API]` | OpenAPI仕様書から取得 | エンドポイント、レスポンス構造 |
+
+**出力例**:
+```markdown
+## インタラクション
+
+### INT-001: お知らせアイコンタップ
+
+| 項目 | 内容 | ソース |
+|------|------|--------|
+| トリガー | お知らせアイコンをタップ | [Figma] |
+| 遷移先 | /notifications | [要確認] |
+| アニメーション | フェードイン | [推奨] |
+```
+
+### 3. 確実に取得できる情報 vs 要確認情報
+
+| 確実（Figma由来） | 要確認（別途情報必要） |
+|-------------------|------------------------|
+| コンポーネント構造 | 遷移先URL |
+| テキストコンテンツ | API エンドポイント |
+| 色・フォント・サイズ | 状態遷移の条件 |
+| ノードID | バリデーションルール |
+| 状態バリエーション（フレームがあれば） | イベントハンドラ名 |
+
 ## オーケストレーション対象エージェント
 
 | 順序 | エージェント | 役割 | 必須/任意 |
@@ -100,9 +156,15 @@ mkdir -p .outputs/{screen-id}
 ```
 - [ ] HTMLファイルが生成された
 - [ ] content_analysis.md が生成された
+- [ ] mapping-overlay.js が生成された（API未確定でも必須）
 - [ ] 全状態のHTMLが生成された（複数状態の場合）
 - [ ] data-figma-node 属性が付与されている
+- [ ] HTMLに <script src="mapping-overlay.js"></script> が含まれている
 ```
+
+**⚠️ mapping-overlay.js は必須出力**:
+- API仕様の有無に関わらず、content_analysis.md の static/dynamic 分類を可視化
+- Phase 2（API確定後）で endpoint/apiField を追加更新
 
 If HTML generation fails, report error and stop orchestration.
 
@@ -217,14 +279,37 @@ Grep: pattern="input|form|text-field|checkbox|radio|select" path=".outputs/{scre
 
 ### Step 4.4: APIマッピング (mapping-html-to-api)
 
+**⚠️ 重要: API仕様は推測禁止**
+
 **実行条件**:
-1. OpenAPI仕様書が提供された場合
-2. content_analysis.md に dynamic 要素がある場合
+- OpenAPI仕様書が提供された場合 **のみ** 実行
 
 **判定ロジック**:
-```bash
-Grep: pattern="type.*dynamic" path=".outputs/{screen-id}/{screen-id}_content_analysis.md"
 ```
+OpenAPI仕様書パスが指定されている？
+├─ はい → mapping-html-to-api を実行
+└─ いいえ → 以下を記載してスキップ
+```
+
+**OpenAPIがない場合の出力**:
+```markdown
+## APIマッピング
+
+API仕様書（OpenAPI）が提供されていないため、このセクションはスキップされました。
+
+APIマッピングを生成するには、以下の情報を提供してください:
+- OpenAPI仕様書のパス（例: `openapi/index.yaml`）
+
+**動的コンテンツ候補** [Figma]:
+以下の要素は動的データが必要と推定されます（content_analysis.mdより）:
+- [要素1]: ノードID xxx
+- [要素2]: ノードID yyy
+```
+
+**禁止事項**:
+- ❌ エンドポイント名の推測（`/api/xxx`）
+- ❌ レスポンス構造の推測
+- ❌ リクエストパラメータの推測
 
 **更新セクション**: `## APIマッピング`
 
@@ -331,12 +416,13 @@ Read: .outputs/{screen-id}/spec.md
 
 ### 生成ファイル
 
-| ファイル | 説明 | パス |
-|----------|------|------|
-| spec.md | 画面仕様書 | `.outputs/{screen-id}/spec.md` |
-| {screen-id}.html | メインHTML | `.outputs/{screen-id}/{screen-id}.html` |
-| content_analysis.md | コンテンツ分析 | `.outputs/{screen-id}/{screen-id}_content_analysis.md` |
-| api_mapping.md | APIマッピング | `.outputs/{screen-id}/{screen-id}_api_mapping.md` |
+| ファイル | 説明 | パス | 必須 |
+|----------|------|------|:----:|
+| spec.md | 画面仕様書 | `.outputs/{screen-id}/spec.md` | ✅ |
+| {screen-id}.html | メインHTML | `.outputs/{screen-id}/{screen-id}.html` | ✅ |
+| content_analysis.md | コンテンツ分析 | `.outputs/{screen-id}/{screen-id}_content_analysis.md` | ✅ |
+| mapping-overlay.js | static/dynamic可視化 | `.outputs/{screen-id}/mapping-overlay.js` | ✅ |
+| api_mapping.md | APIマッピング | `.outputs/{screen-id}/{screen-id}_api_mapping.md` | OpenAPI提供時のみ |
 
 ### 完了セクション
 
@@ -351,11 +437,23 @@ Read: .outputs/{screen-id}/spec.md
 | デザイントークン | ✅ | extracting-design-tokens |
 | 画面フロー | ➖ | 該当なし |
 
+### データソース凡例
+
+仕様書内の各項目には以下のソースラベルが付与されています:
+
+| ラベル | 意味 | 信頼度 |
+|--------|------|--------|
+| `[Figma]` | Figmaデザインから直接取得 | ✅ 確実 |
+| `[API]` | OpenAPI仕様書から取得 | ✅ 確実 |
+| `[推奨]` | ベストプラクティスからの提案 | ⚠️ レビュー推奨 |
+| `[要確認]` | 別途確認が必要な仮定 | ❌ 要確認 |
+
 ### 次のステップ
 
 1. `open .outputs/{screen-id}/spec.md` で仕様書を確認
-2. 必要に応じて手動で調整
-3. 実装チームに仕様書を共有
+2. `[要確認]` ラベルの項目を関係者と確認
+3. `[推奨]` ラベルの項目をプロジェクト要件に合わせて調整
+4. 実装チームに仕様書を共有
 
 ### 実行統計
 

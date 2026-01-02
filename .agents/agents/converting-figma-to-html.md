@@ -100,21 +100,65 @@ mcp__figma__get_design_context(fileKey, nodeId, clientLanguages="html,css")
 - 全要素に `data-figma-node` 属性
 - アイコンは簡略化してインラインSVG
 - 画像はプレースホルダー使用
-- **mapping-overlay.js を `</body>` 直前に読み込み** ← APIマッピング可視化用
+- **mapping-overlay.js を必ず生成・読み込み**（下記参照）
+
+---
+
+### mapping-overlay.js の必須生成
+
+**⚠️ 重要: API仕様の有無に関わらず必ず生成すること**
+
+`mapping-overlay.js` は2段階で使用されます：
+
+| フェーズ | 目的 | 必要な情報 |
+|----------|------|------------|
+| **Phase 1: HTML変換時**（必須） | static/dynamic 分類の可視化 | content_analysis.md |
+| **Phase 2: API確定後**（任意） | エンドポイント・フィールドマッピング追加 | OpenAPI仕様書 |
+
+**Phase 1 での生成内容**:
+
+
+```javascript
+const MAPPING_DATA = {
+  // content_analysis.md の分類結果から生成
+  'data-figma-content-nav-title': {
+    type: 'static',
+    label: 'ナビゲーションタイトル'
+  },
+  'data-figma-content-user-name': {
+    type: 'dynamic',
+    label: 'ユーザー名',
+    endpoint: null,  // API未確定
+    apiField: null   // API未確定
+  },
+  'data-figma-content-course-list': {
+    type: 'dynamic_list',
+    label: '講座一覧',
+    endpoint: null,
+    apiField: null
+  }
+};
+```
+
+**テンプレート**: `.agents/templates/mapping-overlay.js` を使用
 
 **HTMLテンプレート（末尾）**:
 ```html
-  <!-- Mapping Overlay Script -->
+  <!-- Mapping Overlay Script - API確定前でも必須 -->
   <script src="mapping-overlay.js"></script>
 </body>
 </html>
 ```
 
+---
+
 **検証**:
 - [ ] Figmaスクリーンショットと視覚的に一致
 - [ ] 全要素にdata-figma-node属性がある
 - [ ] アイコンは簡略化されているが正しく配置
-- [ ] mapping-overlay.js が読み込まれている
+- [ ] **mapping-overlay.js が生成されている**
+- [ ] **mapping-overlay.js が読み込まれている**
+- [ ] content_analysis.md の分類が MAPPING_DATA に反映されている
 
 ---
 
@@ -169,14 +213,16 @@ mcp__figma__get_design_context(fileKey, nodeId, clientLanguages="html,css")
 
 ## 出力ファイル
 
-| ファイル | 内容 |
-|----------|------|
-| `{name}.html` | Tailwind CSS付き完全なHTML、全要素にdata属性、mapping-overlay.js読み込み |
-| `{name}_content_analysis.md` | コンテンツ分類（static/dynamic識別 ※仮決定）、デザイントークン |
-| `{name}-{state}.html` | 各状態ごとの別HTML（該当する場合、mapping-overlay.js読み込み含む） |
+| ファイル | 内容 | 必須 |
+|----------|------|:----:|
+| `{name}.html` | Tailwind CSS付き完全なHTML、全要素にdata属性、mapping-overlay.js読み込み | ✅ |
+| `{name}_content_analysis.md` | コンテンツ分類（static/dynamic識別 ※仮決定）、デザイントークン | ✅ |
+| `mapping-overlay.js` | static/dynamic 分類の可視化スクリプト（content_analysis.md から生成） | ✅ |
+| `{name}-{state}.html` | 各状態ごとの別HTML（該当する場合、mapping-overlay.js読み込み含む） | 条件付き |
 
-> **注意**: `{name}_content_analysis.md` 内の static/dynamic 分類は**仮決定**です。
-> API仕様確定後にレビューし、`-static` / `-dynamic` サフィックスを確定してください。
+> **注意**:
+> - `{name}_content_analysis.md` 内の static/dynamic 分類は**仮決定**です。API仕様確定後にレビューし確定してください。
+> - `mapping-overlay.js` はAPI仕様確定前でも必ず生成すること。Phase 2（API確定後）で endpoint/apiField を追加更新します。
 
 ---
 

@@ -79,15 +79,47 @@ mcp__figma__get_design_context(fileKey, nodeId, clientLanguages="html,css")
 
 ---
 
-### Step 3: 複数状態の処理
+### Step 3: 画面・状態の判定と処理
 
-フレーム名から状態バリエーションを検出（`_Empty`, `_Error`, `_Modal` 等）：
+Figmaに複数フレームが含まれる場合、**画面の種類を判定**して適切に処理します。
 
-1. 検出した全フレームと状態をリスト化
-2. ユーザーに通知: "X個の状態を検出"
-3. 各フレームに対して `get_design_context` を実行
+#### 判定基準
 
-**検証**: 全状態が識別されたか確認
+| 種類 | 判定条件 | 出力方法 |
+|------|----------|----------|
+| **同一画面の状態バリエーション** | フレーム名に共通プレフィックス + 状態サフィックス | 1ディレクトリ、複数HTML |
+| **完全に異なる画面** | 名前・レイアウト・目的が明らかに異なる | 画面ごとに別ディレクトリ |
+
+#### 状態バリエーションのサフィックス例
+
+```
+_Default, _Empty, _Error, _Loading, _Success
+_Modal, _Dialog, _Sheet
+_Hover, _Active, _Disabled, _Selected
+```
+
+#### 判定プロセス
+
+1. **フレーム名を分析**
+   - 共通プレフィックスがあるか（例: `Home_Default`, `Home_Empty` → 同一画面）
+   - 完全に異なる名前か（例: `Home`, `Settings`, `Profile` → 別画面）
+
+2. **レイアウト構造を比較**
+   - 主要なUI構成が同じか（ヘッダー、コンテンツ領域、フッター）
+   - 部分的な違いのみか、根本的に異なるか
+
+3. **ユーザーに確認**（判断に迷う場合）
+   ```
+   X個のフレームを検出しました：
+   - ScreenA_Default, ScreenA_Empty → 同一画面の2状態
+   - ScreenB → 別画面
+
+   この判定で正しいですか？
+   ```
+
+4. **各フレームに対して `get_design_context` を実行**
+
+**検証**: 全画面・全状態が正しく識別されたか確認
 
 ---
 
@@ -213,16 +245,47 @@ const MAPPING_DATA = {
 
 ## 出力ファイル
 
+### 出力ディレクトリ構造
+
+**単一画面の場合:**
+```
+.outputs/{screen-name}/
+├── index.html              # メインHTML
+├── index-{state}.html      # 状態バリエーション（該当する場合）
+├── spec.md                 # 画面仕様書
+└── mapping-overlay.js      # マッピング可視化スクリプト
+```
+
+**複数画面の場合:**
+```
+.outputs/
+├── {screen-a}/
+│   ├── index.html
+│   ├── index-empty.html    # 同一画面の状態バリエーション
+│   ├── index-error.html
+│   ├── spec.md
+│   └── mapping-overlay.js
+├── {screen-b}/
+│   ├── index.html
+│   ├── spec.md
+│   └── mapping-overlay.js
+└── {screen-c}/
+    └── ...
+```
+
+### ファイル一覧
+
 | ファイル | 内容 | 必須 |
 |----------|------|:----:|
-| `{name}.html` | Tailwind CSS付き完全なHTML、全要素にdata属性、mapping-overlay.js読み込み | ✅ |
-| `{name}_content_analysis.md` | コンテンツ分類（static/dynamic識別 ※仮決定）、デザイントークン | ✅ |
-| `mapping-overlay.js` | static/dynamic 分類の可視化スクリプト（content_analysis.md から生成） | ✅ |
-| `{name}-{state}.html` | 各状態ごとの別HTML（該当する場合、mapping-overlay.js読み込み含む） | 条件付き |
+| `index.html` | メインHTML（Tailwind CSS、data属性、mapping-overlay.js読み込み） | ✅ |
+| `spec.md` | 画面仕様書（コンテンツ分類 ※仮決定）、デザイントークン | ✅ |
+| `mapping-overlay.js` | static/dynamic 分類の可視化スクリプト | ✅ |
+| `index-{state}.html` | 状態バリエーションのHTML（Empty, Error, Modal等） | 条件付き |
 
 > **注意**:
-> - `{name}_content_analysis.md` 内の static/dynamic 分類は**仮決定**です。API仕様確定後にレビューし確定してください。
+> - `spec.md` 内の static/dynamic 分類は**仮決定**です。API仕様確定後にレビューし確定してください。
 > - `mapping-overlay.js` はAPI仕様確定前でも必ず生成すること。Phase 2（API確定後）で endpoint/apiField を追加更新します。
+> - **複数画面の場合、画面ごとに別ディレクトリを作成**してください。
 
 ---
 

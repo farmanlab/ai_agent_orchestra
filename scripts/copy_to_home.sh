@@ -15,13 +15,14 @@ usage() {
     echo "使用方法: $0 [OPTIONS]"
     echo ""
     echo "オプション:"
-    echo "  -r, --repo     GitHubリポジトリ (デフォルト: $DEFAULT_REPO)"
-    echo "  -b, --branch   ブランチ名 (デフォルト: $DEFAULT_BRANCH)"
-    echo "  -d, --here     カレントディレクトリにコピー（デフォルトはホームディレクトリ）"
-    echo "  -a, --all      全フォルダを確認なしでコピー"
-    echo "  -f, --force    既存ファイルを確認なしで上書き（--all を含む）"
-    echo "  -v, --verbose  詳細な出力（同一ファイルも表示）"
-    echo "  -h, --help     このヘルプメッセージを表示"
+    echo "  -r, --repo        GitHubリポジトリ (デフォルト: $DEFAULT_REPO)"
+    echo "  -b, --branch      ブランチ名 (デフォルト: $DEFAULT_BRANCH)"
+    echo "  -d, --here        カレントディレクトリにコピー（デフォルトはホームディレクトリ）"
+    echo "  -a, --all         全フォルダを確認なしでコピー"
+    echo "  -f, --force       既存ファイルを確認なしで上書き（--all を含む）"
+    echo "  -i, --interactive .agents内のagents/commands/skills/rulesを個別に選択"
+    echo "  -v, --verbose     詳細な出力（同一ファイルも表示）"
+    echo "  -h, --help        このヘルプメッセージを表示"
     echo ""
     echo "このスクリプトは以下のフォルダとファイルをコピーします:"
     echo "  フォルダ: .agents, .claude, .cursor, .github"
@@ -29,10 +30,12 @@ usage() {
     echo ""
     echo "デフォルトでは各フォルダのコピー前に確認を求めます。"
     echo "-a または -f オプションで確認をスキップできます。"
+    echo "-i オプションで .agents 内のアイテムを個別に選択できます。"
     echo ""
     echo "例:"
     echo "  $0                              # フォルダごとに確認"
     echo "  $0 -a                           # 全フォルダを確認なしでコピー"
+    echo "  $0 -i                           # agents/skills/rules/commandsを個別選択"
     echo "  $0 -r username/repo -b main -f  # 強制上書き"
     echo "  $0 -v                           # 詳細出力"
     echo "  $0 --here                       # カレントディレクトリにコピー"
@@ -44,6 +47,7 @@ FORCE=false
 VERBOSE=false
 HERE=false
 ALL=false
+INTERACTIVE=false
 REPO="$DEFAULT_REPO"
 BRANCH="$DEFAULT_BRANCH"
 
@@ -68,6 +72,10 @@ while [[ $# -gt 0 ]]; do
         -f|--force)
             FORCE=true
             ALL=true  # --force は --all を含む
+            shift
+            ;;
+        -i|--interactive)
+            INTERACTIVE=true
             shift
             ;;
         -v|--verbose)
@@ -213,6 +221,179 @@ copy_file() {
     fi
 }
 
+# インタラクティブモード: .agents内のアイテムを個別選択
+interactive_select_agents() {
+    local src_agents="$1"
+    local dest_agents="$2"
+
+    # 選択対象のサブフォルダ
+    local AGENT_SUBDIRS=("agents" "commands" "skills" "rules")
+
+    # 選択されたアイテムを記録する配列
+    declare -A SELECTED_ITEMS
+
+    echo ""
+    echo -e "${GREEN}=== インタラクティブモード ===${NC}"
+    echo "各アイテムについて、インストールするかどうか選択してください。"
+    echo "(y=はい, n=いいえ, a=このカテゴリ全て, s=このカテゴリスキップ)"
+    echo ""
+
+    for subdir in "${AGENT_SUBDIRS[@]}"; do
+        local src_subdir="$src_agents/$subdir"
+        local dest_subdir="$dest_agents/$subdir"
+
+        if [ ! -d "$src_subdir" ]; then
+            continue
+        fi
+
+        # サブフォルダ内のアイテム（ファイルまたはディレクトリ）を取得
+        local items=()
+        while IFS= read -r -d '' item; do
+            items+=("$(basename "$item")")
+        done < <(find "$src_subdir" -maxdepth 1 -mindepth 1 \( -type f -o -type d \) -print0 | sort -z)
+
+        if [ ${#items[@]} -eq 0 ]; then
+            continue
+        fi
+
+        echo -e "${YELLOW}━━━ $subdir (${#items[@]}件) ━━━${NC}"
+
+        local skip_category=false
+        local all_category=false
+
+        for item in "${items[@]}"; do
+            local item_path="$src_subdir/$item"
+            local item_name="${item%.md}"  # .md拡張子を除去
+
+            # 説明を取得（.mdファイルの場合はdescriptionを抽出）
+            local description=""
+            if [ -f "$item_path" ]; then
+                description=$(grep -m1 "^description:" "$item_path" 2>/dev/null | sed 's/^description:[[:space:]]*//' | cut -c1-60)
+            elif [ -f "$item_path/SKILL.md" ]; then
+                description=$(grep -m1 "^description:" "$item_path/SKILL.md" 2>/dev/null | sed 's/^description:[[:space:]]*//' | cut -c1-60)
+            fi
+
+            if [ "$all_category" = true ]; then
+                SELECTED_ITEMS["$subdir/$item"]=1
+                echo -e "  ${GREEN}✓${NC} $item_name"
+                continue
+            fi
+
+            if [ "$skip_category" = true ]; then
+                echo -e "  ${YELLOW}✗${NC} $item_name (スキップ)"
+                continue
+            fi
+
+            # 既存チェック
+            local exists_mark=""
+            if [ -e "$dest_subdir/$item" ]; then
+                exists_mark=" ${YELLOW}(既存)${NC}"
+            fi
+
+            echo -e "  ${GREEN}$item_name${NC}$exists_mark"
+            if [ -n "$description" ]; then
+                echo -e "    ${NC}$description${NC}"
+            fi
+            echo -n "    インストール? (y/N/a/s): "
+            read -r answer < /dev/tty
+
+            case $answer in
+                [Yy]*)
+                    SELECTED_ITEMS["$subdir/$item"]=1
+                    echo -e "    ${GREEN}→ 選択${NC}"
+                    ;;
+                [Aa]*)
+                    all_category=true
+                    SELECTED_ITEMS["$subdir/$item"]=1
+                    echo -e "    ${GREEN}→ このカテゴリ全て選択${NC}"
+                    ;;
+                [Ss]*)
+                    skip_category=true
+                    echo -e "    ${YELLOW}→ このカテゴリをスキップ${NC}"
+                    ;;
+                *)
+                    echo -e "    ${YELLOW}→ スキップ${NC}"
+                    ;;
+            esac
+        done
+        echo ""
+    done
+
+    # 選択結果の確認
+    local selected_count=0
+    for key in "${!SELECTED_ITEMS[@]}"; do
+        ((selected_count++))
+    done
+
+    if [ $selected_count -eq 0 ]; then
+        echo -e "${YELLOW}選択されたアイテムがありません。${NC}"
+        return 1
+    fi
+
+    echo -e "${GREEN}━━━ 選択結果 ($selected_count 件) ━━━${NC}"
+    for key in "${!SELECTED_ITEMS[@]}"; do
+        echo -e "  ${GREEN}✓${NC} $key"
+    done
+    echo ""
+
+    echo -n "この選択でインストールしますか? (Y/n): "
+    read -r confirm < /dev/tty
+    case $confirm in
+        [Nn]*)
+            echo -e "${YELLOW}キャンセルしました${NC}"
+            return 1
+            ;;
+    esac
+
+    # 選択されたアイテムをコピー
+    echo ""
+    echo -e "${GREEN}選択されたアイテムをコピー中...${NC}"
+
+    for key in "${!SELECTED_ITEMS[@]}"; do
+        local subdir=$(dirname "$key")
+        local item=$(basename "$key")
+        local src_item="$src_agents/$subdir/$item"
+        local dest_item="$dest_agents/$subdir/$item"
+
+        mkdir -p "$dest_agents/$subdir"
+
+        if [ -d "$src_item" ]; then
+            # ディレクトリの場合
+            find "$src_item" -type f | while read -r src_file; do
+                local rel_path="${src_file#$src_agents/}"
+                local dest_file="$dest_agents/${rel_path}"
+                copy_file "$src_file" "$dest_file" ".agents/$rel_path"
+            done
+        else
+            # ファイルの場合
+            copy_file "$src_item" "$dest_item" ".agents/$subdir/$item"
+        fi
+    done
+
+    # .agents内のその他のファイル（sync, templates等）もコピー
+    echo ""
+    echo -e "${GREEN}その他の.agentsファイルをコピー中...${NC}"
+
+    # 除外するサブフォルダ
+    local exclude_dirs="agents|commands|skills|rules"
+
+    find "$src_agents" -type f | while read -r src_file; do
+        local rel_path="${src_file#$src_agents/}"
+        local top_dir=$(echo "$rel_path" | cut -d'/' -f1)
+
+        # 除外対象でなければコピー
+        if ! echo "$top_dir" | grep -qE "^($exclude_dirs)$"; then
+            local dest_file="$dest_agents/$rel_path"
+            copy_file "$src_file" "$dest_file" ".agents/$rel_path"
+        fi
+    done
+
+    return 0
+}
+
+# インタラクティブモードの処理フラグ
+INTERACTIVE_AGENTS_DONE=false
+
 # 各フォルダをコピー
 for folder in "${FOLDERS[@]}"; do
     SRC="$SRC_DIR/$folder"
@@ -221,6 +402,15 @@ for folder in "${FOLDERS[@]}"; do
     # コピー元フォルダの存在確認
     if [ ! -d "$SRC" ]; then
         echo -e "${YELLOW}警告: $folder が見つかりません。スキップします。${NC}"
+        continue
+    fi
+
+    # インタラクティブモードで .agents フォルダの場合は特別処理
+    if [ "$INTERACTIVE" = true ] && [ "$folder" = ".agents" ]; then
+        if interactive_select_agents "$SRC" "$DEST"; then
+            INTERACTIVE_AGENTS_DONE=true
+        fi
+        echo ""
         continue
     fi
 
@@ -278,3 +468,30 @@ done
 echo ""
 
 echo -e "${GREEN}=== コピー完了 ===${NC}"
+
+# インタラクティブモードで .agents がコピーされた場合は sync を実行
+if [ "$INTERACTIVE_AGENTS_DONE" = true ]; then
+    SYNC_SCRIPT="$TARGET_DIR/.agents/sync/sync.sh"
+
+    if [ -f "$SYNC_SCRIPT" ]; then
+        echo ""
+        echo -e "${GREEN}=== 同期処理を実行 ===${NC}"
+        echo "各エージェント形式に同期します..."
+        echo ""
+
+        # sync.sh を実行
+        bash "$SYNC_SCRIPT" all
+
+        if [ $? -eq 0 ]; then
+            echo ""
+            echo -e "${GREEN}✓ 同期完了${NC}"
+        else
+            echo ""
+            echo -e "${RED}✗ 同期中にエラーが発生しました${NC}"
+        fi
+    else
+        echo ""
+        echo -e "${YELLOW}警告: sync.sh が見つかりません: $SYNC_SCRIPT${NC}"
+        echo "手動で同期を実行してください: .agents/sync/sync.sh all"
+    fi
+fi

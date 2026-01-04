@@ -53,17 +53,36 @@ https://figma.com/design/XXXXX/Project?node-id=1234-5678
 
 ### 生成されるファイル
 
+**単一画面の場合:**
 ```
-.outputs/{short-screen-name}/
-├── index.html          # メインHTML（data属性付き）
-├── spec.md             # 画面仕様書（構造・スタイル、コンテンツ分析セクションを更新）
-└── preview.html        # デバイスフレーム付きプレビュー（オプション）
+.outputs/{screen-name}/
+├── index.html              # メインHTML（data属性付き）
+├── index-{state}.html      # 状態バリエーション（該当する場合）
+├── spec.md                 # 画面仕様書
+├── mapping-overlay.js      # マッピング可視化
+└── preview.html            # プレビュー（オプション）
 ```
 
-`{short-screen-name}` はFigmaの画面名から生成した短い識別名（例: `homework-modal`）
+**複数画面の場合（画面ごとにディレクトリ分離）:**
+```
+.outputs/
+├── {screen-a}/
+│   ├── index.html
+│   ├── index-empty.html    # 同一画面の状態バリエーション
+│   ├── spec.md
+│   └── mapping-overlay.js
+├── {screen-b}/
+│   ├── index.html
+│   ├── spec.md
+│   └── mapping-overlay.js
+└── ...
+```
 
-> **注意**: spec.md 内の static/dynamic 分類は**仮決定**です。
-> 実装時にレビューしてください。
+`{screen-name}` はFigmaの画面名から生成した短い識別名（例: `homework-modal`）
+
+> **注意**:
+> - spec.md 内の static/dynamic 分類は**仮決定**です。実装時にレビューしてください。
+> - 複数フレームは「同一画面の状態バリエーション」か「別画面」かを判定し、適切な構造で出力します。
 
 ## 詳細ガイド
 
@@ -114,6 +133,10 @@ https://figma.com/design/XXXXX/Project?node-id=1234-5678
 | `data-figma-tokens` | デザイントークン | `"background: darkblue"` |
 | `data-figma-font` | フォントトークン | `"JP/16 - Bold"` |
 | `data-figma-icon-svg` | アイコンノードID（getImages用） | `"3428:18627"` |
+| `data-figma-interaction` | インタラクション定義 | `"tap:navigate:/course/1"` |
+| `data-figma-states` | サポートするUI状態 | `"default,hover,active"` |
+| `data-figma-navigate` | 画面遷移先 | `"/course/detail"` |
+| `data-state` | 現在のUI状態 | `"disabled"`, `"loading"` |
 
 ### 2. コンテンツ分類
 
@@ -155,9 +178,28 @@ HTMLの各コンテンツを以下のカテゴリで整理：
 - Dynamic Island
 - Home Indicator
 
-### 6. mapping-overlay.js
+### 6. インタラクション属性
 
-APIマッピング可視化のためのオーバーレイスクリプトを自動付与：
+インタラクティブな要素には動作を定義する属性を付与：
+
+```html
+<article class="course-card"
+         data-figma-states="default,hover,active"
+         data-figma-interaction="tap:navigate:/course/1"
+         data-figma-navigate="/course/1"
+         tabindex="0" role="button">
+  <h3>講座タイトル</h3>
+</article>
+```
+
+**インタラクション形式**: `{trigger}:{action}:{target}`
+- trigger: `tap`, `hover`, `focus`, `longpress`
+- action: `navigate`, `show-modal`, `close-modal`, `submit`
+- target: 遷移先パス、モーダルID等
+
+### 7. mapping-overlay.js
+
+コンテンツマッピングとインタラクション可視化のためのオーバーレイスクリプト：
 
 ```html
 <!-- HTMLの末尾に自動追加 -->
@@ -166,7 +208,11 @@ APIマッピング可視化のためのオーバーレイスクリプトを自�
 </html>
 ```
 
-マウスオーバーでコンテンツのマッピング情報（static/dynamic、APIフィールド等）を表示。
+**機能**:
+- マウスオーバーでコンテンツタイプ（static/dynamic）を表示
+- 画面遷移先・モーダル表示対象を表示
+- リアルタイムでUI状態（hover/active/focus/selected）を検出・表示
+- 凡例クリックでタイプ別フィルタリング（親子関係を考慮）
 
 ## ワークフロー（概要）
 
@@ -205,9 +251,12 @@ APIマッピング可視化のためのオーバーレイスクリプトを自�
 - [ ] 全ての主要要素にdata-figma-node属性がある
 - [ ] コンテンツ要素にdata-figma-content-XXX属性がある
 - [ ] アイコンにdata-figma-icon-svg属性がある
+- [ ] インタラクティブ要素にdata-figma-interaction属性がある
+- [ ] 状態変化する要素にdata-figma-states属性がある
 - [ ] ステータスバー等のOSネイティブUIが除外されている
 - [ ] spec.md の「構造・スタイル」セクションが更新されている
 - [ ] spec.md の「コンテンツ分析」セクションが更新されている
+- [ ] spec.md の「インタラクション」セクションが更新されている
 - [ ] プレビューHTMLが正しく表示される（オプション）
 ```
 

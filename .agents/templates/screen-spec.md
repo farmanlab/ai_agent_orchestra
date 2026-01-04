@@ -36,29 +36,67 @@
 
 ## UI状態
 
-### デフォルト状態
+### 状態一覧
 
-| 要素 | 状態 | 備考 |
-| ---- | ---- | ---- |
-| {{ELEMENT_NAME}} | {{ELEMENT_STATE}} | {{ELEMENT_NOTES}} |
+| 要素 | data-figma-states | data-state | 備考 |
+| ---- | ---- | ---- | ---- |
+| {{ELEMENT_NAME}} | `{{STATES_LIST}}` | `{{CURRENT_STATE}}` | {{ELEMENT_NOTES}} |
 
-### ボタン状態
+### 状態定義
 
-| 状態 | 視覚的変化 | 動作 |
-| ---- | ---- | ---- |
-| default | {{DEFAULT_VISUAL}} | {{DEFAULT_ACTION}} |
-| hover | {{HOVER_VISUAL}} | {{HOVER_ACTION}} |
-| active | {{ACTIVE_VISUAL}} | {{ACTIVE_ACTION}} |
-| disabled | {{DISABLED_VISUAL}} | {{DISABLED_ACTION}} |
+| 状態 | 検出方法 | 視覚的変化 | CSS/属性 |
+| ---- | ---- | ---- | ---- |
+| default | 初期状態 | {{DEFAULT_VISUAL}} | - |
+| hover | マウスオーバー | {{HOVER_VISUAL}} | `:hover` |
+| active | タップ/クリック中 | {{ACTIVE_VISUAL}} | `:active` |
+| focus | フォーカス中 | {{FOCUS_VISUAL}} | `:focus` |
+| disabled | 無効状態 | 透明度40%、操作不可 | `data-state="disabled"` |
+| loading | 読み込み中 | スピナー表示 | `data-state="loading"` |
+| selected | 選択状態 | ハイライト | `.active`, `aria-current` |
+
+### CSS実装例
+
+```css
+/* 無効状態 */
+[data-state="disabled"] {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* 読み込み中状態 */
+[data-state="loading"] {
+  position: relative;
+  pointer-events: none;
+}
+
+[data-state="loading"]::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+```
 
 ---
 
 ## インタラクション
 
+### インタラクティブ要素一覧
+
+| 要素 | data-figma-interaction | data-figma-states | 説明 |
+| ---- | ---- | ---- | ---- |
+| {{ELEMENT_NAME}} | `{{INTERACTION_VALUE}}` | `{{STATES_VALUE}}` | {{DESCRIPTION}} |
+
 ### INT-001: {{INTERACTION_NAME_1}}
 
 | 項目 | 内容 |
 | ---- | ---- |
+| 対象要素 | {{TARGET_ELEMENT}} |
+| data属性 | `data-figma-interaction="{{INTERACTION_VALUE}}"` |
 | トリガー | {{TRIGGER}} |
 | 前提条件 | {{PRECONDITION}} |
 | アクション | {{ACTION}} |
@@ -69,11 +107,23 @@
 
 | 項目 | 内容 |
 | ---- | ---- |
+| 対象要素 | {{TARGET_ELEMENT}} |
+| data属性 | `data-figma-interaction="{{INTERACTION_VALUE}}"` |
 | トリガー | {{TRIGGER}} |
 | 前提条件 | {{PRECONDITION}} |
 | アクション | {{ACTION}} |
 | API | {{API_CALL}} |
 | 遷移先 | {{DESTINATION}} |
+
+### インタラクション形式
+
+```
+形式: {trigger}:{action}:{target}
+
+trigger: tap, hover, focus, longpress
+action: navigate, show-modal, close-modal, submit, toggle
+target: 遷移先パス、モーダルID、または対象要素
+```
 
 ---
 

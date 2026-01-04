@@ -24,6 +24,40 @@
 
 ---
 
+## 🎯 インタラクション属性
+
+| 属性 | 用途 | 例 |
+|------|------|-----|
+| `data-figma-interaction` | インタラクション定義 | `"tap:navigate:/course/1"` |
+| `data-figma-states` | サポートするUI状態 | `"default,hover,active,disabled"` |
+| `data-figma-navigate` | 画面遷移先 | `"/course/detail"` |
+| `data-state` | 現在のUI状態 | `"disabled"`, `"loading"` |
+
+### インタラクション形式
+
+```
+形式: {trigger}:{action}:{target}
+
+例:
+tap:navigate:/course/1       タップで画面遷移
+tap:show-modal:confirm       タップでモーダル表示
+hover:show-tooltip:help      ホバーでツールチップ表示
+```
+
+### UI状態一覧
+
+| 状態 | 説明 | CSS例 |
+|------|------|-------|
+| `default` | 通常状態 | - |
+| `hover` | ホバー中 | `:hover` |
+| `active` | タップ/クリック中 | `:active` |
+| `focus` | フォーカス中 | `:focus` |
+| `disabled` | 無効状態 | `[data-state="disabled"]` |
+| `loading` | 読み込み中 | `[data-state="loading"]` |
+| `selected` | 選択状態 | `.active`, `aria-current` |
+
+---
+
 ## 🎨 data-figma-content-XXX 命名規則
 
 ```

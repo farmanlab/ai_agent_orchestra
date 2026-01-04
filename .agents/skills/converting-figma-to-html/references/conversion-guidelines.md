@@ -219,7 +219,102 @@ curl -H "X-Figma-Token: $FIGMA_TOKEN" \
 
 ---
 
-## 6. Figmaノード情報の保持
+## 6. インタラクション属性
+
+### ルール
+
+インタラクティブな要素には、画面遷移やモーダル表示などの動作を定義するdata属性を付与する。
+
+| 属性 | 用途 | 必須 |
+|------|------|:----:|
+| `data-figma-interaction` | インタラクション定義 | インタラクティブ要素で必須 |
+| `data-figma-states` | サポートするUI状態 | 状態変化がある要素で必須 |
+| `data-figma-navigate` | 画面遷移先 | navigate時のみ |
+| `data-state` | 現在のUI状態 | disabled/loading時のみ |
+
+### インタラクション形式
+
+```
+形式: {trigger}:{action}:{target}
+
+trigger: tap, hover, focus, longpress
+action: navigate, show-modal, close-modal, submit, toggle
+target: 遷移先パス, モーダルID, または対象要素
+```
+
+### 実装例（画面遷移）
+
+```html
+<article class="course-card"
+         data-figma-states="default,hover,active"
+         data-figma-interaction="tap:navigate:/course/1"
+         data-figma-navigate="/course/1"
+         tabindex="0" role="button">
+  <h3>講座タイトル</h3>
+</article>
+```
+
+### 実装例（モーダル表示）
+
+```html
+<button data-figma-states="default,hover,active"
+        data-figma-interaction="tap:show-modal:confirm-dialog">
+  削除する
+</button>
+```
+
+### 実装例（無効状態）
+
+```html
+<button data-figma-states="default,hover,active,disabled"
+        data-state="disabled">
+  送信
+</button>
+```
+
+### 実装例（読み込み中状態）
+
+```html
+<button data-figma-states="default,hover,active,loading"
+        data-state="loading">
+  保存中...
+</button>
+```
+
+### UI状態のCSS実装
+
+```css
+/* 無効状態 */
+[data-state="disabled"] {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* 読み込み中状態 */
+[data-state="loading"] {
+  position: relative;
+  pointer-events: none;
+}
+
+[data-state="loading"]::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+```
+
+---
+
+## 7. Figmaノード情報の保持
 
 ### ルール
 
@@ -234,7 +329,7 @@ curl -H "X-Figma-Token: $FIGMA_TOKEN" \
 
 ---
 
-## 7. 出力ファイル構成
+## 8. 出力ファイル構成
 
 ### 推奨構成
 
@@ -250,7 +345,7 @@ curl -H "X-Figma-Token: $FIGMA_TOKEN" \
 
 ---
 
-## 8. 変換プロセスのチェックリスト
+## 9. 変換プロセスのチェックリスト
 
 ### 変換前
 
@@ -274,7 +369,7 @@ curl -H "X-Figma-Token: $FIGMA_TOKEN" \
 
 ---
 
-## 9. OSネイティブUI要素の処理
+## 10. OSネイティブUI要素の処理
 
 ### ルール
 
@@ -313,7 +408,7 @@ curl -H "X-Figma-Token: $FIGMA_TOKEN" \
 
 ---
 
-## 10. プラットフォーム別の考慮事項
+## 11. プラットフォーム別の考慮事項
 
 ### Web (HTML/Tailwind)
 
@@ -332,7 +427,7 @@ curl -H "X-Figma-Token: $FIGMA_TOKEN" \
 
 ---
 
-## 11. PCでのモバイルデザインプレビュー
+## 12. PCでのモバイルデザインプレビュー
 
 詳細は [mobile-preview.md](./mobile-preview.md) を参照。
 
@@ -340,7 +435,7 @@ curl -H "X-Figma-Token: $FIGMA_TOKEN" \
 
 ---
 
-## 12. コンテンツ分析（後続フェーズ連携用）
+## 13. コンテンツ分析（後続フェーズ連携用）
 
 詳細は [content-classification.md](./content-classification.md) を参照。
 
@@ -348,7 +443,7 @@ curl -H "X-Figma-Token: $FIGMA_TOKEN" \
 
 ---
 
-## 13. CSS/HTMLのベストプラクティス優先
+## 14. CSS/HTMLのベストプラクティス優先
 
 Figmaのノード構造を忠実に再現するのではなく、同じ視覚結果を達成するCSS/HTMLのベストプラクティスを優先する。
 
@@ -360,7 +455,7 @@ Figmaのノード構造を忠実に再現するのではなく、同じ視覚結
 
 ---
 
-## 14. 実装不要要素の除外
+## 15. 実装不要要素の除外
 
 ブラウザ/OSが描画する要素やデザイン参照用要素は出力から除外する。
 
@@ -373,7 +468,7 @@ Figmaのノード構造を忠実に再現するのではなく、同じ視覚結
 
 ---
 
-## 15. 出力前の整合性チェック
+## 16. 出力前の整合性チェック
 
 生成したHTMLに論理的矛盾がないか確認する。
 

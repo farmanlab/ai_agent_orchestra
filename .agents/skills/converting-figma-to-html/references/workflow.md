@@ -43,6 +43,36 @@
    - 複雑なレイアウトの場合に使用
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【Step 1.5: 画面・状態の判定】（複数フレームの場合）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+複数フレームが含まれる場合、以下の基準で判定：
+
+■ 同一画面の状態バリエーション
+  - フレーム名に共通プレフィックス + 状態サフィックス
+  - 例: Home_Default, Home_Empty, Home_Error
+  - サフィックス例: _Default, _Empty, _Error, _Loading, _Modal
+
+■ 完全に異なる画面
+  - 名前に共通部分がない
+  - レイアウト構造が根本的に異なる
+  - 例: Home, Settings, Profile
+
+■ 判定結果の通知
+  検出結果をユーザーに通知し、確認を得る：
+  ```
+  3個のフレームを検出しました：
+  - Home_Default, Home_Empty → 同一画面「Home」の2状態
+  - Settings → 別画面
+
+  この判定で正しいですか？
+  ```
+
+■ 出力構造の決定
+  - 同一画面の状態 → 1ディレクトリ内に複数HTML
+  - 別画面 → 画面ごとに別ディレクトリ
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【Step 2: HTML生成ルール】
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -250,18 +280,42 @@ HTMLで使用されているデザイントークンの一覧を作成してく�
 
 ## 出力ファイル構成
 
+### 単一画面の場合
+
 ```
-.outputs/{short-screen-name}/
+.outputs/{screen-name}/
 ├── index.html                    # メインHTML（mapping-overlay.js読み込み含む）
+├── index-{state}.html            # 状態バリエーション（Empty, Error等）
+├── spec.md                       # 画面仕様書（コンテンツ分析含む）
+├── mapping-overlay.js            # マッピング可視化
 ├── preview.html                  # プレビュー用（オプション）
-├── content_analysis.md           # コンテンツ分析（※static/dynamic は仮決定）
 └── tokens.md                     # トークンマッピング（オプション）
 ```
 
-> **注意**: `content_analysis.md` 内の static/dynamic 分類は**仮決定**です。
-> API仕様確定後にレビューし、`-static` / `-dynamic` サフィックスを確定してください。
+### 複数画面の場合
 
-`{short-screen-name}` はFigmaの画面名から生成した短い識別名
+```
+.outputs/
+├── {screen-a}/
+│   ├── index.html
+│   ├── index-empty.html          # 同一画面の状態バリエーション
+│   ├── index-error.html
+│   ├── spec.md
+│   └── mapping-overlay.js
+├── {screen-b}/
+│   ├── index.html
+│   ├── spec.md
+│   └── mapping-overlay.js
+└── {screen-c}/
+    └── ...
+```
+
+> **注意**:
+> - `spec.md` 内の static/dynamic 分類は**仮決定**です。API仕様確定後にレビューしてください。
+> - 複数画面の場合、**画面ごとに別ディレクトリ**を作成します。
+> - 同一画面の状態バリエーションは**同じディレクトリ内**に `index-{state}.html` として出力します。
+
+`{screen-name}` はFigmaの画面名から生成した短い識別名
 
 ---
 

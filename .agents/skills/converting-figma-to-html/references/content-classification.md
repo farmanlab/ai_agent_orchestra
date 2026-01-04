@@ -21,7 +21,7 @@ Figmaから出力したHTMLのコンテンツを分類し、UIデザインから
 ├── index.html
 ├── preview.html
 ├── tokens.md
-└── content_analysis.md   ← 追加
+└── spec.md   ← コンテンツ分析セクション含む
 ```
 
 ## 分類体系

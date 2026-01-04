@@ -182,7 +182,7 @@ nav-home-label     ナビのホームラベル
 ```
 .outputs/{short-screen-name}/
 ├── index.html              # メインHTML
-├── content_analysis.md     # コンテンツ分析
+├── spec.md                 # 画面仕様書（コンテンツ分析含む）
 ├── preview.html            # プレビュー（オプション）
 └── tokens.md               # トークン（オプション）
 ```

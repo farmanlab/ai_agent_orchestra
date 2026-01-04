@@ -144,7 +144,7 @@ _Hover, _Active, _Disabled, _Selected
 
 | フェーズ | 目的 | 必要な情報 |
 |----------|------|------------|
-| **Phase 1: HTML変換時**（必須） | static/dynamic 分類の可視化 | content_analysis.md |
+| **Phase 1: HTML変換時**（必須） | static/dynamic 分類の可視化 | spec.md「コンテンツ分析」セクション |
 | **Phase 2: API確定後**（任意） | エンドポイント・フィールドマッピング追加 | OpenAPI仕様書 |
 
 **Phase 1 での生成内容**:
@@ -152,7 +152,7 @@ _Hover, _Active, _Disabled, _Selected
 
 ```javascript
 const MAPPING_DATA = {
-  // content_analysis.md の分類結果から生成
+  // spec.md「コンテンツ分析」セクションの分類結果から生成
   'data-figma-content-nav-title': {
     type: 'static',
     label: 'ナビゲーションタイトル'
@@ -190,15 +190,15 @@ const MAPPING_DATA = {
 - [ ] アイコンは簡略化されているが正しく配置
 - [ ] **mapping-overlay.js が生成されている**
 - [ ] **mapping-overlay.js が読み込まれている**
-- [ ] content_analysis.md の分類が MAPPING_DATA に反映されている
+- [ ] spec.md「コンテンツ分析」セクションの分類が MAPPING_DATA に反映されている
 
 ---
 
-### Step 5: コンテンツ分析の生成
+### Step 5: spec.md の更新
 
-`{name}_content_analysis.md` を作成。詳細は [content-classification.md](../skills/converting-figma-to-html/content-classification.md) を参照。
+`spec.md` の「コンテンツ分析」セクションを更新。詳細は [content-classification.md](../skills/converting-figma-to-html/content-classification.md) を参照。
 
-**必須セクション**: 概要、コンテンツ分類、デザイントークン、データ要件、インタラクション
+**更新セクション**: コンテンツ一覧、リストデータ、分類集計
 
 **検証**: 全コンテンツが分類されているか確認
 
@@ -212,7 +212,7 @@ const MAPPING_DATA = {
 - [ ] 全要素にdata-figma-node属性がある
 - [ ] コンテンツ要素に分類属性がある
 - [ ] 全状態が生成されている（複数検出時）
-- [ ] content_analysis.mdが完成している
+- [ ] spec.md「コンテンツ分析」セクションが完成している
 - [ ] HTMLがブラウザでエラーなく開ける
 ```
 
@@ -223,7 +223,7 @@ const MAPPING_DATA = {
 ### 生成ファイル
 - {name}.html
 - {name}-{state}.html（該当する場合）
-- {name}_content_analysis.md
+- spec.md（コンテンツ分析セクション更新済み）
 
 ### 次のステップ
 1. ブラウザでHTMLを開く: `open {name}.html`

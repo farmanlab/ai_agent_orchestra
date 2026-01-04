@@ -31,7 +31,7 @@ ls .agents/tmp/{screen-id}/spec.md
 ### 情報源
 
 1. **spec.md「UI状態」セクション**: 動的データの一覧
-2. **content_analysis.md**: dynamic分類されたコンテンツ
+2. **spec.md「コンテンツ分析」セクション**: dynamic分類されたコンテンツ
 3. **生成済みHTML**: `data-figma-content-*` 属性
 
 ### 検出対象

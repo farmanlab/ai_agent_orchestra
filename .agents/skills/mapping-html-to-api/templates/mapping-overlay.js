@@ -5,7 +5,7 @@
  * マウスオーバーでマッピング情報を表示するオーバーレイスクリプト
  */
 
-// マッピングデータ（content_analysis.md + api_mapping.md から生成）
+// マッピングデータ（spec.md「コンテンツ分析」+ api_mapping.md から生成）
 const MAPPING_DATA = {
   // === {{SECTION_NAME}} ===
   // 以下のフォーマットでエントリを追加:

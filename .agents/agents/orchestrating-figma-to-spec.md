@@ -74,7 +74,7 @@ Figmaデザインから画面仕様書を完成させるまでの一連のフロ
 
 | 順序 | エージェント | 役割 | 必須/任意 |
 |:----:|-------------|------|:--------:|
-| 1 | converting-figma-to-html | Figma → HTML変換 + content_analysis.md | 必須 |
+| 1 | converting-figma-to-html | Figma → HTML変換 + spec.md「コンテンツ分析」 | 必須 |
 | 2 | comparing-figma-html | HTML品質検証 | 必須 |
 | 3 | documenting-ui-states | UI状態の文書化 | 必須 |
 | 4 | extracting-interactions | インタラクション仕様抽出 | 必須 |
@@ -149,13 +149,13 @@ mkdir -p .outputs/{screen-id}
 
 **期待される出力**:
 - `{screen-id}.html`
-- `{screen-id}_content_analysis.md`
+- `spec.md`（コンテンツ分析セクション更新済み）
 - `{screen-id}-{state}.html`（複数状態の場合）
 
 **検証チェックリスト**:
 ```
 - [ ] HTMLファイルが生成された
-- [ ] content_analysis.md が生成された
+- [ ] spec.md「コンテンツ分析」セクションが更新された
 - [ ] mapping-overlay.js が生成された（API未確定でも必須）
 - [ ] 全状態のHTMLが生成された（複数状態の場合）
 - [ ] data-figma-node 属性が付与されている
@@ -163,7 +163,7 @@ mkdir -p .outputs/{screen-id}
 ```
 
 **⚠️ mapping-overlay.js は必須出力**:
-- API仕様の有無に関わらず、content_analysis.md の static/dynamic 分類を可視化
+- API仕様の有無に関わらず、spec.md「コンテンツ分析」の static/dynamic 分類を可視化
 - Phase 2（API確定後）で endpoint/apiField を追加更新
 
 If HTML generation fails, report error and stop orchestration.
@@ -225,7 +225,7 @@ Read: .agents/templates/screen-spec.md
 - `{{FIGMA_URL}}`: Figma URL
 - `{{ROOT_NODE_ID}}`: ルートノードID
 - `{{DATE}}`: 現在日時
-- `{{SCREEN_PURPOSE}}`: content_analysis.md から抽出
+- `{{SCREEN_PURPOSE}}`: spec.md「コンテンツ分析」から抽出
 
 ```bash
 Write: .outputs/{screen-id}/spec.md
@@ -263,11 +263,11 @@ Write: .outputs/{screen-id}/spec.md
 
 ### Step 4.3: フォーム仕様 (defining-form-specs)
 
-**実行条件**: content_analysis.md に入力フィールドがある場合
+**実行条件**: spec.md「コンテンツ分析」に入力フィールドがある場合
 
 **判定ロジック**:
 ```bash
-Grep: pattern="input|form|text-field|checkbox|radio|select" path=".outputs/{screen-id}/{screen-id}_content_analysis.md"
+Grep: pattern="input|form|text-field|checkbox|radio|select" path=".outputs/{screen-id}/spec.md"
 ```
 
 - マッチあり → 実行
@@ -301,7 +301,7 @@ APIマッピングを生成するには、以下の情報を提供してくだ�
 - OpenAPI仕様書のパス（例: `openapi/index.yaml`）
 
 **動的コンテンツ候補** [Figma]:
-以下の要素は動的データが必要と推定されます（content_analysis.mdより）:
+以下の要素は動的データが必要と推定されます（spec.md「コンテンツ分析」より）:
 - [要素1]: ノードID xxx
 - [要素2]: ノードID yyy
 ```
@@ -362,7 +362,7 @@ APIマッピングを生成するには、以下の情報を提供してくだ�
 2. mapping-html-to-api が実行された場合
 
 **入力**:
-- content_analysis.md
+- spec.md「コンテンツ分析」セクション
 - OpenAPI仕様書
 
 **出力**: `{screen-id}_api_mapping.md`（別ファイル）
@@ -418,9 +418,8 @@ Read: .outputs/{screen-id}/spec.md
 
 | ファイル | 説明 | パス | 必須 |
 |----------|------|------|:----:|
-| spec.md | 画面仕様書 | `.outputs/{screen-id}/spec.md` | ✅ |
+| spec.md | 画面仕様書（コンテンツ分析含む） | `.outputs/{screen-id}/spec.md` | ✅ |
 | {screen-id}.html | メインHTML | `.outputs/{screen-id}/{screen-id}.html` | ✅ |
-| content_analysis.md | コンテンツ分析 | `.outputs/{screen-id}/{screen-id}_content_analysis.md` | ✅ |
 | mapping-overlay.js | static/dynamic可視化 | `.outputs/{screen-id}/mapping-overlay.js` | ✅ |
 | api_mapping.md | APIマッピング | `.outputs/{screen-id}/{screen-id}_api_mapping.md` | OpenAPI提供時のみ |
 

@@ -26,11 +26,36 @@
 
 ## コンテンツ分析
 
-| コンテンツ | 分類 | data属性 | API/データソース |
-| ---- | ---- | ---- | ---- |
-| {{CONTENT_NAME}} | static/dynamic | `{{DATA_ATTRIBUTE}}` | {{API_SOURCE}} |
+### 分類凡例
 
-**API依存**: {{API_DEPENDENCIES}}
+| 分類 | 説明 | 例 |
+| ---- | ---- | ---- |
+| `static` | 固定テキスト・ラベル | ボタンラベル、セクションタイトル |
+| `dynamic` | ユーザーや時間によって変わる値 | 数値、日付、ユーザー名 |
+| `dynamic_list` | 件数が可変のリスト | 講座一覧、通知一覧 |
+| `asset` | アイコン・画像等のアセット | アイコンSVG、ロゴ |
+
+### コンテンツ一覧
+
+| ID | 表示値 | 分類 | data属性 | 備考 |
+| ---- | ---- | ---- | ---- | ---- |
+| {{CONTENT_ID}} | {{DISPLAY_VALUE}} | {{CLASSIFICATION}} | `{{DATA_ATTRIBUTE}}` | {{NOTES}} |
+
+### リストデータ
+
+| リストID | アイテム型 | 最小件数 | 最大件数 | 空時の表示 |
+| ---- | ---- | ---- | ---- | ---- |
+| {{LIST_ID}} | {{ITEM_TYPE}} | {{MIN_COUNT}} | {{MAX_COUNT}} | {{EMPTY_MESSAGE}} |
+
+### 分類集計
+
+| 分類 | 件数 |
+| ---- | ---- |
+| static | {{STATIC_COUNT}} |
+| dynamic | {{DYNAMIC_COUNT}} |
+| dynamic_list | {{LIST_COUNT}} |
+| asset | {{ASSET_COUNT}} |
+| **合計** | **{{TOTAL_COUNT}}** |
 
 ---
 

@@ -123,8 +123,8 @@
 1. {component_name}.html
    - 変換後のHTML（data属性付き）
 
-2. {component_name}_content_analysis.md
-   - コンテンツ分析ドキュメント
+2. spec.md
+   - 画面仕様書（コンテンツ分析セクション含む）
 
 3. {component_name}_preview.html（オプション）
    - デバイスフレーム付きプレビュー

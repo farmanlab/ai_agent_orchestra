@@ -112,7 +112,7 @@ URL: https://figma.com/design/{fileKey}/{fileName}?node-id={nodeId}
 ```
 
 **複数ファイルの場合**:
-- content_analysis.md などから対応表を取得
+- spec.md「コンテンツ分析」セクションから対応表を取得
 - 1ファイルずつ順番に比較（バッチ処理しない）
 
 ---
@@ -468,7 +468,7 @@ HTMLディレクトリ: path/to/html/
 ```
 
 **動作**:
-1. content_analysis.md から対応表を取得
+1. spec.md「コンテンツ分析」セクションから対応表を取得
 2. 1ファイルずつ順番に比較・確認
 
 ---

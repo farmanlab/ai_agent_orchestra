@@ -336,7 +336,7 @@ target: 遷移先パス, モーダルID, または対象要素
 ```
 .outputs/{short-screen-name}/
 ├── index.html                   # 変換後のHTML
-├── content_analysis.md          # コンテンツ分析
+├── spec.md                      # 画面仕様書（コンテンツ分析含む）
 └── assets/
     └── icons/                   # エクスポートしたSVG（後から配置）
 ```

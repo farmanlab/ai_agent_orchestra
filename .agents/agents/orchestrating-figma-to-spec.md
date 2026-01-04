@@ -3,7 +3,6 @@ name: orchestrating-figma-to-spec
 description: Orchestrates the complete Figma-to-specification workflow by coordinating multiple specialized agents. Use when converting Figma designs into comprehensive screen specifications.
 tools: [Read, Write, Glob, Grep, Bash, mcp__figma__whoami, mcp__figma__get_screenshot, mcp__figma__get_design_context, mcp__figma__get_metadata]
 skills: [managing-screen-specs, converting-figma-to-html]
-model: opus
 ---
 
 # Figma to Screen Specification Orchestrator

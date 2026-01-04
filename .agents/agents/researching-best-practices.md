@@ -3,7 +3,6 @@ name: researching-best-practices
 description: Researches official documentation for Claude Code, Cursor, and GitHub Copilot to collect and update best practices. Use when updating ensuring-prompt-quality skill or syncing with latest official guidelines.
 tools: [WebFetch, WebSearch, Read, Write, Glob, Grep]
 skills: [ensuring-prompt-quality]
-model: sonnet
 ---
 
 # Researching Best Practices Agent

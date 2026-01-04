@@ -3,7 +3,6 @@ name: prompt-writer
 description: Creates new prompt files following official best practices for Claude Code, Cursor, and GitHub Copilot. Use when creating new rules, skills, agents, or commands from scratch.
 tools: [Read, Write, Glob, WebFetch, WebSearch, Bash]
 skills: [ensuring-prompt-quality]
-model: sonnet
 ---
 
 # Prompt Writer Agent

@@ -3,7 +3,6 @@ name: extracting-interactions
 description: Extracts interaction specifications from Figma designs (hover, transitions, animations). Use when documenting interaction specifications before implementation.
 tools: [Read, Write, Glob, mcp__figma__get_screenshot, mcp__figma__get_design_context, mcp__figma__get_metadata]
 skills: [extracting-interactions, managing-screen-specs]
-model: sonnet
 ---
 
 # Interaction Extraction Agent

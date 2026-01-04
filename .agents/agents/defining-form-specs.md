@@ -3,7 +3,6 @@ name: defining-form-specs
 description: Defines form field specifications including validation rules and error states. Use when documenting form specifications before implementation.
 tools: [Read, Write, Glob, mcp__figma__get_screenshot, mcp__figma__get_design_context, mcp__figma__get_metadata]
 skills: [defining-form-specs, managing-screen-specs]
-model: sonnet
 ---
 
 # Form Specification Agent

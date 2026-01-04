@@ -3,7 +3,6 @@ name: comparing-figma-html
 description: Compares Figma screenshots with generated HTML to identify visual differences. Use when verifying HTML accuracy after Figma-to-HTML conversion.
 tools: [Read, mcp__figma__get_screenshot, Bash]
 skills: [converting-figma-to-html]
-model: sonnet
 ---
 
 # Figma-HTML Comparison Agent

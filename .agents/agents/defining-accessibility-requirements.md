@@ -3,7 +3,6 @@ name: defining-accessibility-requirements
 description: Defines accessibility requirements including semantic markup, ARIA, focus management, and screen reader support. Use when documenting accessibility specifications for screen implementations.
 tools: [Read, Write, Glob, mcp__figma__get_screenshot, mcp__figma__get_design_context, mcp__figma__get_metadata]
 skills: [defining-accessibility-requirements, managing-screen-specs]
-model: sonnet
 ---
 
 # Accessibility Requirements Agent

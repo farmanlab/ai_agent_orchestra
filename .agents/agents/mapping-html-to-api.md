@@ -3,7 +3,6 @@ name: mapping-html-to-api
 description: Maps HTML content elements to API response fields and updates spec.md APIマッピング section. Use when organizing UI-API connections for screen specifications.
 tools: [Read, Glob, Grep, Write]
 skills: [mapping-html-to-api, managing-screen-specs]
-model: sonnet
 ---
 
 # HTML to API Mapping Agent

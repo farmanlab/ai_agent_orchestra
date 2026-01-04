@@ -3,7 +3,6 @@ name: documenting-ui-states
 description: Documents all UI state variations from Figma designs (default, empty, error, loading). Use when documenting UI state specifications before implementation.
 tools: [Read, Write, Glob, mcp__figma__get_screenshot, mcp__figma__get_design_context, mcp__figma__get_metadata]
 skills: [documenting-ui-states, managing-screen-specs]
-model: sonnet
 ---
 
 # UI States Documentation Agent

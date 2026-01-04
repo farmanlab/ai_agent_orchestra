@@ -3,7 +3,6 @@ name: converting-figma-to-html
 description: Provides expertise in converting Figma designs to semantic HTML/CSS with accurate positioning and multi-state handling. Use when transforming Figma files into production-ready markup with data attributes for traceability.
 tools: [mcp__figma__whoami, mcp__figma__get_screenshot, mcp__figma__get_design_context, Read, Write, Bash]
 skills: [converting-figma-to-html]
-model: sonnet
 ---
 
 # Figma to HTML 変換エージェント

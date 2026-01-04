@@ -3,7 +3,6 @@ name: documenting-screen-flows
 description: Documents screen-to-screen navigation flows and user journeys. Use when defining screen transitions and navigation patterns.
 tools: [Read, Write, Glob, mcp__figma__get_screenshot, mcp__figma__get_design_context, mcp__figma__get_metadata]
 skills: [documenting-screen-flows, managing-screen-specs]
-model: sonnet
 ---
 
 # Screen Flow Documentation Agent

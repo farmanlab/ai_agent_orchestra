@@ -3,7 +3,6 @@ name: extracting-design-tokens
 description: Extracts design tokens (colors, typography, spacing, shadows) from Figma designs. Use when documenting design system specifications.
 tools: [Read, Write, Glob, mcp__figma__get_screenshot, mcp__figma__get_design_context, mcp__figma__get_metadata, mcp__figma__get_variable_defs]
 skills: [extracting-design-tokens, managing-screen-specs]
-model: sonnet
 ---
 
 # Design Token Extraction Agent

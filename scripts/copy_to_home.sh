@@ -229,8 +229,8 @@ interactive_select_agents() {
     # 選択対象のサブフォルダ
     local AGENT_SUBDIRS=("agents" "commands" "skills" "rules")
 
-    # 選択されたアイテムを記録する配列
-    declare -A SELECTED_ITEMS
+    # 選択されたアイテムを記録する配列（通常の配列を使用）
+    local SELECTED_ITEMS=()
 
     echo ""
     echo -e "${GREEN}=== インタラクティブモード ===${NC}"
@@ -274,7 +274,7 @@ interactive_select_agents() {
             fi
 
             if [ "$all_category" = true ]; then
-                SELECTED_ITEMS["$subdir/$item"]=1
+                SELECTED_ITEMS+=("$subdir/$item")
                 echo -e "  ${GREEN}✓${NC} $item_name"
                 continue
             fi
@@ -299,12 +299,12 @@ interactive_select_agents() {
 
             case $answer in
                 [Yy]*)
-                    SELECTED_ITEMS["$subdir/$item"]=1
+                    SELECTED_ITEMS+=("$subdir/$item")
                     echo -e "    ${GREEN}→ 選択${NC}"
                     ;;
                 [Aa]*)
                     all_category=true
-                    SELECTED_ITEMS["$subdir/$item"]=1
+                    SELECTED_ITEMS+=("$subdir/$item")
                     echo -e "    ${GREEN}→ このカテゴリ全て選択${NC}"
                     ;;
                 [Ss]*)
@@ -320,10 +320,7 @@ interactive_select_agents() {
     done
 
     # 選択結果の確認
-    local selected_count=0
-    for key in "${!SELECTED_ITEMS[@]}"; do
-        ((selected_count++))
-    done
+    local selected_count=${#SELECTED_ITEMS[@]}
 
     if [ $selected_count -eq 0 ]; then
         echo -e "${YELLOW}選択されたアイテムがありません。${NC}"
@@ -331,7 +328,7 @@ interactive_select_agents() {
     fi
 
     echo -e "${GREEN}━━━ 選択結果 ($selected_count 件) ━━━${NC}"
-    for key in "${!SELECTED_ITEMS[@]}"; do
+    for key in "${SELECTED_ITEMS[@]}"; do
         echo -e "  ${GREEN}✓${NC} $key"
     done
     echo ""
@@ -349,9 +346,9 @@ interactive_select_agents() {
     echo ""
     echo -e "${GREEN}選択されたアイテムをコピー中...${NC}"
 
-    for key in "${!SELECTED_ITEMS[@]}"; do
-        local subdir=$(dirname "$key")
-        local item=$(basename "$key")
+    for key in "${SELECTED_ITEMS[@]}"; do
+        local subdir="${key%%/*}"
+        local item="${key#*/}"
         local src_item="$src_agents/$subdir/$item"
         local dest_item="$dest_agents/$subdir/$item"
 
@@ -379,7 +376,7 @@ interactive_select_agents() {
 
     find "$src_agents" -type f | while read -r src_file; do
         local rel_path="${src_file#$src_agents/}"
-        local top_dir=$(echo "$rel_path" | cut -d'/' -f1)
+        local top_dir="${rel_path%%/*}"
 
         # 除外対象でなければコピー
         if ! echo "$top_dir" | grep -qE "^($exclude_dirs)$"; then

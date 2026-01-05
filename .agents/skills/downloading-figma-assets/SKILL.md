@@ -172,17 +172,75 @@ node figma-screenshot.js --file-key=xxx --node-id=123:456 --token=$FIGMA_TOKEN o
 
 ## SVGの後処理
 
-### 問題: 白いfill
+Figmaからエクスポートされたアイコンには複数の問題が含まれることがある。
 
-Figmaからエクスポートされたアイコンは `fill="var(--fill-0, white)"` を含むことがある。
-白背景では見えなくなる。
+### 問題1: アスペクト比の崩れ（⚠️ 重要）
 
-### 解決: currentColorに置換
+**症状**: アイコンが引き伸ばされて歪む
+
+**原因**: Figma APIが以下の属性を含むSVGを返す：
+```xml
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" ...>
+```
+
+| 問題の属性 | 影響 |
+|-----------|------|
+| `preserveAspectRatio="none"` | アスペクト比を無視して引き伸ばす |
+| `width="100%" height="100%"` | 親コンテナに合わせて伸縮 |
+
+**解決**: 固定サイズに修正
+
+```bash
+cd icons/
+for f in *.svg; do
+  # preserveAspectRatio="none" を削除
+  sed -i '' 's/ preserveAspectRatio="none"//g' "$f"
+  # width="100%" height="100%" を viewBox から計算した値に置換
+  # 例: viewBox="0 0 20 20" → width="20" height="20"
+  sed -i '' 's/ width="100%" height="100%"//g' "$f"
+  # overflow と style も削除
+  sed -i '' 's/ overflow="visible"//g' "$f"
+  sed -i '' 's/ style="display: block;"//g' "$f"
+done
+```
+
+**修正例**:
+```xml
+<!-- Before (問題あり) -->
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 20 20" ...>
+
+<!-- After (修正後) -->
+<svg width="20" height="20" viewBox="0 0 20 20" ...>
+```
+
+### 問題2: 白いfill
+
+**症状**: 白背景でアイコンが見えない
+
+**原因**: `fill="var(--fill-0, white)"` を含む
+
+**解決**: currentColorに置換
 
 ```bash
 cd icons/
 for f in *.svg; do
   sed -i '' 's/fill="var(--fill-0, white)"/fill="currentColor"/g' "$f"
+done
+```
+
+### 問題3: CSS変数のfill
+
+**症状**: SVGの色が変わらない、または透明になる
+
+**原因**: `fill="var(--fill-0, #XXXXXX)"` 形式
+
+**解決**: CSS変数を実際の色に置換
+
+```bash
+cd icons/
+for f in *.svg; do
+  # var(--fill-0, #color) を #color に置換
+  sed -i '' 's/fill="var(--fill-0, \([^)]*\))"/fill="\1"/g' "$f"
 done
 ```
 
@@ -208,7 +266,9 @@ done
 
 | 問題 | 原因 | 解決策 |
 |------|------|--------|
+| **アイコンが歪む** | `preserveAspectRatio="none"` | 属性を削除、固定サイズに修正 |
 | SVGが白く表示 | `fill="white"` | `currentColor`に置換 |
+| SVGの色がおかしい | `fill="var(--fill-0, ...)"` | CSS変数を実際の色に置換 |
 | API exportがnull | ラスター含むノード | MCP asset URLを使用 |
 | ダウンロード失敗 | リダイレクト未対応 | 302/301をフォロー |
 | トークンエラー | FIGMA_TOKEN未設定 | 環境変数またはオプションで指定 |

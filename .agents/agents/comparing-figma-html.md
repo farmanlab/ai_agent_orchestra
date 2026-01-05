@@ -101,13 +101,13 @@ FigmaデザインのスクリーンショットとHTMLを視覚的に比較し�
 ### Step 0: 入力確認
 
 **必要な入力**:
-- Figma URL または `fileKey` + `nodeId`
+- Figma URL または `fileKey`
 - 生成済みHTMLファイルのパス（単一または複数）
 
 **URLからの抽出**:
 ```
 URL: https://figma.com/design/{fileKey}/{fileName}?node-id={nodeId}
-抽出: fileKey, nodeId（ハイフンをコロンに変換: 1-2 → 1:2）
+抽出: fileKey（nodeIdはHTMLから取得するため不要）
 ```
 
 **複数ファイルの場合**:
@@ -116,13 +116,51 @@ URL: https://figma.com/design/{fileKey}/{fileName}?node-id={nodeId}
 
 ---
 
-### Step 1: Figmaスクリーンショット取得
+### Step 1: Figmaスクリーンショット取得と保存
+
+**⚠️ 重要: HTMLのルートノードIDを使用すること**
+
+Figma URLに含まれる `nodeId` はセクションや複数フレームを指す場合があります。
+単一フレームのスクリーンショットを取得するため、**HTMLの `data-figma-node` 属性からルートノードIDを取得**してください。
+
+**Step 1.1: HTMLからルートノードIDを取得**
 
 ```bash
-mcp__figma__get_screenshot(fileKey, nodeId)
+# HTMLの data-figma-content-screen-* 要素から data-figma-node を取得
+grep 'data-figma-content-screen' [HTMLファイル] | head -1
+# 例: <div data-figma-content-screen-xxx data-figma-node="1:1129" ...>
+# → nodeId = "1:1129"
 ```
 
-取得した画像を視覚的な参照基準として保持。
+**Step 1.2: fileKeyを取得**
+
+HTMLの `<body>` タグから `data-figma-filekey` を取得：
+```bash
+grep 'data-figma-filekey' [HTMLファイル]
+# 例: <body data-figma-filekey="WQxcEmQk2AmswHRPQb0Jiv">
+# → fileKey = "WQxcEmQk2AmswHRPQb0Jiv"
+```
+
+**Step 1.3: Figmaスクリーンショット取得**
+
+```bash
+mcp__figma__get_screenshot(fileKey, nodeId)  # HTMLから取得したnodeIdを使用
+```
+
+**Step 1.4: スクリーンショットの保存（必須）**
+
+Figma APIから直接画像URLを取得して保存：
+
+```bash
+# Figma APIで画像URLを取得
+curl -s -H "X-Figma-Token: ${FIGMA_TOKEN}" \
+  "https://api.figma.com/v1/images/{fileKey}?ids={nodeId}&format=png&scale=2"
+
+# 画像をダウンロード
+curl -o [出力ディレクトリ]/figma-screenshot.png "[取得した画像URL]"
+```
+
+**保存ファイル名**: `figma-screenshot.png`（状態バリエーションがある場合は `figma-screenshot-{state}.png`）
 
 ---
 
@@ -136,28 +174,72 @@ HTMLの構造とスタイルを確認。
 
 ---
 
-### Step 2.5: HTMLスクリーンショット取得（自動比較用）
+### Step 2.5: HTMLスクリーンショット取得と保存（自動比較用）
 
 **セットアップ**（初回のみ）:
 ```bash
 cd ~/.agents/scripts/html-screenshot && npm install
 ```
 
-**スクリーンショット取得**:
+**スクリーンショット取得と保存**:
 ```bash
-node ~/.agents/scripts/html-screenshot/screenshot.js [HTMLファイルパス]
+# HTMLスクリーンショットを同じディレクトリに保存
+node ~/.agents/scripts/html-screenshot/screenshot.js [HTMLファイルパス] -o [出力ディレクトリ]/html-screenshot.png
 ```
 
-**画像比較**（オプション）:
+**保存ファイル名**: `html-screenshot.png`（状態バリエーションがある場合は `html-screenshot-{state}.png`）
+
+**画像比較と差分保存**（必須）:
+
 ```bash
-node ~/.agents/scripts/html-screenshot/compare.js [HTML screenshot] [Figma screenshot] [diff.png]
+# compare.js で差分画像を生成（pixelmatchアルゴリズム使用）
+node ~/.agents/scripts/html-screenshot/compare.js \
+  [出力ディレクトリ]/figma-screenshot.png \
+  [出力ディレクトリ]/html-screenshot.png \
+  [出力ディレクトリ]/diff.png
 ```
+
+**compare.js の特徴**:
+
+| 項目 | 内容 |
+|------|------|
+| アルゴリズム | pixelmatch（知覚的比較、アンチエイリアス考慮） |
+| 出力 | 差分ピクセル数、差分パーセンテージ、評価ラベル |
+| 差分可視化 | 赤色でハイライト |
+| サイズ不一致 | 自動パディングで対応 |
+
+**出力例**:
+```
+Comparison Results:
+  Total pixels: 2,832,000
+  Different pixels: 132,597
+  Difference: 4.68%
+
+🟠 NOTICEABLE - Some differences detected
+
+Diff image saved: diff.png
+```
+
+**保存されるファイル一覧**:
+
+| ファイル | 内容 | 用途 |
+|---------|------|------|
+| `figma-screenshot.png` | Figmaデザインのスクリーンショット | 基準画像 |
+| `html-screenshot.png` | 生成HTMLのスクリーンショット | 比較対象 |
+| `diff.png` | 差分を可視化した画像（赤＝差異） | 差異箇所の特定 |
 
 **出力結果の解釈**:
-- ✅ PIXEL PERFECT (0%): 完全一致
-- 🟡 NEARLY PERFECT (< 1%): 軽微な差異
-- 🟠 NOTICEABLE (< 5%): 目立つ差異
-- 🔴 SIGNIFICANT (>= 5%): 大きな差異
+
+| 評価 | 差分率 | 判断 |
+|------|--------|------|
+| ✅ PIXEL PERFECT | 0% | 完全一致、修正不要 |
+| 🟡 NEARLY PERFECT | < 1% | 軽微な差異、許容可能 |
+| 🟠 NOTICEABLE | < 5% | 目立つ差異、要確認 |
+| 🔴 SIGNIFICANT | >= 5% | 大きな差異、修正必須 |
+
+**⚠️ 注意**: Python PIL（ImageChops.difference）ではなく、必ず **compare.js** を使用すること。
+- compare.js: pixelmatchによる知覚的比較、閾値設定可能
+- Python PIL: 単純なピクセル差分、誤検出が多い
 
 ---
 
@@ -363,6 +445,21 @@ If no differences found, report as "一致" and complete.
 
 ## 出力形式
 
+### 保存されるファイル
+
+比較実行後、HTMLファイルと同じディレクトリに以下のファイルが保存される：
+
+```
+[output-directory]/
+├── index.html              # 比較対象のHTML
+├── figma-screenshot.png    # Figmaスクリーンショット（基準画像）
+├── html-screenshot.png     # HTMLスクリーンショット（比較対象）
+├── diff.png                # 差分画像（差異箇所を赤くハイライト）
+└── spec.md                 # 画面仕様書（既存）
+```
+
+### 比較レポート
+
 ```markdown
 # Figma-HTML 比較レポート（ピクセルパーフェクト検証）
 
@@ -374,6 +471,7 @@ If no differences found, report as "一致" and complete.
 | HTMLファイル | [パス] |
 | 比較日時 | YYYY-MM-DD HH:mm |
 | 総合判定 | ✅ ピクセルパーフェクト / ❌ 差異あり（N件） |
+| スクリーンショット | `figma-screenshot.png`, `html-screenshot.png`, `diff.png` |
 
 ---
 

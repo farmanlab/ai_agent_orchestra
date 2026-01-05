@@ -88,6 +88,37 @@ curl -H "X-Figma-Token: $FIGMA_TOKEN" \
 | `data-figma-icon-color` | Figmaのカラートークン名 | `Icon/Main/Default` | 任意 |
 | `data-figma-asset-src` | FigmaアセットURL（画像、7日間有効） | `https://www.figma.com/api/mcp/asset/xxx-xxx` | 任意 |
 
+### アイコンコンテナの配置ルール（重要）
+
+**Figma MCPで明確な配置指定がない場合、アイコンはコンテナ内で中央配置をデフォルトとする。**
+
+| アイコンの配置方法 | 実装 |
+|-------------------|------|
+| `<div>` で囲む場合 | `display: flex; align-items: center; justify-content: center;` |
+| `<img>` 直接の場合 | 親要素で `display: flex; align-items: center;` を設定 |
+| `<svg>` インラインの場合 | 親要素で `display: flex; align-items: center; justify-content: center;` |
+
+### 実装例（アイコンコンテナ）
+
+```html
+<!-- ✅ divで囲む場合 -->
+<div class="w-6 h-6 flex items-center justify-center">
+  <img src="icon.svg" class="max-w-full max-h-full" alt="">
+</div>
+
+<!-- ✅ ボタン内のアイコン（親がflex） -->
+<button class="flex items-center gap-2">
+  <img src="icon.svg" class="w-6 h-6 object-contain" alt="">
+  <span>ラベル</span>
+</button>
+```
+
+### 理由
+
+- Figmaでは要素は常に中央に配置されているように見えるが、明示的な指定がないことが多い
+- HTMLでは明示的に配置を指定しないと左上に寄る
+- デフォルトで中央配置にすることで、Figmaデザインとの乖離を防ぐ
+
 ### 注意事項
 
 - FigmaアセットURLは**7日間で期限切れ**になるため、実装時に再取得またはダウンロードが必要

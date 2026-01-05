@@ -11,6 +11,20 @@
 
 ---
 
+## data-figma-* 属性リファレンス
+
+| 属性パターン | 用途 | 付与対象 | 例 |
+| ---- | ---- | ---- | ---- |
+| `data-figma-filekey` | FigmaファイルキーをHTMLに紐付け | `<body>` | `data-figma-filekey="WQxcEmQk2..."` |
+| `data-figma-node` | Figmaノードへのトレーサビリティ | 全要素 | `data-figma-node="123:456"` |
+| `data-figma-content-screen-*` | 画面ルートコンテナの識別 | ルート`<div>` | `data-figma-content-screen-home` |
+| `data-figma-content-*` | コンテンツ要素の識別（static/dynamic分類用） | テキスト・画像要素 | `data-figma-content-user-name` |
+| `data-figma-states` | 要素がサポートする状態のリスト | インタラクティブ要素 | `data-figma-states="default,hover,active"` |
+| `data-figma-interaction` | インタラクション定義（トリガー:アクション:ターゲット） | ボタン・リンク | `data-figma-interaction="tap:navigate:/home"` |
+| `data-state` | 現在のUI状態（JavaScript制御用） | 状態を持つ要素 | `data-state="loading"` |
+
+---
+
 ## 構造・スタイル
 
 ### HTML構造

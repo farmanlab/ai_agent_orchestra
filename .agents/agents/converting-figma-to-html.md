@@ -128,10 +128,25 @@ _Hover, _Active, _Disabled, _Selected
 
 **主要ルール**:
 - セマンティックHTML + Tailwind CSS
+- **`<body>` タグに `data-figma-filekey` 属性を付与**（Figma fileKey をセット）
 - 全要素に `data-figma-node` 属性
 - アイコンは簡略化してインラインSVG
 - 画像はプレースホルダー使用
 - **mapping-overlay.js を必ず生成・読み込み**（下記参照）
+
+**HTML構造例**:
+```html
+<!DOCTYPE html>
+<html lang="ja">
+<head>...</head>
+<body data-figma-filekey="WQxcEmQk2AmswHRPQb0Jiv">
+  <div data-figma-content-screen-{screen-id} data-figma-node="{root-node-id}">
+    ...
+  </div>
+  <script src="mapping-overlay.js"></script>
+</body>
+</html>
+```
 
 ---
 
@@ -146,34 +161,56 @@ _Hover, _Active, _Disabled, _Selected
 | **Phase 1: HTML変換時**（必須） | static/dynamic 分類の可視化 | spec.md「コンテンツ分析」セクション |
 | **Phase 2: API確定後**（任意） | エンドポイント・フィールドマッピング追加 | OpenAPI仕様書 |
 
-**Phase 1 での生成内容**:
+#### Step 4.1: テンプレートの読み込み（必須）
 
+**⚠️ 必ずテンプレートを読み込んでから生成すること**
+
+```bash
+Read: .agents/templates/mapping-overlay.js
+```
+
+テンプレートには以下の機能が含まれています：
+- データタイプ可視化（static/dynamic/dynamic_list/asset）
+- インタラクション可視化（navigate/modal/disabled/loading）
+- リアルタイム状態表示（hover/active/focus/selected）
+- フィルタリング機能
+
+#### Step 4.2: MAPPING_DATA の生成
+
+テンプレート内の `MAPPING_DATA` セクションを、HTMLから抽出した `data-figma-content-*` 属性で置換：
 
 ```javascript
 const MAPPING_DATA = {
-  // spec.md「コンテンツ分析」セクションの分類結果から生成
+  // HTMLの data-figma-content-* 属性から生成
+  // キー: 属性名（data-figma-content-xxx）
+  // 値: { type, endpoint, apiField, label }
+
   'data-figma-content-nav-title': {
     type: 'static',
+    endpoint: null,
+    apiField: null,
     label: 'ナビゲーションタイトル'
   },
   'data-figma-content-user-name': {
     type: 'dynamic',
-    label: 'ユーザー名',
     endpoint: null,  // API未確定
-    apiField: null   // API未確定
+    apiField: 'user.name',  // 推定フィールド名
+    label: 'ユーザー名'
   },
   'data-figma-content-course-list': {
     type: 'dynamic_list',
-    label: '講座一覧',
     endpoint: null,
-    apiField: null
+    apiField: 'courses',
+    label: '講座一覧'
   }
 };
 ```
 
-**テンプレート**: `.agents/templates/mapping-overlay.js` を使用
+#### Step 4.3: ファイル出力
 
-**HTMLテンプレート（末尾）**:
+1. テンプレートの `MAPPING_DATA` を置換した内容で `mapping-overlay.js` を書き出し
+2. HTMLの `</body>` 直前に以下を追加：
+
 ```html
   <!-- Mapping Overlay Script - API確定前でも必須 -->
   <script src="mapping-overlay.js"></script>

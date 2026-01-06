@@ -1,5 +1,5 @@
 ---
-applyTo:  ".agents/rules/**/*.md"
+applyTo: ".agents/rules/**/*.md"
 ---
 
 

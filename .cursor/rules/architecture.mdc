@@ -1,7 +1,7 @@
 ---
 description: Enforces architecture principles and design patterns for clean code structure. Use when designing or refactoring application layers.
 
-globs:  "**/*.{ts,js,py}"
+globs: "**/*.{ts,js,py}"
 alwaysApply: false
 ---
 

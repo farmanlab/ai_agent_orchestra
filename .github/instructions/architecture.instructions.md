@@ -1,5 +1,5 @@
 ---
-applyTo:  "**/*.{ts,js,py}"
+applyTo: "**/*.{ts,js,py}"
 ---
 
 

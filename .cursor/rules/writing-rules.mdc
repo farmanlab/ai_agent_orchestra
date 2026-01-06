@@ -1,7 +1,7 @@
 ---
 description: Enforces rule file conventions. Use when creating, editing, or reviewing files in .agents/rules/.
 
-globs:  ".agents/rules/**/*.md"
+globs: ".agents/rules/**/*.md"
 alwaysApply: false
 ---
 

@@ -1,7 +1,7 @@
 ---
 description: Enforces skill file conventions. Use when creating, editing, or reviewing files in .agents/skills/.
 
-globs:  ".agents/skills/**/*.md"
+globs: ".agents/skills/**/*.md"
 alwaysApply: false
 ---
 

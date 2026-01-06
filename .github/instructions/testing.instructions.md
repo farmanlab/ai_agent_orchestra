@@ -1,5 +1,5 @@
 ---
-applyTo:  "**/*Test.{ts,js}, **/*_test.py, **/test/**"
+applyTo: "**/*Test.{ts,js}, **/*_test.py, **/test/**"
 ---
 
 

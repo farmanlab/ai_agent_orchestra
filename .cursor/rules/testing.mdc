@@ -1,7 +1,7 @@
 ---
 description: Enforces testing conventions and best practices for reliable test suites. Use when writing or reviewing test code.
 
-globs:  "**/*Test.{ts,js}, **/*_test.py, **/test/**"
+globs: "**/*Test.{ts,js}, **/*_test.py, **/test/**"
 alwaysApply: false
 ---
 

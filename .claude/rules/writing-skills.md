@@ -1,5 +1,5 @@
 ---
-paths:  ".agents/skills/**/*.md"
+paths: ".agents/skills/**/*.md"
 ---
 
 

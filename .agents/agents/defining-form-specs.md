@@ -1,7 +1,7 @@
 ---
 name: defining-form-specs
 description: Defines form field specifications including validation rules and error states. Use when documenting form specifications before implementation.
-tools: [Read, Write, Glob, mcp__figma__get_screenshot, mcp__figma__get_design_context, mcp__figma__get_metadata]
+tools: ["Read", "Write", "Glob", "mcp__figma__get_screenshot", "mcp__figma__get_design_context", "mcp__figma__get_metadata"]
 skills: [defining-form-specs, managing-screen-specs]
 ---
 
@@ -112,6 +112,25 @@ spec.md は .outputs/user-registration/ にあります。
 4. **エラーメッセージ**: 各ルール違反時のメッセージ
 5. **バリデーションタイミング**: onChange/onBlur/onSubmit
 6. **送信動作**: 活性条件、成功/失敗時の挙動
+
+---
+
+## 署名出力（必須）
+
+**更新したセクションに署名コメントを含めること。**
+
+### spec.md の「フォーム仕様」セクション
+
+セクション見出しの直後に署名を追加：
+
+```markdown
+## フォーム仕様
+
+<!-- @generated-by: defining-form-specs | @timestamp: 2026-01-05T16:47:00Z -->
+
+### フィールド一覧
+...
+```
 
 ---
 

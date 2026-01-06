@@ -1,0 +1,71 @@
+name: Agents Validation
+
+on:
+  pull_request:
+    paths:
+      - '.agents/**'
+      - '.claude/**'
+      - '.cursor/**'
+      - '.github/instructions/**'
+      - '.github/prompts/**'
+
+jobs:
+  validate:
+    name: Validate Structure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run structure validation
+        run: .agents/sync/validate.sh
+
+      - name: Run size check
+        run: .agents/sync/check-size.sh
+        continue-on-error: true
+
+      - name: Run quality check
+        run: .agents/sync/check-quality.sh
+        continue-on-error: true
+
+  sync-check:
+    name: Check Sync Status
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run sync
+        run: .agents/sync/sync.sh all
+
+      - name: Check for unsynced changes
+        run: |
+          if ! git diff --quiet; then
+            echo "::warning::Sync required - run '.agents/sync/sync.sh all' and commit"
+            echo ""
+            echo "Changed files:"
+            git diff --stat
+            exit 0
+          fi
+          echo "All files are in sync"
+
+  direct-edit-warning:
+    name: Detect Direct Edits
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for direct edits to generated files
+        run: |
+          DIRECT=$(git diff --name-only origin/${{ github.base_ref }}...HEAD 2>/dev/null | \
+            grep -E '^\.(claude|cursor)/|^\.github/(instructions|prompts)/' || true)
+
+          if [ -n "$DIRECT" ]; then
+            echo "::warning::Direct edits detected in generated files."
+            echo "Please edit .agents/ source files instead:"
+            echo ""
+            echo "$DIRECT"
+          fi

@@ -1,7 +1,7 @@
 ---
 name: documenting-ui-states
 description: Documents all UI state variations from Figma designs (default, empty, error, loading). Use when documenting UI state specifications before implementation.
-tools: [Read, Write, Glob, mcp__figma__get_screenshot, mcp__figma__get_design_context, mcp__figma__get_metadata]
+tools: ["Read", "Write", "Glob", "mcp__figma__get_screenshot", "mcp__figma__get_design_context", "mcp__figma__get_metadata"]
 skills: [documenting-ui-states, managing-screen-specs]
 ---
 
@@ -99,6 +99,25 @@ Figma URL: https://figma.com/design/XXXXX/Project?node-id=1234-5678
 
 先ほど生成した講座一覧画面の状態バリエーションを整理してください。
 spec.md は .outputs/course-list/ にあります。
+```
+
+---
+
+## 署名出力（必須）
+
+**更新したセクションに署名コメントを含めること。**
+
+### spec.md の「UI状態」セクション
+
+セクション見出しの直後に署名を追加：
+
+```markdown
+## UI状態
+
+<!-- @generated-by: documenting-ui-states | @timestamp: 2026-01-05T16:47:00Z -->
+
+### 定義済み状態一覧
+...
 ```
 
 ---

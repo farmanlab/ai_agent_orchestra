@@ -1,7 +1,7 @@
 ---
 name: extracting-interactions
 description: Extracts interaction specifications from Figma designs (hover, transitions, animations). Use when documenting interaction specifications before implementation.
-tools: [Read, Write, Glob, mcp__figma__get_screenshot, mcp__figma__get_design_context, mcp__figma__get_metadata]
+tools: ["Read", "Write", "Glob", "mcp__figma__get_screenshot", "mcp__figma__get_design_context", "mcp__figma__get_metadata"]
 skills: [extracting-interactions, managing-screen-specs]
 ---
 
@@ -105,6 +105,25 @@ Figma URL: https://figma.com/design/XXXXX/Project?node-id=1234-5678
 
 講座一覧画面のインタラクション仕様を抽出してください。
 spec.md は .outputs/course-list/ にあります。
+```
+
+---
+
+## 署名出力（必須）
+
+**更新したセクションに署名コメントを含めること。**
+
+### spec.md の「インタラクション」セクション
+
+セクション見出しの直後に署名を追加：
+
+```markdown
+## インタラクション
+
+<!-- @generated-by: extracting-interactions | @timestamp: 2026-01-05T16:47:00Z -->
+
+### インタラクティブ要素一覧
+...
 ```
 
 ---

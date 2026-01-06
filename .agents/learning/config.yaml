@@ -1,0 +1,86 @@
+# Team Knowledge Extraction Configuration
+#
+# This file configures the automated knowledge extraction from team activity.
+# Used by: .github/workflows/team-knowledge-extraction.yml
+
+# Schedule settings
+schedule:
+  frequency: weekly  # daily | weekly
+  day: sunday        # For weekly schedule
+  time: "09:00"      # JST (UTC+9)
+
+# Data sources to analyze
+sources:
+  # PR review comments - highest value source
+  pr_reviews:
+    enabled: true
+    min_occurrences: 2  # Pattern must appear 2+ times to be proposed
+    lookback_prs: 30    # Number of recent PRs to analyze
+
+  # Issue discussions
+  issues:
+    enabled: true
+    lookback_issues: 30
+    # Only analyze issues with these labels (empty = all issues)
+    labels: []
+
+  # Learn from successful .agents/ additions
+  agents_changes:
+    enabled: true
+    learn_from_successful: true
+
+# Proposal thresholds
+thresholds:
+  max_proposals_per_run: 3
+  min_confidence: medium  # low | medium | high
+
+# Patterns to never propose (already covered or not relevant)
+exclusions:
+  - "code formatting"
+  - "import ordering"
+  - "whitespace"
+  - "typo fix"
+
+# Detection patterns for each type
+detection:
+  # RULES - coding standards, conventions
+  rule_indicators:
+    - "always"
+    - "never"
+    - "must"
+    - "should"
+    - "don't"
+    - "avoid"
+    - "常に"
+    - "必ず"
+    - "禁止"
+    - "すべき"
+
+  # SKILLS - reusable workflows
+  skill_indicators:
+    - "steps"
+    - "workflow"
+    - "process"
+    - "how to"
+    - "手順"
+    - "フロー"
+    - "checklist"
+
+  # AGENTS - autonomous task handlers
+  agent_indicators:
+    - "automatically"
+    - "analyze"
+    - "review"
+    - "specialized"
+    - "dedicated"
+    - "自動的に"
+    - "分析"
+
+  # COMMANDS - user-invoked operations
+  command_indicators:
+    - "run this"
+    - "execute"
+    - "invoke"
+    - "call"
+    - "実行"
+    - "コマンド"

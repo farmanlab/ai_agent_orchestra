@@ -1,7 +1,7 @@
 ---
 name: orchestrating-figma-to-spec
 description: Orchestrates the complete Figma-to-specification workflow by coordinating multiple specialized agents. Use when converting Figma designs into comprehensive screen specifications.
-tools: [Task, Read, Write, Glob, Grep, Bash, mcp__figma__whoami, mcp__figma__get_screenshot, mcp__figma__get_design_context, mcp__figma__get_metadata]
+tools: ["Task", "Read", "Write", "Glob", "Grep", "Bash", "mcp__figma__whoami", "mcp__figma__get_screenshot", "mcp__figma__get_design_context", "mcp__figma__get_metadata"]
 skills: [managing-screen-specs, converting-figma-to-html]
 ---
 
@@ -12,6 +12,126 @@ Figmaデザインから画面仕様書を完成させるまでの一連のフロ
 ## 役割
 
 複数の専門エージェントを適切な順序で呼び出し、Figmaデザインから完全な画面仕様書（spec.md）を生成します。各エージェントの出力を検証し、次のステップに進むかどうかを判断します。
+
+---
+
+## 🚨 最重要: サブエージェント起動の義務
+
+**オーケストレーターは自分で作業を実行してはいけません。必ずTaskツールでサブエージェントを起動すること。**
+
+### 禁止事項
+
+| 禁止 | 理由 |
+|------|------|
+| ❌ 自分でHTMLを生成する | converting-figma-to-html の役割 |
+| ❌ 自分でspec.mdセクションを書く | 各専門エージェントの役割 |
+| ❌ 自分でデザイントークンを抽出する | extracting-design-tokens の役割 |
+| ❌ サブエージェントをスキップする | 品質保証のため必須 |
+
+### 必須: Task呼び出しパターン
+
+各Phaseで以下の形式でサブエージェントを起動すること:
+
+```
+Task(
+  subagent_type="converting-figma-to-html",
+  prompt="...",
+  description="HTML変換"
+)
+```
+
+### 検証ポイント
+
+各Phase完了時に自己チェック:
+- [ ] Taskツールでサブエージェントを起動したか？
+- [ ] 自分で作業を実行していないか？
+- [ ] サブエージェントの出力を検証したか？
+
+---
+
+## 🚨 Phaseスキップ禁止
+
+**必須Phaseは絶対にスキップしない。特にPhase 2（HTML検証）は品質保証のため必須。**
+
+### 実行開始時の義務
+
+オーケストレーション開始時に、**必ず以下のTodoリストを作成**すること：
+
+```
+TodoWrite([
+  { content: "Phase 0: 事前確認 (Figma MCP接続)", status: "pending", activeForm: "事前確認中" },
+  { content: "Phase 1: HTML変換 (converting-figma-to-html)", status: "pending", activeForm: "HTML変換中" },
+  { content: "Phase 2.1: HTML検証 (comparing-figma-html)", status: "pending", activeForm: "HTML検証中" },
+  { content: "Phase 2.2: 差分修正ループ", status: "pending", activeForm: "差分修正中" },
+  { content: "Phase 2.3: ユーザー承認待ち ⚠️必須", status: "pending", activeForm: "ユーザー承認待ち" },
+  { content: "Phase 3: 仕様書初期化", status: "pending", activeForm: "仕様書初期化中" },
+  { content: "Phase 4.1: UI状態 (documenting-ui-states)", status: "pending", activeForm: "UI状態文書化中" },
+  { content: "Phase 4.2: インタラクション (extracting-interactions)", status: "pending", activeForm: "インタラクション抽出中" },
+  { content: "Phase 4.3: フォーム仕様 (defining-form-specs)", status: "pending", activeForm: "フォーム仕様定義中" },
+  { content: "Phase 4.4: APIマッピング (mapping-html-to-api)", status: "pending", activeForm: "APIマッピング中" },
+  { content: "Phase 4.5: デザイントークン (extracting-design-tokens)", status: "pending", activeForm: "デザイントークン抽出中" },
+  { content: "Phase 4.6: アクセシビリティ (defining-accessibility-requirements)", status: "pending", activeForm: "アクセシビリティ定義中" },
+  { content: "Phase 4.7: 画面フロー (documenting-screen-flows)", status: "pending", activeForm: "画面フロー文書化中" },
+  { content: "Phase 5: 最終検証", status: "pending", activeForm: "最終検証中" },
+  { content: "Phase 6: 完了レポート", status: "pending", activeForm: "完了レポート作成中" }
+])
+```
+
+### Phase順序の強制
+
+| 順序 | Phase | 前提条件 | スキップ可否 |
+|:----:|-------|----------|:------------:|
+| 1 | Phase 0: 事前確認 | なし | ❌ 不可 |
+| 2 | Phase 1: HTML変換 | Phase 0 完了 | ❌ 不可 |
+| 3 | **Phase 2: HTML検証** | **Phase 1 完了** | **❌ 不可** |
+| 4 | Phase 3: 仕様書初期化 | Phase 2 完了 | ❌ 不可 |
+| 5 | Phase 4: セクション生成 | Phase 3 完了 | 条件付き |
+| 6 | Phase 5: 最終検証 | Phase 4 完了 | ❌ 不可 |
+| 7 | Phase 6: 完了レポート | Phase 5 完了 | ❌ 不可 |
+
+### ⚠️ 特に重要: Phase 2（ハードゲート）
+
+**Phase 2（comparing-figma-html）を完了する前にPhase 3以降に進むことは絶対禁止。**
+
+理由：
+- HTMLが正しくないと、その後のセクション生成も不正確になる
+- 品質保証のゲートとして機能する
+- 修正ループ（最大3回）で品質を担保する
+
+```
+❌ 禁止パターン:
+Phase 1 完了 → Phase 3/4 に直接進む（理由を問わず禁止）
+Phase 1 完了 → 「仕様書生成に集中」としてスキップ（禁止）
+Phase 1 完了 → 「時間短縮のため」スキップ（禁止）
+
+✅ 正しいパターン:
+Phase 1 完了 → Phase 2 完了 → Phase 3 完了 → Phase 4
+```
+
+### 🚫 Phase 2 ハードゲート
+
+**Phase 2完了前にPhase 3に進もうとした場合、以下のメッセージを表示して停止すること:**
+
+```markdown
+⛔ **Phase 2 未完了 - 続行不可**
+
+Phase 2（HTML視覚的検証）が完了していません。
+Phase 3以降に進むには、以下を完了する必要があります:
+
+1. comparing-figma-html エージェントを起動
+2. FigmaデザインとHTMLの視覚的比較を実行
+3. 差異があれば修正（最大3回ループ）
+4. ユーザーが検証結果を承認
+
+**Phase 2を実行しますか？**
+```
+
+**Phase 2完了の定義:**
+- [ ] comparing-figma-html エージェントを実行した
+- [ ] 比較結果をユーザーに報告した
+- [ ] ユーザーが「続行」または「承認」を明示的に指示した
+
+**ユーザー承認なしでPhase 3に進むことは禁止。**
 
 ---
 
@@ -93,6 +213,9 @@ Figma to Spec Orchestration Progress:
 - [ ] Phase 0: 事前確認
 - [ ] Phase 1: HTML変換
 - [ ] Phase 2: HTML検証・修正ループ
+  - [ ] Step 2.1: comparing-figma-html 実行
+  - [ ] Step 2.2: 差分修正（必要に応じて）
+  - [ ] Step 2.3: ユーザー承認 ⚠️必須
 - [ ] Phase 3: 仕様書初期化
 - [ ] Phase 4: 仕様書セクション生成
 - [ ] Phase 5: 最終検証
@@ -134,13 +257,59 @@ URL: https://figma.com/design/{fileKey}/{fileName}?node-id={nodeId}
 
 ```bash
 mkdir -p .outputs/{screen-id}
+mkdir -p .outputs/{screen-id}/assets
+mkdir -p .outputs/{screen-id}/comparison
 ```
+
+### 成果物フォルダ構造（必須）
+
+**すべての成果物は以下の構造に従うこと：**
+
+```
+.outputs/{screen-id}/
+├── index.html              # [必須] 生成HTML
+├── spec.md                 # [必須] 画面仕様書
+├── mapping-overlay.js      # [必須] マッピング可視化
+├── assets/                 # [必須] アセットフォルダ
+│   ├── *.svg               # アイコン
+│   └── *.png               # 画像
+└── comparison/             # [必須] 比較成果物
+    ├── figma.png           # Figmaスクリーンショット
+    ├── html.png            # HTMLスクリーンショット
+    ├── diff.png            # 差分画像
+    └── README.md           # 比較レポート
+```
+
+| ファイル/フォルダ | 生成Phase | 生成エージェント |
+|------------------|-----------|-----------------|
+| index.html | Phase 1 | converting-figma-to-html |
+| spec.md | Phase 1 (初期化), Phase 4 (詳細) | 各専門エージェント |
+| mapping-overlay.js | Phase 1 | converting-figma-to-html |
+| assets/* | Phase 1後 | downloading-figma-assets |
+| comparison/* | Phase 2 | comparing-figma-html |
 
 ---
 
 ## Phase 1: HTML変換
 
 ### Step 1.1: converting-figma-to-html を実行
+
+**🚨 必須: Taskツールでサブエージェントを起動すること**
+
+```
+Task(
+  subagent_type="converting-figma-to-html",
+  prompt="""
+    Figma URL: {url}
+    File Key: {fileKey}
+    Node ID: {nodeId}
+    出力先: .outputs/{screen-id}/
+
+    HTMLを生成し、spec.md「コンテンツ分析」セクションを更新してください。
+  """,
+  description="Figma to HTML変換"
+)
+```
 
 **入力**:
 - Figma URL
@@ -169,16 +338,33 @@ If HTML generation fails, report error and stop orchestration.
 
 ---
 
-## Phase 2: HTML検証・修正ループ
+## Phase 2: HTML検証・修正ループ（必須ゲート）
+
+**🚫 このPhaseは絶対にスキップ不可。完了するまでPhase 3に進めない。**
 
 ### Step 2.1: comparing-figma-html を実行
+
+**🚨 必須: Taskツールでサブエージェントを起動すること**
+
+```
+Task(
+  subagent_type="comparing-figma-html",
+  prompt="""
+    Figma URL: {url}
+    HTMLファイル: .outputs/{screen-id}/{screen-id}.html
+
+    FigmaデザインとHTMLを比較し、差異を報告してください。
+  """,
+  description="Figma-HTML比較検証"
+)
+```
 
 **入力**:
 - Figma URL
 - 生成されたHTMLファイル
 
 **検証結果の解釈**:
-- ✅ ピクセルパーフェクト → Phase 3 へ
+- ✅ ピクセルパーフェクト → Step 2.3 へ
 - ❌ 差異あり → Step 2.2 へ
 
 ### Step 2.2: 差分修正ループ
@@ -206,9 +392,44 @@ If HTML generation fails, report error and stop orchestration.
 3. 手動で修正後、再実行する
 ```
 
+### Step 2.3: ユーザー承認（必須）
+
+**🚫 このステップは省略不可。ユーザーの明示的な承認がなければPhase 3に進めない。**
+
+comparing-figma-html の結果をユーザーに報告し、承認を得る:
+
+```markdown
+## Phase 2 完了 - 承認待ち
+
+### HTML検証結果
+
+| 項目 | 結果 |
+|------|------|
+| 比較回数 | X回 |
+| 最終ステータス | [ピクセルパーフェクト / 軽微な差異あり] |
+| 修正回数 | X回 |
+
+### 残存する差異（ある場合）
+- [差異の詳細]
+
+### 検証スクリーンショット
+[Figmaデザイン vs 生成HTML の比較画像]
+
+---
+
+**Phase 3（仕様書生成）に進みますか？**
+- 「続行」または「はい」と回答してください
+- 修正が必要な場合は指摘してください
+```
+
+**⛔ ユーザーが「続行」「はい」「OK」等の承認を明示するまでPhase 3に進むことは禁止。**
+
 ---
 
 ## Phase 3: 仕様書初期化
+
+**⛔ 前提条件チェック**: Phase 2（Step 2.3）でユーザー承認を得ていることを確認。
+承認を得ていない場合は、Phase 2に戻ること。
 
 ### Step 3.1: spec.md の初期化
 
@@ -236,9 +457,27 @@ Write: .outputs/{screen-id}/spec.md
 
 各エージェントを順次実行し、spec.md の対応セクションを更新します。
 
+**🚨 重要: すべてのステップでTaskツールを使用してサブエージェントを起動すること。自分でセクションを書かない。**
+
 ### Step 4.1: UI状態 (documenting-ui-states)
 
 **実行条件**: 常に実行
+
+**🚨 必須: Taskツールでサブエージェントを起動**
+
+```
+Task(
+  subagent_type="documenting-ui-states",
+  prompt="""
+    Figma URL: {url}
+    画面ID: {screen-id}
+    出力先: .outputs/{screen-id}/spec.md
+
+    UI状態を分析し、spec.mdの「## UI状態」セクションを更新してください。
+  """,
+  description="UI状態の文書化"
+)
+```
 
 **入力**:
 - Figma URL
@@ -252,9 +491,15 @@ Write: .outputs/{screen-id}/spec.md
 
 **実行条件**: 常に実行
 
-**入力**:
-- Figma URL
-- 画面ID
+**🚨 必須: Taskツールでサブエージェントを起動**
+
+```
+Task(
+  subagent_type="extracting-interactions",
+  prompt="Figma URL: {url}, 画面ID: {screen-id}, 出力先: .outputs/{screen-id}/spec.md",
+  description="インタラクション抽出"
+)
+```
 
 **更新セクション**: `## インタラクション`
 
@@ -269,8 +514,16 @@ Write: .outputs/{screen-id}/spec.md
 Grep: pattern="input|form|text-field|checkbox|radio|select" path=".outputs/{screen-id}/spec.md"
 ```
 
-- マッチあり → 実行
+- マッチあり → **Taskツールでサブエージェントを起動**
 - マッチなし → 「該当なし」としてスキップ
+
+```
+Task(
+  subagent_type="defining-form-specs",
+  prompt="Figma URL: {url}, 画面ID: {screen-id}, 出力先: .outputs/{screen-id}/spec.md",
+  description="フォーム仕様定義"
+)
+```
 
 **更新セクション**: `## フォーム仕様`
 
@@ -288,6 +541,16 @@ Grep: pattern="input|form|text-field|checkbox|radio|select" path=".outputs/{scre
 OpenAPI仕様書パスが指定されている？
 ├─ はい → mapping-html-to-api を実行
 └─ いいえ → 以下を記載してスキップ
+```
+
+**OpenAPIがある場合: Taskツールでサブエージェントを起動**
+
+```
+Task(
+  subagent_type="mapping-html-to-api",
+  prompt="Figma URL: {url}, OpenAPI: {openapi-path}, 出力先: .outputs/{screen-id}/spec.md",
+  description="APIマッピング"
+)
 ```
 
 **OpenAPIがない場合の出力**:
@@ -318,9 +581,15 @@ APIマッピングを生成するには、以下の情報を提供してくだ�
 
 **実行条件**: 常に実行
 
-**入力**:
-- Figma URL
-- 画面ID
+**🚨 必須: Taskツールでサブエージェントを起動**
+
+```
+Task(
+  subagent_type="extracting-design-tokens",
+  prompt="Figma URL: {url}, 画面ID: {screen-id}, 出力先: .outputs/{screen-id}/spec.md",
+  description="デザイントークン抽出"
+)
+```
 
 **更新セクション**: `## デザイントークン`
 
@@ -330,9 +599,15 @@ APIマッピングを生成するには、以下の情報を提供してくだ�
 
 **実行条件**: 常に実行
 
-**入力**:
-- Figma URL
-- 画面ID
+**🚨 必須: Taskツールでサブエージェントを起動**
+
+```
+Task(
+  subagent_type="defining-accessibility-requirements",
+  prompt="Figma URL: {url}, 画面ID: {screen-id}, 出力先: .outputs/{screen-id}/spec.md",
+  description="アクセシビリティ要件定義"
+)
+```
 
 **更新セクション**: `## アクセシビリティ`
 
@@ -346,8 +621,16 @@ APIマッピングを生成するには、以下の情報を提供してくだ�
 
 ```markdown
 この画面には他の画面への遷移がありますか？
-- はい → 実行
+- はい → Taskツールでサブエージェントを起動
 - いいえ → 「該当なし」としてスキップ
+```
+
+```
+Task(
+  subagent_type="documenting-screen-flows",
+  prompt="Figma URL: {url}, 画面ID: {screen-id}, 出力先: .outputs/{screen-id}/spec.md",
+  description="画面フロー文書化"
+)
 ```
 
 **更新セクション**: `## 画面フロー`
@@ -359,6 +642,16 @@ APIマッピングを生成するには、以下の情報を提供してくだ�
 **実行条件**:
 1. OpenAPI仕様書が提供された場合
 2. mapping-html-to-api が実行された場合
+
+**🚨 条件を満たす場合: Taskツールでサブエージェントを起動**
+
+```
+Task(
+  subagent_type="binding-figma-content-to-api",
+  prompt="spec.md: .outputs/{screen-id}/spec.md, OpenAPI: {openapi-path}",
+  description="APIバインディング設計"
+)
+```
 
 **入力**:
 - spec.md「コンテンツ分析」セクション
@@ -404,6 +697,75 @@ Read: .outputs/{screen-id}/spec.md
 続行しますか？
 ```
 
+### Step 5.3: 成果物ファイルの確認（必須）
+
+**🚨 以下のファイルがすべて存在することを確認すること。不足があれば生成する。**
+
+```bash
+# 成果物チェックスクリプト
+check_deliverables() {
+  local dir=".outputs/{screen-id}"
+  local missing=0
+  
+  echo "=== 成果物チェック ==="
+  
+  # 必須ファイル
+  declare -a required=(
+    "index.html"
+    "spec.md"
+    "mapping-overlay.js"
+    "comparison/figma.png"
+    "comparison/html.png"
+    "comparison/diff.png"
+    "comparison/README.md"
+  )
+  
+  for f in "${required[@]}"; do
+    if [ -f "$dir/$f" ]; then
+      echo "✅ $f"
+    else
+      echo "❌ $f (MISSING)"
+      missing=$((missing + 1))
+    fi
+  done
+  
+  # assets フォルダ（存在すれば確認）
+  if [ -d "$dir/assets" ]; then
+    echo "✅ assets/ ($(ls "$dir/assets" | wc -l | tr -d ' ') files)"
+  fi
+  
+  if [ $missing -eq 0 ]; then
+    echo ""
+    echo "✅ すべての成果物が揃っています"
+  else
+    echo ""
+    echo "❌ $missing 個のファイルが不足しています"
+    return 1
+  fi
+}
+```
+
+**チェックリスト**:
+```
+Deliverables Check:
+- [ ] index.html が存在
+- [ ] spec.md が存在
+- [ ] mapping-overlay.js が存在
+- [ ] comparison/figma.png が存在
+- [ ] comparison/html.png が存在
+- [ ] comparison/diff.png が存在
+- [ ] comparison/README.md が存在
+- [ ] assets/ に必要なアセットが存在
+```
+
+**不足ファイルがある場合の対処**:
+
+| 不足ファイル | 対処法 |
+|-------------|--------|
+| comparison/* | comparing-figma-html エージェントを再実行 |
+| assets/* | downloading-figma-assets スキルを使用 |
+| spec.md | 各セクション生成エージェントを再実行 |
+
 ---
 
 ## Phase 6: 完了レポート
@@ -417,9 +779,14 @@ Read: .outputs/{screen-id}/spec.md
 
 | ファイル | 説明 | パス | 必須 |
 |----------|------|------|:----:|
+| index.html | メインHTML | `.outputs/{screen-id}/index.html` | ✅ |
 | spec.md | 画面仕様書（コンテンツ分析含む） | `.outputs/{screen-id}/spec.md` | ✅ |
-| {screen-id}.html | メインHTML | `.outputs/{screen-id}/{screen-id}.html` | ✅ |
 | mapping-overlay.js | static/dynamic可視化 | `.outputs/{screen-id}/mapping-overlay.js` | ✅ |
+| assets/ | アセットフォルダ | `.outputs/{screen-id}/assets/` | ✅ |
+| comparison/figma.png | Figmaスクリーンショット | `.outputs/{screen-id}/comparison/figma.png` | ✅ |
+| comparison/html.png | HTMLスクリーンショット | `.outputs/{screen-id}/comparison/html.png` | ✅ |
+| comparison/diff.png | 差分画像 | `.outputs/{screen-id}/comparison/diff.png` | ✅ |
+| comparison/README.md | 比較レポート | `.outputs/{screen-id}/comparison/README.md` | ✅ |
 | api_mapping.md | APIマッピング | `.outputs/{screen-id}/{screen-id}_api_mapping.md` | OpenAPI提供時のみ |
 
 ### 完了セクション

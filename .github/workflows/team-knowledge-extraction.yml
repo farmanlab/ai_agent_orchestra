@@ -1,0 +1,222 @@
+name: Team Knowledge Extraction
+
+on:
+  schedule:
+    # Weekly on Sunday at 00:00 UTC (09:00 JST)
+    - cron: "0 0 * * 0"
+  workflow_dispatch:
+    inputs:
+      days_to_analyze:
+        description: "Number of days to analyze"
+        required: false
+        default: "7"
+      dry_run:
+        description: "Dry run (no PR creation)"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: read
+
+env:
+  DAYS: ${{ inputs.days_to_analyze || '7' }}
+
+jobs:
+  extract:
+    name: Extract Team Knowledge
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Collect PR review data
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Collecting PR data from the last $DAYS days..."
+
+          gh pr list \
+            --state merged \
+            --limit 30 \
+            --json number,title,body,comments,reviews,mergedAt \
+            > /tmp/pr_data.json
+
+          echo "Collected $(jq length /tmp/pr_data.json) PRs"
+
+      - name: Collect issue discussions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Collecting issue discussions..."
+
+          gh issue list \
+            --state all \
+            --limit 30 \
+            --json number,title,body,comments,labels,createdAt \
+            > /tmp/issues.json
+
+          echo "Collected $(jq length /tmp/issues.json) issues"
+
+      - name: Collect recent .agents/ changes
+        run: |
+          echo "Collecting recent .agents/ changes..."
+
+          git log \
+            --since="$DAYS days ago" \
+            --name-only \
+            --pretty=format:"%H|%s|%an|%ai" \
+            -- .agents/ > /tmp/agents_changes.txt
+
+          echo "Found $(wc -l < /tmp/agents_changes.txt) change entries"
+
+      - name: List existing content
+        run: |
+          echo "Listing existing .agents/ content for deduplication..."
+
+          ls -1 .agents/rules/*.md 2>/dev/null | xargs -I {} basename {} .md > /tmp/existing_rules.txt || true
+          ls -d .agents/skills/*/ 2>/dev/null | xargs -I {} basename {} > /tmp/existing_skills.txt || true
+          ls -1 .agents/agents/*.md 2>/dev/null | xargs -I {} basename {} .md > /tmp/existing_agents.txt || true
+          ls -1 .agents/commands/*.md 2>/dev/null | xargs -I {} basename {} .md > /tmp/existing_commands.txt || true
+
+          echo "Existing rules: $(wc -l < /tmp/existing_rules.txt)"
+          echo "Existing skills: $(wc -l < /tmp/existing_skills.txt)"
+          echo "Existing agents: $(wc -l < /tmp/existing_agents.txt)"
+          echo "Existing commands: $(wc -l < /tmp/existing_commands.txt)"
+
+      - name: Read extraction prompt
+        id: prompt
+        run: |
+          # Read prompt from external file for reusability
+          {
+            echo 'content<<EOF'
+            cat .agents/prompts/team-knowledge-extraction.md
+            echo 'EOF'
+          } >> $GITHUB_OUTPUT
+
+      - name: Analyze and generate proposals
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: ${{ steps.prompt.outputs.content }}
+
+      - name: List proposals
+        id: proposals
+        run: |
+          mkdir -p /tmp/proposals
+          if [ -z "$(ls -A /tmp/proposals/*.json 2>/dev/null)" ]; then
+            echo "count=0" >> $GITHUB_OUTPUT
+            echo "No proposals generated"
+          else
+            COUNT=$(ls -1 /tmp/proposals/*.json | wc -l)
+            echo "count=$COUNT" >> $GITHUB_OUTPUT
+            echo "Generated $COUNT proposals"
+            ls -la /tmp/proposals/
+          fi
+
+      - name: Create PRs for each proposal
+        if: steps.proposals.outputs.count != '0' && inputs.dry_run != true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          for proposal_json in /tmp/proposals/*.json; do
+            [ -f "$proposal_json" ] || continue
+
+            # Parse metadata
+            NAME=$(jq -r '.name' "$proposal_json")
+            TYPE=$(jq -r '.type' "$proposal_json")
+            TITLE=$(jq -r '.title' "$proposal_json")
+            FILE_PATH=$(jq -r '.file_path' "$proposal_json")
+            SOURCE=$(jq -r '.source' "$proposal_json")
+            CONFIDENCE=$(jq -r '.confidence' "$proposal_json")
+            DETECTION_REASON=$(jq -r '.detection_reason' "$proposal_json")
+            OCCURRENCES=$(jq -r '.occurrences' "$proposal_json")
+            CONTRIBUTORS=$(jq -r '.contributors | join(", ")' "$proposal_json")
+
+            # Format evidence as markdown quotes
+            EVIDENCE=$(jq -r '.evidence[] | "> \"\(.quote)\" - \(.author) (\(.source))"' "$proposal_json" | head -5)
+
+            # Create branch
+            BRANCH="knowledge/${TYPE}/${NAME}"
+            git checkout main
+            git checkout -b "$BRANCH"
+
+            # Stage the created file
+            git add "$FILE_PATH"
+            git commit -m "feat(.agents): add ${TYPE} - ${NAME}
+
+            Extracted from team activity.
+
+            Source: ${SOURCE}
+            Confidence: ${CONFIDENCE}"
+
+            git push origin "$BRANCH"
+
+            # Create PR with detection details in description
+            gh pr create \
+              --title "Add ${TYPE}: ${TITLE}" \
+              --body "## Detection Summary
+
+            | Item | Value |
+            |------|-------|
+            | Type | ${TYPE} |
+            | Source | ${SOURCE} |
+            | Confidence | ${CONFIDENCE} |
+            | Occurrences | ${OCCURRENCES} |
+            | Contributors | ${CONTRIBUTORS} |
+
+            ## Detection Reason
+
+            ${DETECTION_REASON}
+
+            ## Evidence
+
+            ${EVIDENCE}
+
+            ## File
+
+            \`${FILE_PATH}\`
+
+            ## Review Checklist
+
+            - [ ] Content is accurate and project-specific
+            - [ ] No duplication with existing rules/skills
+            - [ ] Follows .agents/ conventions
+            - [ ] Examples are clear and helpful
+
+            ---
+            *Auto-generated by Team Knowledge Extraction*"
+
+            echo "Created PR for: $NAME"
+
+            # Return to main for next iteration
+            git checkout main
+          done
+
+      - name: Dry run summary
+        if: inputs.dry_run == true
+        run: |
+          echo "=== DRY RUN - No PRs created ==="
+          echo ""
+
+          for proposal_json in /tmp/proposals/*.json; do
+            [ -f "$proposal_json" ] || continue
+
+            echo "--- Proposal: $(basename "$proposal_json" .json) ---"
+            jq '.' "$proposal_json"
+            echo ""
+
+            FILE_PATH=$(jq -r '.file_path' "$proposal_json")
+            if [ -f "$FILE_PATH" ]; then
+              echo "File content:"
+              cat "$FILE_PATH"
+            fi
+            echo ""
+          done

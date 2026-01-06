@@ -1,7 +1,7 @@
 ---
 name: documenting-screen-flows
 description: Documents screen-to-screen navigation flows and user journeys. Use when defining screen transitions and navigation patterns.
-tools: [Read, Write, Glob, mcp__figma__get_screenshot, mcp__figma__get_design_context, mcp__figma__get_metadata]
+tools: ["Read", "Write", "Glob", "mcp__figma__get_screenshot", "mcp__figma__get_design_context", "mcp__figma__get_metadata"]
 skills: [documenting-screen-flows, managing-screen-specs]
 ---
 
@@ -111,6 +111,25 @@ spec.md は .outputs/course-list/ にあります。
 5. **条件分岐**: 条件による遷移先の違い
 6. **フロー図**: Mermaid形式での可視化
 7. **画面スタック**: ナビゲーションスタックの想定
+
+---
+
+## 署名出力（必須）
+
+**更新したセクションに署名コメントを含めること。**
+
+### spec.md の「画面フロー」セクション
+
+セクション見出しの直後に署名を追加：
+
+```markdown
+## 画面フロー
+
+<!-- @generated-by: documenting-screen-flows | @timestamp: 2026-01-05T16:47:00Z -->
+
+### 画面の位置づけ
+...
+```
 
 ---
 

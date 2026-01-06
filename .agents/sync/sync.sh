@@ -294,16 +294,14 @@ sync_to_claude() {
         fi
     done
 
-    # Agents symlinks (file-level)
+    # Agents copy (from .agents/agents/)
     mkdir -p "$REPO_ROOT/.claude/agents"
     for agent_file in "$REPO_ROOT/.agents/agents"/*.md; do
         if [ -f "$agent_file" ]; then
             filename=$(basename "$agent_file")
             target="$REPO_ROOT/.claude/agents/$filename"
-            if [ ! -L "$target" ]; then
-                ln -sf "../../.agents/agents/$filename" "$target"
-                log_verbose "Created .claude/agents/$filename symlink"
-            fi
+            cp "$agent_file" "$target"
+            log_verbose "Copied .claude/agents/$filename"
         fi
     done
 
@@ -345,16 +343,14 @@ sync_to_cursor() {
         fi
     done
 
-    # Agents symlinks (file-level)
+    # Agents copy (from .agents/agents/)
     mkdir -p "$REPO_ROOT/.cursor/agents"
     for agent_file in "$REPO_ROOT/.agents/agents"/*.md; do
         if [ -f "$agent_file" ]; then
             filename=$(basename "$agent_file")
             target="$REPO_ROOT/.cursor/agents/$filename"
-            if [ ! -L "$target" ]; then
-                ln -sf "../../.agents/agents/$filename" "$target"
-                log_verbose "Created .cursor/agents/$filename symlink"
-            fi
+            cp "$agent_file" "$target"
+            log_verbose "Copied .cursor/agents/$filename"
         fi
     done
 
@@ -396,16 +392,14 @@ sync_to_copilot() {
         fi
     done
 
-    # Agents symlinks (file-level, renamed to *.agents.md)
+    # Agents copy (from .agents/agents/, renamed to *.agents.md)
     mkdir -p "$REPO_ROOT/.github/agents"
     for agent_file in "$REPO_ROOT/.agents/agents"/*.md; do
         if [ -f "$agent_file" ]; then
             filename=$(basename "$agent_file" .md)
             target="$REPO_ROOT/.github/agents/${filename}.agents.md"
-            if [ ! -L "$target" ]; then
-                ln -sf "../../.agents/agents/${filename}.md" "$target"
-                log_verbose "Created .github/agents/${filename}.agents.md symlink"
-            fi
+            cp "$agent_file" "$target"
+            log_verbose "Copied .github/agents/${filename}.agents.md"
         fi
     done
 

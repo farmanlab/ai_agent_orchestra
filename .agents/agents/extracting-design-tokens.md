@@ -1,7 +1,7 @@
 ---
 name: extracting-design-tokens
 description: Extracts design tokens (colors, typography, spacing, shadows) from Figma designs. Use when documenting design system specifications.
-tools: [Read, Write, Glob, mcp__figma__get_screenshot, mcp__figma__get_design_context, mcp__figma__get_metadata, mcp__figma__get_variable_defs]
+tools: ["Read", "Write", "Glob", "mcp__figma__get_screenshot", "mcp__figma__get_design_context", "mcp__figma__get_metadata", "mcp__figma__get_variable_defs"]
 skills: [extracting-design-tokens, managing-screen-specs]
 ---
 
@@ -119,6 +119,25 @@ spec.md は .outputs/course-list/ にあります。
 5. **ボーダートークン**: 角丸、線幅
 6. **アニメーショントークン**: duration、easing
 7. **使用箇所マッピング**: どの要素でどのトークンが使われているか
+
+---
+
+## 署名出力（必須）
+
+**更新したセクションに署名コメントを含めること。**
+
+### spec.md の「デザイントークン」セクション
+
+セクション見出しの直後に署名を追加：
+
+```markdown
+## デザイントークン
+
+<!-- @generated-by: extracting-design-tokens | @timestamp: 2026-01-05T16:47:00Z -->
+
+### カラートークン
+...
+```
 
 ---
 

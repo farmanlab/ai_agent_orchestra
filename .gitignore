@@ -3,3 +3,4 @@
 .agents/tmp/**/*
 node_modules/
 .outputs/**/*
+.envrc

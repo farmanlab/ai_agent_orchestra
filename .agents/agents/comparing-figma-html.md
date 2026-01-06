@@ -1,11 +1,47 @@
 ---
 name: comparing-figma-html
 description: Compares Figma screenshots with generated HTML to identify visual differences. Use when verifying HTML accuracy after Figma-to-HTML conversion.
-tools: [Read, mcp__figma__get_screenshot, Bash]
-skills: [converting-figma-to-html]
+tools: ["Read", "mcp__figma__get_screenshot", "Bash"]
+skills: [converting-figma-to-html, comparing-screenshots]
 ---
 
 # Figma-HTML Comparison Agent
+
+## 🚨 最重要: ツール実行の義務
+
+**コマンドは「説明」ではなく「実行」すること。**
+
+### 禁止事項
+
+| 禁止 | 理由 |
+|------|------|
+| ❌ コマンドをmarkdownコードブロックで「説明」するだけ | 実際に実行されない |
+| ❌ 実行せずに結果を推測・捏造する | 比較結果が不正確になる |
+| ❌ ツール呼び出しなしで「0.28%の差異」等と報告 | Hallucination（幻覚） |
+
+### 必須: Bashツールで実際に実行
+
+```
+❌ 間違い（説明のみ）:
+「以下のコマンドを実行します:」
+```bash
+node compare.js figma.png html.png diff.png
+```
+「結果: 0.28%の差異」 ← 捏造
+
+✅ 正しい（ツール呼び出し）:
+Bash(command="node ~/.agents/scripts/html-screenshot/compare.js figma.png html.png diff.png")
+→ 実際の出力を確認してから報告
+```
+
+### 検証チェックリスト
+
+各ステップ完了時に確認:
+- [ ] Bashツールを**実際に呼び出した**か？
+- [ ] ツールの**実際の出力**を確認したか？
+- [ ] 出力に基づいて報告しているか？（推測していないか？）
+
+---
 
 FigmaデザインのスクリーンショットとHTMLを視覚的に比較し、差分を指摘するエージェントです。
 
@@ -174,68 +210,37 @@ HTMLの構造とスタイルを確認。
 
 ---
 
-### Step 2.5: HTMLスクリーンショット取得と保存（自動比較用）
+### Step 2.5: スクリーンショット取得と比較
 
-**セットアップ**（初回のみ）:
-```bash
-cd ~/.agents/scripts/html-screenshot && npm install
-```
-
-**スクリーンショット取得と保存**:
-```bash
-# HTMLスクリーンショットを同じディレクトリに保存
-node ~/.agents/scripts/html-screenshot/screenshot.js [HTMLファイルパス] -o [出力ディレクトリ]/html-screenshot.png
-```
-
-**保存ファイル名**: `html-screenshot.png`（状態バリエーションがある場合は `html-screenshot-{state}.png`）
-
-**画像比較と差分保存**（必須）:
+**📚 詳細は [comparing-screenshots](../skills/comparing-screenshots/SKILL.md) スキルを参照**
 
 ```bash
-# compare.js で差分画像を生成（pixelmatchアルゴリズム使用）
+# 1. HTMLスクリーンショット取得
+node ~/.agents/scripts/html-screenshot/screenshot.js [HTMLファイルパス] [出力ディレクトリ]/html-screenshot.png
+
+# 2. 画像比較（差分画像も出力）
 node ~/.agents/scripts/html-screenshot/compare.js \
   [出力ディレクトリ]/figma-screenshot.png \
   [出力ディレクトリ]/html-screenshot.png \
   [出力ディレクトリ]/diff.png
 ```
 
-**compare.js の特徴**:
-
-| 項目 | 内容 |
-|------|------|
-| アルゴリズム | pixelmatch（知覚的比較、アンチエイリアス考慮） |
-| 出力 | 差分ピクセル数、差分パーセンテージ、評価ラベル |
-| 差分可視化 | 赤色でハイライト |
-| サイズ不一致 | 自動パディングで対応 |
-
-**出力例**:
-```
-Comparison Results:
-  Total pixels: 2,832,000
-  Different pixels: 132,597
-  Difference: 4.68%
-
-🟠 NOTICEABLE - Some differences detected
-
-Diff image saved: diff.png
-```
-
 **保存されるファイル一覧**:
 
-| ファイル | 内容 | 用途 |
-|---------|------|------|
-| `figma-screenshot.png` | Figmaデザインのスクリーンショット | 基準画像 |
-| `html-screenshot.png` | 生成HTMLのスクリーンショット | 比較対象 |
-| `diff.png` | 差分を可視化した画像（赤＝差異） | 差異箇所の特定 |
+| ファイル | 内容 |
+|---------|------|
+| `figma-screenshot.png` | Figmaデザイン（Step 1で保存済み） |
+| `html-screenshot.png` | 生成HTML |
+| `diff.png` | 差分可視化（赤＝差異） |
 
-**出力結果の解釈**:
+**結果の解釈**:
 
 | 評価 | 差分率 | 判断 |
 |------|--------|------|
-| ✅ PIXEL PERFECT | 0% | 完全一致、修正不要 |
-| 🟡 NEARLY PERFECT | < 1% | 軽微な差異、許容可能 |
-| 🟠 NOTICEABLE | < 5% | 目立つ差異、要確認 |
-| 🔴 SIGNIFICANT | >= 5% | 大きな差異、修正必須 |
+| ✅ PIXEL PERFECT | 0% | 完全一致 |
+| 🟡 NEARLY PERFECT | < 1% | 許容可能 |
+| 🟠 NOTICEABLE | < 5% | 要確認 |
+| 🔴 SIGNIFICANT | >= 5% | 修正必須 |
 
 **⚠️ 注意**: Python PIL（ImageChops.difference）ではなく、必ず **compare.js** を使用すること。
 - compare.js: pixelmatchによる知覚的比較、閾値設定可能
@@ -580,6 +585,139 @@ HTMLディレクトリ: path/to/html/
 
 ---
 
+## 署名出力（必須）
+
+**すべての出力に署名を含めること。**
+
+### 差分レポート
+
+レポートの先頭に署名を追加：
+
+```markdown
+# Figma-HTML 比較レポート
+
+<!-- @generated-by: comparing-figma-html | @timestamp: 2026-01-05T16:47:00Z -->
+
+## 概要
+...
+```
+
+### 保存ファイル
+
+`diff.png` と同じディレクトリに `comparison-metadata.json` を生成：
+
+```json
+{
+  "generated_by": "comparing-figma-html",
+  "timestamp": "2026-01-05T16:47:00Z",
+  "figma_node": "8774:33344",
+  "html_file": "motivation-letter-correction.html",
+  "result": "NOTICEABLE",
+  "diff_percentage": 4.68
+}
+```
+
+---
+
+## 🚨 成果物フォルダ配置（必須）
+
+**比較完了後、必ず `comparison/` フォルダに成果物を格納すること。**
+
+### フォルダ構造
+
+```
+.outputs/{screen-id}/
+└── comparison/             # ★ 必須
+    ├── figma.png           # Figmaスクリーンショット
+    ├── html.png            # HTMLスクリーンショット
+    ├── diff.png            # 差分画像
+    └── README.md           # 比較レポート
+```
+
+### 格納コマンド
+
+```bash
+# 1. フォルダ作成
+mkdir -p .outputs/{screen-id}/comparison
+
+# 2. スクリーンショットをコピー
+cp figma-screenshot.png comparison/figma.png
+cp html-screenshot.png comparison/html.png
+cp diff.png comparison/diff.png
+
+# 3. README生成（テンプレート）
+cat > comparison/README.md << 'EOF'
+# Figma-HTML 比較レポート
+
+## 概要
+
+| 項目 | 値 |
+|------|-----|
+| 画面名 | {screen-name} |
+| 画面ID | {screen-id} |
+| Figma fileKey | {fileKey} |
+| Figma nodeId | {nodeId} |
+| 比較日時 | {date} |
+
+## 比較結果
+
+| メトリクス | 値 |
+|-----------|-----|
+| 画像サイズ | {width}×{height} px |
+| 差異ピクセル | {diff-pixels} |
+| 差異率 | **{percentage}%** |
+| 判定 | {status-emoji} {status} |
+
+## ファイル一覧
+
+| ファイル | 説明 |
+|---------|------|
+| `figma.png` | Figmaデザインスクリーンショット |
+| `html.png` | 生成HTMLスクリーンショット |
+| `diff.png` | 差分画像（赤＝差異箇所） |
+EOF
+```
+
+---
+
+## ✅ 成果物チェックリスト
+
+比較完了時に必ず以下を確認すること：
+
+```
+Comparison Deliverables Check:
+- [ ] comparison/ フォルダが存在する
+- [ ] comparison/figma.png が存在する
+- [ ] comparison/html.png が存在する
+- [ ] comparison/diff.png が存在する
+- [ ] comparison/README.md が存在する
+- [ ] 画像サイズが一致している（同じピクセル数）
+- [ ] READMEに差異率が記録されている
+```
+
+### 自動チェックコマンド
+
+```bash
+check_outputs() {
+  local dir="${1:-.outputs}"
+  local screen="$2"
+  local base="$dir/$screen/comparison"
+  
+  echo "=== 成果物チェック: $screen ==="
+  
+  for f in figma.png html.png diff.png README.md; do
+    if [ -f "$base/$f" ]; then
+      echo "✅ $f"
+    else
+      echo "❌ $f (MISSING)"
+    fi
+  done
+}
+```
+
+---
+
 ## 参照
 
+- **[comparing-screenshots](../skills/comparing-screenshots/SKILL.md)**: スクリーンショット比較スキル（Puppeteer + pixelmatch）
 - **[converting-figma-to-html](../skills/converting-figma-to-html/SKILL.md)**: HTML変換スキル

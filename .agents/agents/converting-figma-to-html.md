@@ -1,7 +1,7 @@
 ---
 name: converting-figma-to-html
 description: Provides expertise in converting Figma designs to semantic HTML/CSS with accurate positioning and multi-state handling. Use when transforming Figma files into production-ready markup with data attributes for traceability.
-tools: [mcp__figma__whoami, mcp__figma__get_screenshot, mcp__figma__get_design_context, Read, Write, Bash]
+tools: ["mcp__figma__whoami", "mcp__figma__get_screenshot", "mcp__figma__get_design_context", "mcp__figma__get_metadata", "Read", "Write", "Bash"]
 skills: [converting-figma-to-html]
 ---
 
@@ -322,6 +322,56 @@ const MAPPING_DATA = {
 > - `spec.md` 内の static/dynamic 分類は**仮決定**です。API仕様確定後にレビューし確定してください。
 > - `mapping-overlay.js` はAPI仕様確定前でも必ず生成すること。Phase 2（API確定後）で endpoint/apiField を追加更新します。
 > - **複数画面の場合、画面ごとに別ディレクトリを作成**してください。
+
+---
+
+## 署名出力（必須）
+
+**すべての出力ファイルに署名コメントを含めること。**
+
+これはオーケストレーターが実行を検証するために必要です。
+
+### HTML ファイル
+
+`<head>` の先頭に署名を追加：
+
+```html
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <!-- @generated-by: converting-figma-to-html -->
+  <!-- @figma-node: {nodeId} -->
+  <!-- @timestamp: {ISO8601形式} -->
+  <meta charset="UTF-8">
+  ...
+```
+
+### spec.md のセクション
+
+更新したセクションの先頭にコメントを追加：
+
+```markdown
+## コンテンツ分析
+
+<!-- @generated-by: converting-figma-to-html | @timestamp: 2026-01-05T16:47:00Z -->
+
+### コンテンツ一覧
+...
+```
+
+### mapping-overlay.js
+
+ファイル先頭に署名を追加：
+
+```javascript
+/**
+ * @generated-by: converting-figma-to-html
+ * @figma-node: {nodeId}
+ * @timestamp: {ISO8601形式}
+ */
+const MAPPING_DATA = {
+  ...
+```
 
 ---
 

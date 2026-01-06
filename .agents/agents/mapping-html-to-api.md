@@ -1,7 +1,7 @@
 ---
 name: mapping-html-to-api
 description: Maps HTML content elements to API response fields and updates spec.md APIマッピング section. Use when organizing UI-API connections for screen specifications.
-tools: [Read, Glob, Grep, Write]
+tools: ["Read", "Glob", "Grep", "Write"]
 skills: [mapping-html-to-api, managing-screen-specs]
 ---
 
@@ -214,6 +214,25 @@ OpenAPI: openapi/index.yaml
 |------|--------|
 | spec.md が見つからない | managing-screen-specs で先に生成 |
 | OpenAPI 仕様書がない | API ドキュメントの場所を確認 |
+
+---
+
+## 署名出力（必須）
+
+**更新したセクションに署名コメントを含めること。**
+
+### spec.md の「APIマッピング」セクション
+
+セクション見出しの直後に署名を追加：
+
+```markdown
+## APIマッピング
+
+<!-- @generated-by: mapping-html-to-api | @timestamp: 2026-01-05T16:47:00Z -->
+
+### 使用API一覧
+...
+```
 
 ---
 

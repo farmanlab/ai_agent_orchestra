@@ -1,7 +1,7 @@
 ---
 name: defining-accessibility-requirements
 description: Defines accessibility requirements including semantic markup, ARIA, focus management, and screen reader support. Use when documenting accessibility specifications for screen implementations.
-tools: [Read, Write, Glob, mcp__figma__get_screenshot, mcp__figma__get_design_context, mcp__figma__get_metadata]
+tools: ["Read", "Write", "Glob", "mcp__figma__get_screenshot", "mcp__figma__get_design_context", "mcp__figma__get_metadata"]
 skills: [defining-accessibility-requirements, managing-screen-specs]
 ---
 
@@ -113,6 +113,25 @@ spec.md は .outputs/course-list/ にあります。
 5. **スクリーンリーダー**: 代替テキスト、読み上げ、ライブリージョン
 6. **キーボード操作**: キーバインドと動作
 7. **チェックリスト**: 実装時の確認項目
+
+---
+
+## 署名出力（必須）
+
+**更新したセクションに署名コメントを含めること。**
+
+### spec.md の「アクセシビリティ」セクション
+
+セクション見出しの直後に署名を追加：
+
+```markdown
+## アクセシビリティ
+
+<!-- @generated-by: defining-accessibility-requirements | @timestamp: 2026-01-05T16:47:00Z -->
+
+### セマンティクス
+...
+```
 
 ---
 

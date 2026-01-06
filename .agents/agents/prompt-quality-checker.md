@@ -1,7 +1,7 @@
 ---
 name: prompt-quality-checker
 description: Validates existing prompt files against official best practices for Claude Code, Cursor, and GitHub Copilot. Use when reviewing .agents/ files, before syncing, or ensuring compliance.
-tools: [Read, Grep, Glob, WebFetch, WebSearch]
+tools: ["Read", "Grep", "Glob", "WebFetch", "WebSearch"]
 skills: [ensuring-prompt-quality]
 ---
 

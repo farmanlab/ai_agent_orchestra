@@ -35,15 +35,19 @@ Asset Download Progress:
 
 | タイプ | 推奨方法 |
 |--------|----------|
-| アイコン（SVG） | MCP経由（方法1） |
+| アイコン（SVG）※HTMLに`data-figma-icon-svg`あり | Figma API（方法2）★優先 |
+| アイコン（SVG）※`data-figma-asset-url`あり | MCP経由（方法1） |
 | 写真・画像 | MCP経由（方法1） |
 | イラスト | Figma API（方法2） |
 | スクリーンショット | スクリプト（方法3） |
 
+> **⚠️ 重要**: `data-figma-icon-svg` には親ノードIDが指定されている場合があります。
+> 複数のSVGパーツを1つのアイコンとしてダウンロードするため、Figma APIでの取得を優先してください。
+
 **Step 2: 取得方法を選択**
 
-- **方法1（推奨）**: MCP経由 - 最も簡単、認証不要
-- **方法2**: Figma API - MCPで`null`が返る場合
+- **方法2（優先）**: Figma API - `data-figma-icon-svg`属性がある場合
+- **方法1**: MCP経由 - `data-figma-asset-url`属性がある場合
 - **方法3**: スクリーンショット - 特定ビューが必要な場合
 
 **Step 3-5**: 選択した方法のセクションに従って実行
@@ -114,7 +118,12 @@ main();
 
 **注意**: MCPアセットURLは実際にはSVG形式で返されることが多い（拡張子に関わらず）。
 
-## 方法2: Figma API経由でSVGエクスポート
+## 方法2: Figma API経由でSVGエクスポート（★アイコン推奨）
+
+> **この方法を優先する理由**:
+> - `data-figma-icon-svg` には**親ノードID**が指定されている場合がある
+> - 親ノードを指定することで、複数のSVGパーツを1つのアイコンとして取得可能
+> - Figma APIは指定ノード配下の全要素を含むSVGを返す
 
 ### Step 1: ノードIDの特定
 
@@ -123,13 +132,21 @@ main();
 HTMLの `data-figma-icon-svg` 属性にはノードIDが格納されている：
 
 ```html
+<!-- 単一ノードの例 -->
 <span class="icon" data-figma-icon-svg="3428:18627" data-figma-node="3428:18627"></span>
+
+<!-- 親ノードが指定されている例（複数パーツで構成されるアイコン） -->
+<div class="icon-container" 
+     data-figma-node="2348:3191" 
+     data-figma-icon-svg="2348:3191">
+  <!-- 内部に複数のSVG要素が含まれる -->
+</div>
 ```
 
 ```bash
 # HTMLからノードIDを抽出
 grep -oP 'data-figma-icon-svg="\K[^"]+' dashboard.html | sort -u
-# 出力: 3428:18627, 491:2101, ...
+# 出力: 3428:18627, 491:2101, 2348:3191, ...
 ```
 
 **Figma MCPから取得する場合:**
@@ -255,23 +272,38 @@ done
 
 ## よくあるアセットタイプ
 
-| タイプ | 取得方法 | 形式 |
-|--------|----------|------|
-| アイコン | MCP asset URL | SVG |
-| 写真/画像 | MCP asset URL | PNG/JPG |
-| イラスト | Figma API export | SVG |
-| スクリーンショット | figma-screenshot.js | PNG |
+| タイプ | 取得方法 | 形式 | 備考 |
+|--------|----------|------|------|
+| アイコン（`data-figma-icon-svg`あり） | Figma API export ★ | SVG | 親ノード指定で複数パーツを統合 |
+| アイコン（`data-figma-asset-url`あり） | MCP asset URL | SVG | 単一アセットの場合 |
+| 写真/画像 | MCP asset URL | PNG/JPG | - |
+| イラスト | Figma API export | SVG | - |
+| スクリーンショット | figma-screenshot.js | PNG | - |
 
 ## トラブルシューティング
 
 | 問題 | 原因 | 解決策 |
 |------|------|--------|
 | **アイコンが歪む** | `preserveAspectRatio="none"` | 属性を削除、固定サイズに修正 |
+| **アイコンが不完全** | 子ノードIDを指定している | `data-figma-icon-svg`の親ノードIDでFigma API取得 |
 | SVGが白く表示 | `fill="white"` | `currentColor`に置換 |
 | SVGの色がおかしい | `fill="var(--fill-0, ...)"` | CSS変数を実際の色に置換 |
 | API exportがnull | ラスター含むノード | MCP asset URLを使用 |
 | ダウンロード失敗 | リダイレクト未対応 | 302/301をフォロー |
 | トークンエラー | FIGMA_TOKEN未設定 | 環境変数またはオプションで指定 |
+
+### 親ノードIDについて
+
+Figmaのアイコンは複数のレイヤーで構成されることがあります：
+
+```
+Circle/Ai (親ノード: 2348:3191) ← data-figma-icon-svg に指定
+├── Background (子ノード: 2348:3192)
+├── Ellipse (子ノード: 2348:3195)
+└── Icon (子ノード: 2348:3196)
+```
+
+この場合、親ノードID `2348:3191` をFigma APIに渡すことで、全パーツを含む完全なSVGを取得できます。
 
 ## 出力例
 

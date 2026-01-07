@@ -1,28 +1,21 @@
 /**
- * {{PROJECT_NAME}} - Content & Interaction Mapping Overlay
- * Generated: {{GENERATED_DATE}}
+ * Content & Interaction Mapping Overlay
+ * Auto-extraction version - HTMLのdata属性から自動的にマッピング情報を抽出
  *
  * 機能:
- * - データタイプ可視化 (static/dynamic/dynamic_list/local/asset)
+ * - データタイプ可視化 (static/dynamic/dynamic_list/config/asset/user_asset)
  * - インタラクション可視化 (navigate/modal/disabled/loading)
  * - リアルタイム状態表示 (hover/active/focus/selected)
  * - フィルタリング機能
+ *
+ * 対応HTML属性:
+ * - data-figma-content-id: 一意識別子（snake_case）
+ * - data-figma-content-type: text/icon/ui_state/number/list等
+ * - data-figma-content-classification: static/dynamic/dynamic_list/config/asset/user_asset
+ * - data-figma-content-value: Figmaでの表示値
+ * - data-figma-content-notes: 補足説明
+ * - data-figma-content-data-type: string/number/svg等
  */
-
-// ========================================
-// マッピングデータ (spec.md「コンテンツ分析」セクションから生成)
-// ========================================
-const MAPPING_DATA = {
-  // フォーマット:
-  // 'data-figma-node="NODE_ID"': {
-  //   type: 'static|dynamic|dynamic_list|local|asset',
-  //   endpoint: 'GET /api/...',  // dynamic/dynamic_list の場合
-  //   apiField: 'response.field',
-  //   label: '日本語ラベル'
-  // },
-
-  {{MAPPING_ENTRIES}}
-};
 
 // ========================================
 // タイプ設定
@@ -30,12 +23,13 @@ const MAPPING_DATA = {
 
 // タイプ別の色設定
 const TYPE_COLORS = {
-  // データタイプ
+  // データタイプ（classification）
   static: { bg: '#e0e0e0', text: '#333', border: '#999' },
   dynamic: { bg: '#d4edda', text: '#155724', border: '#28a745' },
   dynamic_list: { bg: '#cce5ff', text: '#004085', border: '#007bff' },
-  local: { bg: '#e8daef', text: '#4a235a', border: '#8e44ad' },
+  config: { bg: '#e8daef', text: '#4a235a', border: '#8e44ad' },
   asset: { bg: '#fff3cd', text: '#856404', border: '#ffc107' },
+  user_asset: { bg: '#ffe0b2', text: '#e65100', border: '#ff9800' },
   // インタラクションタイプ
   navigate: { bg: '#ffe0ec', text: '#8b0a50', border: '#de30ca' },
   modal: { bg: '#ffeeba', text: '#856404', border: '#ff9800' },
@@ -48,13 +42,55 @@ const TYPE_LABELS = {
   static: '静的',
   dynamic: '動的',
   dynamic_list: '動的リスト',
-  local: 'ローカル',
+  config: '設定',
   asset: 'アセット',
+  user_asset: 'ユーザー画像',
   navigate: '画面遷移',
   modal: 'モーダル',
   disabled: '無効',
   loading: '読込中'
 };
+
+// ========================================
+// HTMLからマッピングデータを自動抽出
+// ========================================
+
+function extractMappingDataFromHTML() {
+  const mappingData = {};
+
+  // data-figma-content-id を持つ全要素を検索
+  document.querySelectorAll('[data-figma-content-id]').forEach(el => {
+    const contentId = el.dataset.figmaContentId;
+    const classification = el.dataset.figmaContentClassification || 'static';
+    const contentType = el.dataset.figmaContentType || 'text';
+    const value = el.dataset.figmaContentValue || '';
+    const notes = el.dataset.figmaContentNotes || '';
+    const dataType = el.dataset.figmaContentDataType || 'string';
+    const nodeId = el.dataset.figmaNode || '';
+
+    // ラベル生成: notes > value > テキストコンテンツ
+    let label = notes || value || el.textContent?.trim().substring(0, 30) || contentId;
+    if (label.length > 40) label = label.substring(0, 37) + '...';
+
+    // キーとして data-figma-content-id を使用
+    const key = `data-figma-content-id="${contentId}"`;
+
+    mappingData[key] = {
+      type: classification,
+      contentType: contentType,
+      dataType: dataType,
+      label: label,
+      nodeId: nodeId,
+      value: value,
+      notes: notes
+    };
+  });
+
+  return mappingData;
+}
+
+// グローバル変数として保持（初期化時に設定）
+let MAPPING_DATA = {};
 
 // ========================================
 // ユーティリティ関数
@@ -82,13 +118,11 @@ function createTooltip() {
   return tooltip;
 }
 
-// マッピング情報を取得
+// マッピング情報を取得（data-figma-content-id から）
 function getMappingInfo(element) {
-  const attrs = element.attributes;
-  for (let i = 0; i < attrs.length; i++) {
-    const attrName = attrs[i].name;
-    const attrValue = attrs[i].value;
-    const key = `${attrName}="${attrValue}"`;
+  const contentId = element.dataset.figmaContentId;
+  if (contentId) {
+    const key = `data-figma-content-id="${contentId}"`;
     if (MAPPING_DATA[key]) {
       return { attr: key, ...MAPPING_DATA[key] };
     }
@@ -188,11 +222,37 @@ function renderTooltipContent(info) {
       ">${typeLabel}</span>
       <span style="margin-left: 8px; color: #666;">${info.label}</span>
     </div>
-    <div style="font-size: 11px; color: #888; margin-bottom: 4px;">
-      ${info.attr}
-    </div>
   `;
 
+  // コンテンツ詳細
+  if (info.contentType || info.dataType) {
+    html += `
+      <div style="font-size: 11px; color: #888; margin-bottom: 4px;">
+        type: ${info.contentType || '-'} / data: ${info.dataType || '-'}
+      </div>
+    `;
+  }
+
+  // ノードID
+  if (info.nodeId) {
+    html += `
+      <div style="font-size: 11px; color: #888; margin-bottom: 4px;">
+        node: ${info.nodeId}
+      </div>
+    `;
+  }
+
+  // 値
+  if (info.value) {
+    html += `
+      <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
+        <div style="font-weight: bold; color: #333; margin-bottom: 4px;">値:</div>
+        <code style="display: block; background: #f5f5f5; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">${info.value}</code>
+      </div>
+    `;
+  }
+
+  // API情報（後から追加される想定）
   if (info.endpoint) {
     html += `
       <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
@@ -292,6 +352,10 @@ function renderInteractionTooltipContent(info, mappingInfo = null) {
 // メイン初期化
 // ========================================
 function initMappingOverlay() {
+  // HTMLからマッピングデータを抽出
+  MAPPING_DATA = extractMappingDataFromHTML();
+  const mappingCount = Object.keys(MAPPING_DATA).length;
+
   const tooltip = createTooltip();
   let isEnabled = true;
   let activeFilters = new Set();
@@ -301,7 +365,7 @@ function initMappingOverlay() {
   // トグルボタン
   const toggleBtn = document.createElement('button');
   toggleBtn.id = 'mapping-toggle';
-  toggleBtn.innerHTML = 'Mapping';
+  toggleBtn.innerHTML = `Mapping (${mappingCount})`;
   toggleBtn.style.cssText = `
     position: fixed; top: 10px; right: 10px; z-index: 10001;
     padding: 8px 16px; background: #0070e0; color: white; border: none;
@@ -320,9 +384,21 @@ function initMappingOverlay() {
     ">${label}</span>`;
   }
 
-  // 凡例
+  // 使用されているタイプを検出
+  const usedTypes = new Set();
+  Object.values(MAPPING_DATA).forEach(info => usedTypes.add(info.type));
+
+  // 凡例（使用されているタイプのみ表示）
   const legend = document.createElement('div');
   legend.id = 'mapping-legend';
+
+  let dataTypeBadges = '';
+  ['static', 'dynamic', 'dynamic_list', 'config', 'asset', 'user_asset'].forEach(type => {
+    if (usedTypes.has(type)) {
+      dataTypeBadges += createFilterBadge(type, TYPE_LABELS[type], TYPE_COLORS[type]);
+    }
+  });
+
   legend.innerHTML = `
     <div style="font-weight: bold; margin-bottom: 8px;">
       凡例
@@ -331,9 +407,7 @@ function initMappingOverlay() {
     <div style="margin-bottom: 8px;">
       <div style="font-size: 10px; color: #666; margin-bottom: 4px;">データタイプ</div>
       <div style="display: flex; flex-wrap: wrap; gap: 4px;">
-        ${createFilterBadge('static', '静的', TYPE_COLORS.static)}
-        ${createFilterBadge('dynamic', '動的', TYPE_COLORS.dynamic)}
-        ${createFilterBadge('dynamic_list', 'リスト', TYPE_COLORS.dynamic_list)}
+        ${dataTypeBadges}
       </div>
     </div>
     <div style="margin-bottom: 8px;">
@@ -341,8 +415,6 @@ function initMappingOverlay() {
       <div style="display: flex; flex-wrap: wrap; gap: 4px;">
         ${createFilterBadge('navigate', '遷移', TYPE_COLORS.navigate)}
         ${createFilterBadge('modal', 'モーダル', TYPE_COLORS.modal)}
-        ${createFilterBadge('disabled', '無効', TYPE_COLORS.disabled)}
-        ${createFilterBadge('loading', '読込中', TYPE_COLORS.loading)}
       </div>
     </div>
     <div style="border-top: 1px solid #eee; padding-top: 8px;">
@@ -367,8 +439,7 @@ function initMappingOverlay() {
   // ========================================
 
   function elementMatchesFilter(el) {
-    const mappingKey = el.dataset.mappingKey;
-    const mappingInfo = mappingKey ? MAPPING_DATA[mappingKey] : null;
+    const mappingInfo = getMappingInfo(el);
     const interactionInfo = getInteractionInfo(el);
 
     if (mappingInfo && activeFilters.has(mappingInfo.type)) return true;
@@ -474,7 +545,7 @@ function initMappingOverlay() {
   toggleBtn.addEventListener('click', () => {
     isEnabled = !isEnabled;
     toggleBtn.style.background = isEnabled ? '#0070e0' : '#999';
-    toggleBtn.innerHTML = isEnabled ? 'Mapping' : 'OFF';
+    toggleBtn.innerHTML = isEnabled ? `Mapping (${mappingCount})` : 'OFF';
     legend.style.display = isEnabled ? 'block' : 'none';
     if (!isEnabled) {
       tooltip.style.display = 'none';
@@ -491,26 +562,19 @@ function initMappingOverlay() {
   // ========================================
 
   function highlightElements() {
-    // MAPPING_DATAに基づくハイライト
-    Object.keys(MAPPING_DATA).forEach(key => {
-      const match = key.match(/^([^=]+)="([^"]+)"$/);
-      if (match) {
-        const [, attrName, attrValue] = match;
-        document.querySelectorAll(`[${attrName}="${attrValue}"]`).forEach(el => {
-          const info = MAPPING_DATA[key];
-          if (info) {
-            const colors = TYPE_COLORS[info.type] || TYPE_COLORS.static;
-            el.style.outline = `2px dashed ${colors.border}`;
-            el.style.outlineOffset = '2px';
-            el.dataset.mappingEnabled = 'true';
-            el.dataset.mappingKey = key;
-          }
-        });
+    // data-figma-content-id を持つ要素をハイライト
+    document.querySelectorAll('[data-figma-content-id]').forEach(el => {
+      const info = getMappingInfo(el);
+      if (info) {
+        const colors = TYPE_COLORS[info.type] || TYPE_COLORS.static;
+        el.style.outline = `2px dashed ${colors.border}`;
+        el.style.outlineOffset = '2px';
+        el.dataset.mappingEnabled = 'true';
       }
     });
 
     // インタラクション要素のハイライト
-    document.querySelectorAll('[data-figma-interaction]').forEach(el => {
+    document.querySelectorAll('[data-figma-interaction], [data-figma-navigate]').forEach(el => {
       const interactionInfo = getInteractionInfo(el);
       if (interactionInfo) {
         const colors = TYPE_COLORS[interactionInfo.type] || TYPE_COLORS.navigate;
@@ -530,7 +594,6 @@ function initMappingOverlay() {
       el.style.outline = '';
       el.style.outlineOffset = '';
       delete el.dataset.mappingEnabled;
-      delete el.dataset.mappingKey;
     });
     document.querySelectorAll('[data-interaction-enabled]').forEach(el => {
       el.style.outline = '';
@@ -556,15 +619,13 @@ function initMappingOverlay() {
 
   function updateTooltipContent(target) {
     const hasInteraction = target.dataset.interactionEnabled;
-    const hasMapping = target.dataset.mappingKey;
+    const mappingInfo = getMappingInfo(target);
 
     if (hasInteraction) {
       const interactionInfo = getInteractionInfo(target);
-      const mappingInfo = hasMapping ? { attr: hasMapping, ...MAPPING_DATA[hasMapping] } : null;
       if (interactionInfo) tooltip.innerHTML = renderInteractionTooltipContent(interactionInfo, mappingInfo);
-    } else if (hasMapping) {
-      const info = { attr: hasMapping, ...MAPPING_DATA[hasMapping] };
-      tooltip.innerHTML = renderTooltipContent(info);
+    } else if (mappingInfo) {
+      tooltip.innerHTML = renderTooltipContent(mappingInfo);
     }
   }
 
@@ -573,7 +634,7 @@ function initMappingOverlay() {
     if (!isEnabled) return;
     let target = e.target;
     while (target && target !== document.body) {
-      if (target.dataset.interactionEnabled || target.dataset.mappingKey) {
+      if (target.dataset.interactionEnabled || target.dataset.mappingEnabled) {
         currentHoveredElement = target;
         updateTooltipContent(target);
         tooltip.style.display = 'block';
@@ -596,7 +657,7 @@ function initMappingOverlay() {
   document.addEventListener('mouseout', (e) => {
     let target = e.target;
     while (target && target !== document.body) {
-      if (target.dataset.mappingKey || target.dataset.interactionEnabled) {
+      if (target.dataset.mappingEnabled || target.dataset.interactionEnabled) {
         if (stateUpdateInterval) { cancelAnimationFrame(stateUpdateInterval); stateUpdateInterval = null; }
         currentHoveredElement = null;
         tooltip.style.display = 'none';
@@ -611,7 +672,7 @@ function initMappingOverlay() {
 
   // 初期化
   highlightElements();
-  console.log('Mapping Overlay initialized.');
+  console.log(`Mapping Overlay initialized. ${mappingCount} elements detected.`);
   console.log('- データタイプ: 破線枠');
   console.log('- インタラクション: 実線枠');
   console.log('- 凡例クリックでフィルタリング');

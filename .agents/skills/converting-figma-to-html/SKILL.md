@@ -147,16 +147,41 @@ HTMLの各コンテンツを以下のカテゴリで整理：
 | `static` | 固定ラベル・UI文言 | ボタン名、ナビゲーション |
 | `dynamic` | ユーザー/時間で変化 | 数値、日付、ユーザー名 |
 | `dynamic_list` | 件数可変リスト | 講座一覧、通知一覧 |
-| `asset` | アイコン・画像 | SVG、ロゴ |
+| `config` | 画面設定で変わる要素 | ページネーション状態 |
+| `asset` | 静的アセット | SVGアイコン、ロゴ |
+| `user_asset` | ユーザーアップロード画像 | プロフィール画像 |
 
-### 3. レスポンシブ対応
+### 3. コンテンツ分類属性の埋め込み
+
+分類結果をHTML要素に data 属性として埋め込み、後続のAPI連携フェーズで活用：
+
+| 属性 | 用途 | 例 |
+|------|------|-----|
+| `data-figma-content-id` | 一意識別子（snake_case） | `"badge_text"` |
+| `data-figma-content-type` | コンテンツ種別 | `"text"`, `"icon"`, `"ui_state"` |
+| `data-figma-content-classification` | 分類 | `"static"`, `"dynamic"`, `"asset"` |
+| `data-figma-content-data-type` | データ型 | `"string"`, `"number"`, `"svg"` |
+| `data-figma-content-value` | Figmaでの表示値 | `"テスト運用版"` |
+| `data-figma-content-notes` | 補足説明 | `"最終ステップでは「はじめる」"` |
+
+**埋め込み例:**
+```html
+<span data-figma-node="2350:6414"
+      data-figma-content-id="badge_text"
+      data-figma-content-type="text"
+      data-figma-content-value="テスト運用版"
+      data-figma-content-classification="static"
+      data-figma-content-data-type="string">テスト運用版</span>
+```
+
+### 4. レスポンシブ対応
 
 - Tailwind CSS（CDN経由）を使用
 - モバイルファースト（max-w-[375px]等）
 - Flexbox/Gridで相対的レイアウト
 - absolute/fixed は最小限に
 
-### 4. アイコン処理
+### 5. アイコン処理
 
 複雑なSVGパスは再現せず、シンプルなプレースホルダーに置換：
 
@@ -171,14 +196,14 @@ HTMLの各コンテンツを以下のカテゴリで整理：
 </div>
 ```
 
-### 5. OSネイティブUI除外
+### 6. OSネイティブUI除外
 
 以下の要素は自動的に除外：
 - ステータスバー（時刻、電波、バッテリー）
 - Dynamic Island
 - Home Indicator
 
-### 6. インタラクション属性
+### 7. インタラクション属性
 
 インタラクティブな要素には動作を定義する属性を付与：
 
@@ -197,7 +222,53 @@ HTMLの各コンテンツを以下のカテゴリで整理：
 - action: `navigate`, `show-modal`, `close-modal`, `submit`
 - target: 遷移先パス、モーダルID等
 
-### 7. mapping-overlay.js
+### 8. 画面遷移属性の埋め込み
+
+spec.md の「インタラクション」「画面フロー」セクションを参照して、HTMLに画面遷移属性を付与：
+
+| 属性 | 用途 | 例 |
+|------|------|-----|
+| `data-figma-interaction` | インタラクション定義 | `"tap:navigate:tutorial"` |
+| `data-figma-navigate` | 遷移先パス | `"/{locale}/ask_ai/tutorial"` |
+| `data-figma-states` | サポートするUI状態 | `"default,hover,active,disabled"` |
+
+**遷移パターン例:**
+
+```html
+<!-- 単純な画面遷移 -->
+<button data-figma-interaction="tap:navigate:tutorial"
+        data-figma-navigate="/{locale}/ask_ai/tutorial">
+  ヘルプ
+</button>
+
+<!-- 条件付き遷移（同意状態等） -->
+<button data-figma-interaction="tap:conditional-navigate"
+        data-figma-navigate="consented:/{locale}/ask_ai|unconsented:consent-modal"
+        data-figma-states="default,hover,active">
+  スキップ
+</button>
+
+<!-- 内部ステップ遷移 -->
+<button data-figma-interaction="tap:navigate:next-step"
+        data-figma-navigate="tutorial-step-{n+1}"
+        data-figma-states="default,hover,active">
+  次へ
+</button>
+
+<!-- 複合アクション -->
+<button data-figma-interaction="tap:open-file-dialog|navigate:trim"
+        data-figma-navigate="/{locale}/ask_ai/trim"
+        data-figma-states="default,hover,active,loading">
+  写真を共有
+</button>
+```
+
+**遷移先の記述形式:**
+- 単純遷移: `/{locale}/path/to/screen`
+- 条件付き: `condition1:path1|condition2:path2`
+- 内部遷移: `screen-step-{n+1}`, `previous-screen`
+
+### 9. mapping-overlay.js
 
 コンテンツマッピングとインタラクション可視化のためのオーバーレイスクリプト：
 
@@ -231,12 +302,27 @@ HTMLの各コンテンツを以下のカテゴリで整理：
    ├─> data属性を全要素に付与
    └─> プレースホルダーアイコンを配置
 
-5. spec.md 更新
+5. コンテンツ分析
+   └─> static/dynamic分類を整理
+
+6. コンテンツ分類属性の埋め込み ★新規
+   ├─> data-figma-content-id（snake_case識別子）
+   ├─> data-figma-content-type（text/icon/ui_state等）
+   ├─> data-figma-content-classification（static/dynamic/asset等）
+   └─> data-figma-content-data-type（string/number/svg等）
+
+7. 画面遷移属性の埋め込み ★新規
+   ├─> spec.md のインタラクション/画面フローを参照
+   ├─> data-figma-interaction（トリガー:アクション:ターゲット）
+   ├─> data-figma-navigate（遷移先パス）
+   └─> data-figma-states（対応UI状態）
+
+8. spec.md 更新
    ├─> 「構造・スタイル」セクション
-   ├─> 「コンテンツ分析」セクション（static/dynamic分類）
+   ├─> 「コンテンツ分析」セクション
    └─> 完了チェックリストを更新
 
-6. プレビュー生成（オプション）
+9. プレビュー生成（オプション）
    └─> デバイスフレーム付きプレビュー
 ```
 
@@ -254,6 +340,15 @@ HTMLの各コンテンツを以下のカテゴリで整理：
 - [ ] インタラクティブ要素にdata-figma-interaction属性がある
 - [ ] 状態変化する要素にdata-figma-states属性がある
 - [ ] ステータスバー等のOSネイティブUIが除外されている
+- [ ] 画面遷移属性が埋め込まれている（Step 7）
+  - data-figma-interaction（トリガー:アクション:ターゲット）
+  - data-figma-navigate（遷移先パス）
+  - data-figma-states（対応UI状態）
+- [ ] コンテンツ分類属性が埋め込まれている（Step 6）
+  - data-figma-content-id（snake_case）
+  - data-figma-content-type
+  - data-figma-content-classification
+  - data-figma-content-data-type
 - [ ] spec.md の「構造・スタイル」セクションが更新されている
 - [ ] spec.md の「コンテンツ分析」セクションが更新されている
 - [ ] spec.md の「インタラクション」セクションが更新されている

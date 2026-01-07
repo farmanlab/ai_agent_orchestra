@@ -8,6 +8,8 @@
 3. figma:get_metadata       → 階層構造確認（必要時）
 4. HTML生成                 → data属性付きHTML
 5. コンテンツ分析           → 分類ドキュメント
+6. コンテンツ分類属性       → data-figma-content-* 埋め込み
+7. 画面遷移属性             → data-figma-interaction/navigate 埋め込み
 ```
 
 ---
@@ -83,7 +85,9 @@ nav-home-label     ナビのホームラベル
 | `static` | 固定ラベル・UI文言 | ボタン名、セクション名 |
 | `dynamic` | ユーザー/時間で変化 | 数値、日付、名前 |
 | `dynamic_list` | 件数可変リスト | 一覧データ |
-| `asset` | アイコン・画像 | SVG、ロゴ |
+| `config` | 画面設定で変わる要素 | ページネーション状態 |
+| `asset` | 静的アセット | SVGアイコン、ロゴ |
+| `user_asset` | ユーザーアップロード画像 | プロフィール画像 |
 
 ### 判断チェックリスト
 
@@ -98,6 +102,164 @@ nav-home-label     ナビのホームラベル
 - [ ] 日付・期間
 - [ ] ユーザー名・ID
 - [ ] ステータス値
+
+---
+
+## 🏷️ コンテンツ分類属性
+
+### 必須属性
+
+| 属性 | 用途 | 例 |
+|------|------|-----|
+| `data-figma-content-id` | 一意識別子（snake_case） | `"badge_text"` |
+| `data-figma-content-type` | コンテンツ種別 | `"text"`, `"icon"`, `"ui_state"` |
+| `data-figma-content-classification` | 分類 | `"static"`, `"dynamic"` |
+| `data-figma-content-data-type` | データ型 | `"string"`, `"number"`, `"svg"` |
+
+### オプション属性
+
+| 属性 | 用途 | 例 |
+|------|------|-----|
+| `data-figma-content-value` | Figmaでの表示値 | `"テスト運用版"` |
+| `data-figma-content-notes` | 補足説明 | `"最終ステップでは変化"` |
+| `data-figma-display-format` | 表示フォーマット | `"{value}分"` |
+
+### type の値一覧
+
+| 値 | 説明 |
+|-----|------|
+| `text` | テキストコンテンツ |
+| `number` | 数値 |
+| `percentage` | パーセンテージ |
+| `duration` | 時間・期間 |
+| `date` | 日付 |
+| `date_range` | 日付範囲 |
+| `list` | リストコンテナ |
+| `icon` | アイコン |
+| `ui_state` | UI状態（ページネーション等） |
+
+### 埋め込み例
+
+```html
+<!-- テキスト（静的） -->
+<span data-figma-node="2350:6414"
+      data-figma-content-id="badge_text"
+      data-figma-content-type="text"
+      data-figma-content-value="テスト運用版"
+      data-figma-content-classification="static"
+      data-figma-content-data-type="string">テスト運用版</span>
+
+<!-- アイコン（アセット） -->
+<button data-figma-node="I2350:6398;48:622"
+        data-figma-content-id="nav_back_icon"
+        data-figma-content-type="icon"
+        data-figma-content-classification="asset"
+        data-figma-content-data-type="svg"
+        data-figma-icon-svg="assets/icon-back.svg">
+  <img src="assets/icon-back.svg" width="24" height="24">
+</button>
+
+<!-- UI状態（設定） -->
+<nav data-figma-node="2350:6402"
+     data-figma-content-id="pagination"
+     data-figma-content-type="ui_state"
+     data-figma-content-classification="config"
+     data-figma-content-data-type="number"
+     data-figma-content-notes="現在のステップ（1-4）">
+```
+
+### content-id 命名規則
+
+```
+形式: {category}_{element} (snake_case)
+
+例:
+badge_text          バッジのテキスト
+nav_back_icon       ナビの戻るアイコン
+step_description    ステップの説明文
+pagination_dot_1    ページネーションドット1
+next_button         次へボタン
+```
+
+---
+
+## 🔗 画面遷移属性
+
+### 必須属性
+
+| 属性 | 用途 | 例 |
+|------|------|-----|
+| `data-figma-interaction` | インタラクション定義 | `"tap:navigate:tutorial"` |
+| `data-figma-navigate` | 遷移先パス | `"/{locale}/ask_ai/tutorial"` |
+| `data-figma-states` | サポートするUI状態 | `"default,hover,active,disabled"` |
+
+### 遷移パターン
+
+| パターン | 形式 | 例 |
+|---------|------|-----|
+| 単純遷移 | `tap:navigate:{target}` | `tap:navigate:tutorial` |
+| 条件付き | `tap:conditional-navigate` | 同意状態で分岐 |
+| 内部遷移 | `tap:navigate:next-step` | ステップ遷移 |
+| 複合 | `tap:action1\|action2` | ファイル選択+遷移 |
+| 戻る | `tap:navigate:back` | 前の画面へ |
+
+### 遷移先の記述形式
+
+```
+単純遷移:
+  /{locale}/ask_ai/tutorial
+
+条件付き:
+  consented:/{locale}/ask_ai|unconsented:consent-modal
+
+内部遷移:
+  tutorial-step-{n+1}
+  previous-screen
+```
+
+### 埋め込み例
+
+```html
+<!-- 単純な画面遷移 -->
+<button data-figma-interaction="tap:navigate:tutorial"
+        data-figma-navigate="/{locale}/ask_ai/tutorial">
+  ヘルプ
+</button>
+
+<!-- 条件付き遷移 -->
+<button data-figma-interaction="tap:conditional-navigate"
+        data-figma-navigate="consented:/{locale}/ask_ai|unconsented:consent-modal"
+        data-figma-states="default,hover,active">
+  スキップ
+</button>
+
+<!-- 内部ステップ遷移 -->
+<button data-figma-interaction="tap:navigate:next-step"
+        data-figma-navigate="step1-3:tutorial-step-{n+1}|step4:/{locale}/ask_ai"
+        data-figma-states="default,hover,active">
+  次へ
+</button>
+
+<!-- 複合アクション -->
+<button data-figma-interaction="tap:open-file-dialog|navigate:trim"
+        data-figma-navigate="/{locale}/ask_ai/trim"
+        data-figma-states="default,hover,active,loading">
+  写真を共有
+</button>
+
+<!-- ボトムナビゲーション -->
+<a data-figma-interaction="tap:navigate:history"
+   data-figma-navigate="/{locale}/ask_ai/history"
+   data-figma-states="active,inactive">
+  マイリスト
+</a>
+```
+
+### spec.md から遷移情報を抽出
+
+1. 「インタラクション」セクション → 各要素のタップ時動作
+2. 「画面フロー」セクション → 画面間の遷移関係
+3. ボタン・リンク・ナビ要素に属性を付与
 
 ---
 
@@ -197,6 +359,15 @@ nav-home-label     ナビのホームラベル
 - [ ] アイコンに`data-figma-icon-svg`
 - [ ] OSネイティブUI除外済み
 - [ ] コンテンツ分析完成
+- [ ] コンテンツ分類属性が埋め込まれている
+  - `data-figma-content-id`（snake_case）
+  - `data-figma-content-type`
+  - `data-figma-content-classification`
+  - `data-figma-content-data-type`
+- [ ] 画面遷移属性が埋め込まれている
+  - `data-figma-interaction`（トリガー:アクション:ターゲット）
+  - `data-figma-navigate`（遷移先パス）
+  - `data-figma-states`（対応UI状態）
 
 ---
 

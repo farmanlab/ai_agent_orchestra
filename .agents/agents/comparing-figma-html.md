@@ -214,7 +214,15 @@ HTMLの構造とスタイルを確認。
 
 **📚 詳細は [comparing-screenshots](../skills/comparing-screenshots/SKILL.md) スキルを参照**
 
+**⚠️ 重要: mapping-overlay.js を無効化してからスクリーンショットを取得すること**
+
+mapping-overlay.js が有効な状態だと、UIにオーバーレイが表示され、正確な比較ができません。
+
 ```bash
+# 0. mapping-overlay.js を無効化（スクリーンショット前に必須）
+# HTMLファイル内の mapping-overlay.js の読み込みをコメントアウト
+sed -i '' 's|<script src="mapping-overlay.js"></script>|<!-- <script src="mapping-overlay.js"></script> -->|g' [HTMLファイルパス]
+
 # 1. HTMLスクリーンショット取得
 node ~/.agents/scripts/html-screenshot/screenshot.js [HTMLファイルパス] [出力ディレクトリ]/html-screenshot.png
 
@@ -223,7 +231,15 @@ node ~/.agents/scripts/html-screenshot/compare.js \
   [出力ディレクトリ]/figma-screenshot.png \
   [出力ディレクトリ]/html-screenshot.png \
   [出力ディレクトリ]/diff.png
+
+# 3. mapping-overlay.js を再有効化（スクリーンショット後に復元）
+sed -i '' 's|<!-- <script src="mapping-overlay.js"></script> -->|<script src="mapping-overlay.js"></script>|g' [HTMLファイルパス]
 ```
+
+**なぜ無効化が必要か**:
+- mapping-overlay.js はデバッグ用のオーバーレイUI（ボタン、ツールチップ）を表示する
+- これらがスクリーンショットに含まれると、Figmaとの比較で大量の偽差分が発生する
+- 比較後は必ず再有効化して、開発時の利便性を維持する
 
 **保存されるファイル一覧**:
 

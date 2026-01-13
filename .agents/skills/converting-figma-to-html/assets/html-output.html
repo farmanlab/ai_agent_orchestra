@@ -1,227 +1,414 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+  <!-- @generated-by: converting-figma-to-html -->
+  <!-- @figma-node: {{ROOT_NODE_ID}} -->
+  <!-- @timestamp: {{TIMESTAMP}} -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{COMPONENT_NAME}}</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* ===================================
-       フォント設定
-       =================================== */
-    .font-hiragino {
-      font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            // Figma Color Tokens (from get_variable_defs)
+            'ultrablue': {
+              '700-aa': '#0070e0',
+              '600': '#1c80e7',
+              '300': '#9bcafa',
+              '100': '#e5f2ff',
+            },
+            'turquoise': { '500': '#64cdca' },
+            'skyblue': { '400': '#69cbf5', '100': '#e1f4ff' },
+            'gray': {
+              '900': '#24243f',
+              '500': '#67717a',
+              '300': '#adb8be',
+              '200': '#c7d2d6',
+              '100': '#dae2e5',
+              '50': '#e9eeef',
+            },
+            // Semantic Tokens
+            'text-default': {
+              'default': '#24243f',
+              'secondary': '#67717a',
+              'tertiary': '#adb8be',
+              'on': '#ffffff',
+            },
+            'text-main': { 'default': '#0070e0' },
+            'bg-default': {
+              'default': '#ffffff',
+              'hover': '#fafafa',
+              'secondary': '#e9eeef',
+              'tertiary': '#c7d2d6',
+            },
+            'bg-main': {
+              'default': '#0070e0',
+              'secondary': '#cfe5fc',
+            },
+            'bg-disabled': { 'default': '#dae2e5' },
+            'border-main': { 'default': '#0070e0' },
+            'border-default': {
+              'secondary': '#67717a',
+              'tertiary': '#adb8be',
+            },
+            'border-disabled': { 'default': '#c7d2d6' },
+            'icon-default': {
+              'default': '#24243f',
+              'secondary': '#67717a',
+              'tertiary': '#adb8be',
+              'on': '#ffffff',
+            },
+            'icon-main': { 'default': '#0070e0' },
+            'icon-disabled': { 'default': '#c7d2d6' },
+          },
+          spacing: {
+            // Space tokens from Figma
+            'space-050': '4px',
+            'space-100': '8px',
+            'space-150': '12px',
+            'space-200': '16px',
+            'space-300': '24px',
+            'space-400': '32px',
+          },
+          borderRadius: {
+            // Radius tokens from Figma
+            'radius-050': '4px',
+            'radius-100': '8px',
+            'radius-200': '16px',
+            'radius-full': '9999px',
+          },
+          fontFamily: {
+            'hiragino': ['"Hiragino Sans"', '"Hiragino Kaku Gothic ProN"', '"Meiryo"', 'sans-serif'],
+          },
+          boxShadow: {
+            '200': '0 1px 4px rgba(12, 12, 13, 0.07), 0 1px 4px rgba(12, 12, 13, 0.1)',
+            '400': '0 4px 4px rgba(12, 12, 13, 0.07), 0 16px 32px rgba(12, 12, 13, 0.1)',
+          },
+        }
+      }
     }
-    .font-hiragino-w3 {
-      font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
-      font-weight: 300;
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
     }
-    .font-hiragino-w6 {
-      font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
-      font-weight: 600;
-    }
-    .font-number {
-      font-family: "Helvetica Neue", Arial, sans-serif;
-      font-weight: 400;
-    }
-    
-    /* ===================================
-       カスタムスタイル（必要に応じて追加）
-       =================================== */
   </style>
 </head>
-<body class="bg-[#f8f9f9]">
-  
+<body class="font-hiragino bg-bg-default-hover min-h-screen flex justify-center"
+      data-figma-filekey="{{FIGMA_FILEKEY}}"
+      data-figma-token-bg="Background/Default/Default Hover"
+      data-figma-token-font="Hiragino Sans">
+
   <!-- ===================================
-       メインコンテナ
-       - data-figma-node: FigmaのルートノードID
+       Screen Container
        =================================== -->
-  <div class="flex flex-col w-full max-w-[375px] mx-auto min-h-screen"
-       data-figma-node="{{ROOT_NODE_ID}}">
-    
+  <div class="w-[375px] min-h-screen mx-auto flex flex-col bg-bg-default-hover relative"
+       data-screen-id="{{SCREEN_ID}}"
+       data-screen-name="{{SCREEN_NAME}}"
+       data-figma-url="{{FIGMA_URL}}"
+       data-figma-node="{{ROOT_NODE_ID}}"
+       data-figma-filekey="{{FIGMA_FILEKEY}}"
+       data-figma-name="{{FIGMA_NAME}}"
+       data-figma-token-bg="Background/Default/Default Hover"
+       role="main"
+       aria-label="{{SCREEN_NAME}}">
+
     <!-- ===================================
-         Navigation Bar
-         - OSネイティブのステータスバーは省略
+         Navigation Header
          =================================== -->
-    <nav class="flex items-center justify-between w-full p-2.5 bg-[{{NAV_BG_COLOR}}]"
-         data-figma-node="{{NAV_NODE_ID}}"
-         data-figma-tokens="background: {{NAV_TOKEN}}">
-      
-      <!-- Left (Back button space) -->
-      <div class="w-6 h-6 shrink-0">
-        <!-- 戻るボタン等が入るスペース -->
-      </div>
-      
-      <!-- Center (Title) -->
-      <div class="flex-1 flex items-center justify-center px-3 min-w-0">
-        <h1 class="font-hiragino-w6 text-base leading-[1.5] text-white text-center truncate"
-            data-figma-font="System Font: Size 16 / Leading 24"
-            data-figma-content-nav-title>
+    <header role="banner">
+      <nav class="w-full h-14 min-h-[56px] bg-bg-default-default flex items-center justify-between px-space-150 py-space-200 gap-space-050 relative z-10"
+           data-figma-node="{{NAV_NODE_ID}}"
+           data-figma-name="Navigation"
+           data-figma-token-bg="Background/Default/Default"
+           data-figma-token-height="56px"
+           data-figma-token-padding="Space/150, Space/200"
+           aria-label="ナビゲーション">
+
+        <!-- Back Button -->
+        <button class="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer bg-transparent border-none rounded-radius-100 transition-colors duration-200 hover:bg-bg-default-hover focus-visible:outline-2 focus-visible:outline-border-main-default focus-visible:outline-offset-2 active:scale-95"
+                data-figma-node="{{BACK_BTN_NODE_ID}}"
+                data-figma-name="Common/Forward_Outlined"
+                data-figma-content-id="nav_back_icon"
+                data-figma-content-type="icon"
+                data-figma-content-classification="asset"
+                data-figma-content-data-type="svg"
+                data-figma-icon-svg="assets/icon-back.svg"
+                data-figma-interaction="tap:navigate:back"
+                data-figma-navigate="previous-screen"
+                data-figma-states="default,hover,active,disabled"
+                data-figma-token-size="44px"
+                data-figma-token-radius="Radius/100"
+                aria-label="戻る"
+                type="button">
+          <img src="assets/icon-back.svg" alt="" width="24" height="24" aria-hidden="true">
+        </button>
+
+        <!-- Title -->
+        <h1 class="flex-1 text-center text-lg font-bold text-text-default-default leading-[1.5] truncate"
+            data-figma-node="{{TITLE_NODE_ID}}"
+            data-figma-content-id="nav_title"
+            data-figma-content-type="text"
+            data-figma-content-value="{{NAV_TITLE}}"
+            data-figma-content-classification="static"
+            data-figma-content-data-type="string"
+            data-figma-token-font="JP/18 - Bold"
+            data-figma-token-color="Text/Default/Default">
           {{NAV_TITLE}}
         </h1>
-      </div>
-      
-      <!-- Right (Action buttons) -->
-      <div class="flex items-center justify-end gap-4 shrink-0">
-        <button class="w-6 h-6 flex items-center justify-center text-white"
+
+        <!-- Action Button -->
+        <button class="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer bg-transparent border-none rounded-radius-100 transition-colors duration-200 hover:bg-bg-default-hover focus-visible:outline-2 focus-visible:outline-border-main-default focus-visible:outline-offset-2 active:scale-95"
+                data-figma-node="{{ACTION_BTN_NODE_ID}}"
+                data-figma-name="{{ACTION_ICON_NAME}}"
+                data-figma-content-id="nav_action_icon"
+                data-figma-content-type="icon"
+                data-figma-content-classification="asset"
+                data-figma-content-data-type="svg"
+                data-figma-icon-svg="assets/{{ACTION_ICON_FILE}}"
+                data-figma-interaction="tap:navigate:{{ACTION_TARGET}}"
+                data-figma-navigate="{{ACTION_PATH}}"
+                data-figma-states="default,hover,active"
+                data-figma-token-size="44px"
+                data-figma-token-radius="Radius/100"
                 aria-label="{{ACTION_LABEL}}"
-                data-figma-node="{{ACTION_NODE_ID}}"
-                data-figma-icon-svg="{{ACTION_ICON_URL}}"
-                data-figma-content-{{ACTION_ID}}-icon>
-          <!-- Placeholder SVG -->
-          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
-            <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
-          </svg>
+                type="button">
+          <img src="assets/{{ACTION_ICON_FILE}}" alt="" width="24" height="24" aria-hidden="true">
         </button>
-      </div>
-    </nav>
-    
+      </nav>
+    </header>
+
     <!-- ===================================
-         Tab Menu（タブがある場合）
+         Main Content
          =================================== -->
-    <div class="flex items-center w-full"
-         data-figma-node="{{TAB_NODE_ID}}"
-         data-figma-content-tab-menu>
-      
-      <!-- Tab 1 (Active) -->
-      <button class="flex-1 flex flex-col items-center gap-1.5 pt-2.5 bg-[{{TAB_BG_COLOR}}]"
-              data-figma-node="{{TAB1_NODE_ID}}"
-              data-figma-content-tab-active>
-        <span class="font-hiragino-w3 text-sm leading-[1.5] text-white text-center"
-              data-figma-content-tab-{{TAB1_ID}}>{{TAB1_LABEL}}</span>
-        <div class="w-full h-[3px] bg-[{{TAB_ACTIVE_COLOR}}]"></div>
-      </button>
-      
-      <!-- Tab 2 -->
-      <button class="flex-1 flex items-center justify-center py-2.5 pb-[9px] bg-[{{TAB_BG_COLOR}}]"
-              data-figma-node="{{TAB2_NODE_ID}}">
-        <span class="font-hiragino-w3 text-sm leading-[1.5] text-white text-center"
-              data-figma-content-tab-{{TAB2_ID}}>{{TAB2_LABEL}}</span>
-      </button>
-    </div>
-    
-    <!-- ===================================
-         Main Content Section
-         =================================== -->
-    <section class="flex flex-col items-center p-4 w-full"
-             data-figma-node="{{MAIN_NODE_ID}}">
-      
-      <!-- ここにメインコンテンツを配置 -->
-      
-    </section>
-    
-    <!-- ===================================
-         リストセクション（リストがある場合）
-         =================================== -->
-    <section class="flex flex-col w-full px-4 pb-4"
-             data-figma-node="{{LIST_SECTION_NODE_ID}}">
-      
-      <h2 class="font-hiragino-w6 text-base leading-[1.5] text-[#24243f] mb-3"
-          data-figma-content-section-title>
+    <main class="flex-1 w-full flex flex-col items-center px-space-200 py-space-200 relative z-10"
+          data-figma-node="{{MAIN_NODE_ID}}"
+          data-figma-name="Content Container"
+          data-figma-token-padding="Space/200">
+
+      <!-- Section Title -->
+      <h2 class="w-full text-base font-bold text-text-default-default mb-space-200"
+          data-figma-node="{{SECTION_TITLE_NODE_ID}}"
+          data-figma-content-id="section_title"
+          data-figma-content-type="text"
+          data-figma-content-value="{{SECTION_TITLE}}"
+          data-figma-content-classification="static"
+          data-figma-content-data-type="string"
+          data-figma-token-font="JP/16 - Bold"
+          data-figma-token-color="Text/Default/Default">
         {{SECTION_TITLE}}
       </h2>
-      
+
       <!-- List Container -->
-      <div class="flex flex-col gap-2"
-           data-figma-content-{{LIST_ID}}-list>
-        
+      <div class="flex flex-col gap-space-200 w-full"
+           data-figma-node="{{LIST_NODE_ID}}"
+           data-figma-content-id="{{LIST_ID}}_list"
+           data-figma-content-classification="dynamic_list"
+           data-figma-content-type="list"
+           data-figma-token-gap="Space/200">
+
         <!-- List Item Template -->
-        <article class="flex items-start gap-3 p-3 bg-white rounded-lg"
+        <article class="flex items-start gap-space-150 p-space-150 bg-bg-default-default rounded-radius-100 cursor-pointer transition-colors duration-200 hover:bg-bg-default-hover"
                  data-figma-node="{{ITEM_NODE_ID}}"
-                 data-figma-content-{{LIST_ID}}-item>
-          
+                 data-figma-content-id="{{LIST_ID}}_item"
+                 data-figma-content-classification="dynamic_list"
+                 data-figma-content-type="list"
+                 data-figma-interaction="tap:navigate:detail"
+                 data-figma-navigate="/{{DETAIL_PATH}}"
+                 data-figma-states="default,hover,active"
+                 data-figma-token-bg="Background/Default/Default"
+                 data-figma-token-radius="Radius/100"
+                 data-figma-token-padding="Space/150"
+                 data-figma-token-gap="Space/150">
+
           <!-- Item Icon -->
-          <div class="w-8 h-8 shrink-0 flex items-center justify-center"
-               data-figma-icon-svg="{{ITEM_ICON_URL}}"
-               data-figma-content-{{LIST_ID}}-icon>
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/>
-            </svg>
+          <div class="w-10 h-10 shrink-0 flex items-center justify-center rounded-radius-100 bg-bg-main-secondary"
+               data-figma-node="{{ITEM_ICON_NODE_ID}}"
+               data-figma-content-id="{{LIST_ID}}_icon"
+               data-figma-content-type="icon"
+               data-figma-content-classification="asset"
+               data-figma-content-data-type="svg"
+               data-figma-icon-svg="assets/icon-placeholder.svg"
+               data-figma-token-bg="Background/Main/Secondary"
+               data-figma-token-radius="Radius/100">
+            <img src="assets/icon-placeholder.svg" alt="" width="24" height="24" aria-hidden="true">
           </div>
-          
+
           <!-- Item Content -->
-          <div class="flex-1 min-w-0">
-            <p class="font-hiragino text-xs text-[#67717a]"
-               data-figma-content-{{LIST_ID}}-category>{{ITEM_CATEGORY}}</p>
-            <p class="font-hiragino-w6 text-sm text-[#24243f] truncate"
-               data-figma-content-{{LIST_ID}}-title>{{ITEM_TITLE}}</p>
+          <div class="flex-1 min-w-0 flex flex-col gap-space-050">
+            <p class="text-sm font-bold text-text-default-default truncate"
+               data-figma-node="{{ITEM_TITLE_NODE_ID}}"
+               data-figma-content-id="{{LIST_ID}}_title"
+               data-figma-content-type="text"
+               data-figma-content-value="{{ITEM_TITLE}}"
+               data-figma-content-classification="dynamic"
+               data-figma-content-data-type="string"
+               data-figma-token-font="JP/14 - Bold"
+               data-figma-token-color="Text/Default/Default">
+              {{ITEM_TITLE}}
+            </p>
+            <p class="text-xs text-text-default-secondary"
+               data-figma-node="{{ITEM_DESC_NODE_ID}}"
+               data-figma-content-id="{{LIST_ID}}_description"
+               data-figma-content-type="text"
+               data-figma-content-value="{{ITEM_DESCRIPTION}}"
+               data-figma-content-classification="dynamic"
+               data-figma-content-data-type="string"
+               data-figma-token-font="JP/12 - Regular"
+               data-figma-token-color="Text/Default/Secondary">
+              {{ITEM_DESCRIPTION}}
+            </p>
           </div>
-          
+
           <!-- Item Meta -->
-          <div class="flex flex-col items-end shrink-0">
-            <span class="font-number text-xs text-[#67717a]"
-                  data-figma-content-{{LIST_ID}}-duration>{{ITEM_DURATION}}</span>
-            <span class="font-number text-xs text-[#67717a]"
-                  data-figma-content-{{LIST_ID}}-score>{{ITEM_SCORE}}</span>
+          <div class="shrink-0 flex items-center gap-space-100">
+            <span class="text-xs text-text-default-tertiary"
+                  data-figma-node="{{ITEM_META_NODE_ID}}"
+                  data-figma-content-id="{{LIST_ID}}_meta"
+                  data-figma-content-type="text"
+                  data-figma-content-value="{{ITEM_META}}"
+                  data-figma-content-classification="dynamic"
+                  data-figma-content-data-type="string"
+                  data-figma-token-font="JP/12 - Regular"
+                  data-figma-token-color="Text/Default/Tertiary">
+              {{ITEM_META}}
+            </span>
+            <img src="assets/icon-chevron-right.svg" alt="" width="16" height="16" aria-hidden="true"
+                 data-figma-icon-svg="chevron-right">
           </div>
         </article>
-        
+
         <!-- 繰り返しアイテム... -->
-        
+
       </div>
-    </section>
-    
+    </main>
+
     <!-- ===================================
-         Spacer for Bottom Navigation
+         Primary Button
          =================================== -->
-    <div class="h-[56px] w-full shrink-0"></div>
-    
+    <div class="w-full p-space-200 relative z-10"
+         data-figma-node="{{FOOTER_NODE_ID}}"
+         data-figma-token-padding="Space/200">
+      <button class="w-full min-h-[48px] px-space-150 py-space-100 rounded-radius-100 text-base font-bold text-center cursor-pointer transition-all duration-100 border-none bg-bg-main-default text-text-default-on flex items-center justify-center leading-[1.5] hover:bg-ultrablue-600 focus-visible:outline-2 focus-visible:outline-border-main-default focus-visible:outline-offset-2 active:scale-[0.98] disabled:bg-bg-disabled-default disabled:text-icon-disabled-default disabled:cursor-not-allowed"
+              data-figma-node="{{BUTTON_NODE_ID}}"
+              data-figma-name="Button"
+              data-figma-content-id="primary_button"
+              data-figma-content-type="text"
+              data-figma-content-value="{{BUTTON_LABEL}}"
+              data-figma-content-classification="static"
+              data-figma-content-data-type="string"
+              data-figma-interaction="tap:navigate:{{BUTTON_TARGET}}"
+              data-figma-navigate="{{BUTTON_PATH}}"
+              data-figma-states="default,hover,active,disabled,loading"
+              data-figma-token-bg="Background/Main/Default"
+              data-figma-token-color="Text/Default/On"
+              data-figma-token-radius="Radius/100"
+              data-figma-token-height="48px"
+              data-figma-token-padding="Space/100, Space/150"
+              type="button">
+        {{BUTTON_LABEL}}
+      </button>
+    </div>
+
     <!-- ===================================
-         Bottom Navigation
+         Bottom Navigation (if applicable)
          =================================== -->
-    <nav class="fixed bottom-0 left-0 right-0 max-w-[375px] mx-auto h-[56px] bg-white border-t border-[#dae2e5] flex items-center justify-around"
-         data-figma-node="{{BOTTOM_NAV_NODE_ID}}"
-         data-figma-content-bottom-nav>
-      
-      <!-- Nav Item 1 -->
-      <button class="flex flex-col items-center justify-center gap-0.5 py-2 px-3"
-              data-figma-content-nav-{{NAV1_ID}}>
-        <div class="w-6 h-6"
-             data-figma-icon-svg="{{NAV1_ICON_URL}}"
-             data-figma-content-nav-{{NAV1_ID}}-icon>
-          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
-            <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
-          </svg>
-        </div>
-        <span class="font-hiragino text-[10px] text-[#67717a]"
-              data-figma-content-nav-{{NAV1_ID}}-label>{{NAV1_LABEL}}</span>
-      </button>
-      
-      <!-- Nav Item 2 -->
-      <button class="flex flex-col items-center justify-center gap-0.5 py-2 px-3"
-              data-figma-content-nav-{{NAV2_ID}}>
-        <div class="w-6 h-6"
-             data-figma-icon-svg="{{NAV2_ICON_URL}}"
-             data-figma-content-nav-{{NAV2_ID}}-icon>
-          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
-            <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
-          </svg>
-        </div>
-        <span class="font-hiragino text-[10px] text-[#67717a]"
-              data-figma-content-nav-{{NAV2_ID}}-label>{{NAV2_LABEL}}</span>
-      </button>
-      
-      <!-- Nav Item 3 (Active) -->
-      <button class="flex flex-col items-center justify-center gap-0.5 py-2 px-3"
-              data-figma-content-nav-{{NAV3_ID}}
-              data-figma-content-nav-active>
-        <div class="w-6 h-6"
-             data-figma-icon-svg="{{NAV3_ICON_URL}}"
-             data-figma-content-nav-{{NAV3_ID}}-icon>
-          <svg class="w-6 h-6 text-[{{NAV_ACTIVE_COLOR}}]" viewBox="0 0 24 24" fill="none">
-            <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
-          </svg>
-        </div>
-        <span class="font-hiragino text-[10px] text-[{{NAV_ACTIVE_COLOR}}]"
-              data-figma-content-nav-{{NAV3_ID}}-label>{{NAV3_LABEL}}</span>
-      </button>
-      
-      <!-- 追加のナビアイテム... -->
-      
-    </nav>
-    
+    <footer role="contentinfo">
+      <nav class="w-full h-14 flex items-center border-t border-icon-disabled-default bg-bg-default-default relative z-10"
+           data-figma-node="{{BOTTOM_NAV_NODE_ID}}"
+           data-figma-name="Bottom Bar"
+           data-figma-content-id="bottom_tab_bar"
+           data-figma-content-type="ui_state"
+           data-figma-content-classification="config"
+           data-figma-content-data-type="string"
+           data-figma-token-bg="Background/Default/Default"
+           data-figma-token-border="Icon/Disabled/Default"
+           data-figma-token-height="56px"
+           aria-label="メインナビゲーション"
+           role="tablist">
+
+        <!-- Tab 1 -->
+        <a href="#"
+           class="flex-1 h-full flex flex-col items-center justify-center gap-[2px] bg-bg-default-default cursor-pointer no-underline transition-colors duration-200 hover:bg-bg-default-hover"
+           data-figma-node="{{TAB1_NODE_ID}}"
+           data-figma-content-id="nav_{{TAB1_ID}}_tab"
+           data-figma-content-type="text"
+           data-figma-content-classification="static"
+           data-figma-content-data-type="string"
+           data-figma-interaction="tap:navigate:{{TAB1_TARGET}}"
+           data-figma-navigate="{{TAB1_PATH}}"
+           data-figma-states="active,inactive"
+           data-figma-token-height="56px"
+           role="tab"
+           aria-selected="true"
+           aria-label="{{TAB1_LABEL}}（現在のページ）">
+          <img src="assets/icon-{{TAB1_ICON}}-active.svg" alt="" width="24" height="24" aria-hidden="true"
+               data-figma-icon-svg="{{TAB1_NODE_ID}}"
+               data-figma-content-id="nav_{{TAB1_ID}}_icon"
+               data-figma-content-type="icon"
+               data-figma-content-classification="asset"
+               data-figma-content-data-type="svg">
+          <span class="text-xs font-bold leading-[1.5] text-center text-text-main-default"
+                data-figma-content-id="nav_{{TAB1_ID}}_label"
+                data-figma-content-type="text"
+                data-figma-content-classification="static"
+                data-figma-content-data-type="string"
+                data-figma-content-value="{{TAB1_LABEL}}"
+                data-figma-token-font="JP/12 - Bold"
+                data-figma-token-color="Text/Main/Default">{{TAB1_LABEL}}</span>
+        </a>
+
+        <!-- Tab 2 -->
+        <a href="#"
+           class="flex-1 h-full flex flex-col items-center justify-center gap-[2px] bg-bg-default-default cursor-pointer no-underline transition-colors duration-200 hover:bg-bg-default-hover"
+           data-figma-node="{{TAB2_NODE_ID}}"
+           data-figma-content-id="nav_{{TAB2_ID}}_tab"
+           data-figma-content-type="text"
+           data-figma-content-classification="static"
+           data-figma-content-data-type="string"
+           data-figma-interaction="tap:navigate:{{TAB2_TARGET}}"
+           data-figma-navigate="{{TAB2_PATH}}"
+           data-figma-states="active,inactive"
+           data-figma-token-height="56px"
+           role="tab"
+           aria-selected="false"
+           aria-label="{{TAB2_LABEL}}">
+          <img src="assets/icon-{{TAB2_ICON}}.svg" alt="" width="24" height="24" aria-hidden="true"
+               data-figma-icon-svg="{{TAB2_NODE_ID}}"
+               data-figma-content-id="nav_{{TAB2_ID}}_icon"
+               data-figma-content-type="icon"
+               data-figma-content-classification="asset"
+               data-figma-content-data-type="svg">
+          <span class="text-xs font-bold leading-[1.5] text-center text-text-default-default"
+                data-figma-content-id="nav_{{TAB2_ID}}_label"
+                data-figma-content-type="text"
+                data-figma-content-classification="static"
+                data-figma-content-data-type="string"
+                data-figma-content-value="{{TAB2_LABEL}}"
+                data-figma-token-font="JP/12 - Bold"
+                data-figma-token-color="Text/Default/Default">{{TAB2_LABEL}}</span>
+        </a>
+
+      </nav>
+    </footer>
+
   </div>
 
+  <!-- Mapping Overlay Script -->
+  <script src="mapping-overlay.js"></script>
 </body>
 </html>
 
@@ -233,29 +420,89 @@
 基本情報:
 - {{COMPONENT_NAME}}: コンポーネント名（titleに使用）
 - {{ROOT_NODE_ID}}: FigmaのルートノードID
+- {{FIGMA_FILEKEY}}: FigmaファイルキーG
+- {{FIGMA_URL}}: FigmaのURL
+- {{FIGMA_NAME}}: Figmaでの名前
+- {{SCREEN_ID}}: 画面識別子（kebab-case）
+- {{SCREEN_NAME}}: 画面名（日本語）
+- {{TIMESTAMP}}: 生成日時（ISO8601形式）
 
 ナビゲーション:
 - {{NAV_NODE_ID}}: ナビゲーションのノードID
-- {{NAV_BG_COLOR}}: ナビゲーション背景色（例: #0b41a0）
-- {{NAV_TOKEN}}: デザイントークン名（例: darkblue）
 - {{NAV_TITLE}}: ナビゲーションタイトル
+- {{BACK_BTN_NODE_ID}}: 戻るボタンのノードID
+- {{TITLE_NODE_ID}}: タイトルのノードID
+- {{ACTION_BTN_NODE_ID}}: アクションボタンのノードID
+- {{ACTION_ICON_NAME}}: アクションアイコン名（Figma）
+- {{ACTION_ICON_FILE}}: アクションアイコンファイル名
+- {{ACTION_TARGET}}: アクションターゲット（遷移先識別子）
+- {{ACTION_PATH}}: アクションパス（URLパス）
+- {{ACTION_LABEL}}: アクションボタンのaria-label
 
-タブ:
-- {{TAB_NODE_ID}}: タブメニューのノードID
-- {{TAB_BG_COLOR}}: タブ背景色
-- {{TAB_ACTIVE_COLOR}}: アクティブタブの下線色
-- {{TAB1_ID}}, {{TAB2_ID}}: タブの識別子
-- {{TAB1_LABEL}}, {{TAB2_LABEL}}: タブのラベル
-
-リスト:
-- {{LIST_ID}}: リストの識別子（例: course）
+セクション/リスト:
+- {{MAIN_NODE_ID}}: メインコンテナのノードID
+- {{SECTION_TITLE_NODE_ID}}: セクションタイトルのノードID
 - {{SECTION_TITLE}}: セクションタイトル
+- {{LIST_NODE_ID}}: リストコンテナのノードID
+- {{LIST_ID}}: リストの識別子（snake_case）
+- {{ITEM_NODE_ID}}: アイテムのノードID
+- {{DETAIL_PATH}}: 詳細画面パス
+
+ボタン:
+- {{FOOTER_NODE_ID}}: フッターのノードID
+- {{BUTTON_NODE_ID}}: ボタンのノードID
+- {{BUTTON_LABEL}}: ボタンラベル
+- {{BUTTON_TARGET}}: ボタンターゲット
+- {{BUTTON_PATH}}: ボタン遷移先パス
 
 ボトムナビ:
 - {{BOTTOM_NAV_NODE_ID}}: ボトムナビのノードID
-- {{NAV1_ID}}, {{NAV2_ID}}, {{NAV3_ID}}: ナビアイテムの識別子
-- {{NAV1_LABEL}}, {{NAV2_LABEL}}, {{NAV3_LABEL}}: ナビアイテムのラベル
-- {{NAV_ACTIVE_COLOR}}: アクティブナビの色
+- {{TAB1_NODE_ID}}, {{TAB2_NODE_ID}}: タブのノードID
+- {{TAB1_ID}}, {{TAB2_ID}}: タブの識別子（snake_case）
+- {{TAB1_LABEL}}, {{TAB2_LABEL}}: タブのラベル
+- {{TAB1_ICON}}, {{TAB2_ICON}}: タブのアイコン名
+- {{TAB1_TARGET}}, {{TAB2_TARGET}}: タブのターゲット
+- {{TAB1_PATH}}, {{TAB2_PATH}}: タブの遷移先パス
+
+===================================
+data属性一覧
+===================================
+
+## 基本属性
+- data-figma-node: FigmaノードID
+- data-figma-filekey: Figmaファイルキー
+- data-figma-name: Figmaでの名前
+- data-figma-url: FigmaのURL
+- data-screen-id: 画面識別子
+- data-screen-name: 画面名
+
+## デザイントークン属性
+- data-figma-token-bg: 背景色トークン
+- data-figma-token-color: テキスト色トークン
+- data-figma-token-font: フォントトークン
+- data-figma-token-radius: 角丸トークン
+- data-figma-token-padding: パディングトークン
+- data-figma-token-gap: ギャップトークン
+- data-figma-token-height: 高さトークン
+- data-figma-token-border: ボーダートークン
+- data-figma-token-size: サイズトークン
+
+## コンテンツ分類属性
+- data-figma-content-id: 一意識別子（snake_case）
+- data-figma-content-type: コンテンツ種別（text, icon, ui_state, list, image）
+- data-figma-content-classification: 分類（static, dynamic, dynamic_list, config, asset, user_asset）
+- data-figma-content-data-type: データ型（string, number, svg, image）
+- data-figma-content-value: Figmaでの表示値
+- data-figma-content-notes: 補足説明
+
+## インタラクション属性
+- data-figma-interaction: インタラクション定義（trigger:action:target）
+- data-figma-navigate: 遷移先パス
+- data-figma-states: サポートするUI状態（カンマ区切り）
+- data-state: 現在のUI状態
+
+## アイコン・アセット属性
+- data-figma-icon-svg: アイコンパスまたはノードID
 
 ===================================
 -->

@@ -12,6 +12,17 @@ HTML要素・UIコンポーネントとAPIエンドポイントの対応関係�
 ## 役割
 
 画面仕様書の一部として、UIフィールドとAPIフィールドの対応関係を整理します。
+
+### ワークフロー上の位置づけ
+
+| フェーズ | 担当エージェント | 目的 |
+|----------|-----------------|------|
+| **Phase 1: HTML変換時** | `converting-figma-to-html` | static/dynamic 分類の可視化 |
+| **Phase 2: API確定後** | `mapping-html-to-api`（本エージェント） | エンドポイント・フィールドマッピング追加 |
+
+このエージェントは **Phase 2** を担当し、`converting-figma-to-html` が生成したHTMLに対してAPIマッピング情報を追加します。
+
+**主な責務:**
 - **全コンテンツ要素の確認**: 静的・動的を問わず全要素をAPI仕様書と照合
 - **再分類**: 静的と仮決定された要素でもAPIから取得する場合は動的に変更
 - データソースの特定
@@ -115,13 +126,50 @@ spec.md「コンテンツ分析」から**全ての要素**（静的・動的両
 4. 完了チェックリストを更新
 5. 変更履歴に追記
 
-### Step 8: マッピングオーバーレイ生成（任意）
+### Step 8: HTMLに data-api 属性を付与
+
+APIフィールドが確定したら、HTML要素に `data-api-*` 属性を追加：
+
+```html
+<article class="item"
+  data-figma-node="2350:2737"
+  data-api-field="result[].submissions[]"
+  data-api-binding="id:submissionId">
+
+  <span class="item__label"
+    data-api-field="subject+category"
+    data-api-transform="formatCategoryLabel(subject, category)">
+    カテゴリ名
+  </span>
+
+  <span class="item__date"
+    data-api-field="created_at"
+    data-api-transform="formatDate(created_at)">
+    2024/01/01
+  </span>
+</article>
+```
+
+**data-api 属性一覧**:
+
+| 属性 | 用途 | 例 |
+|------|------|-----|
+| `data-api-field` | APIレスポンスのフィールドパス | `user.name`, `items[].title` |
+| `data-api-binding` | HTML属性とAPIフィールドの紐付け | `id:submissionId`, `src:image_uri` |
+| `data-api-transform` | データ変換関数 | `formatDate(created_at)` |
+
+### Step 9: マッピングオーバーレイ生成（任意）
 
 ユーザーが要求した場合、HTMLにマッピング可視化オーバーレイを追加：
 
 1. テンプレートを読み込み: `templates/mapping-overlay.js`
 2. マッピングデータを挿入
 3. HTMLに `<script src="mapping-overlay.js"></script>` を追加
+
+**mapping-overlay.js の機能**:
+- `data-figma-*` 属性の可視化（破線枠）
+- `data-api-*` 属性の可視化（動的タイプのツールチップ内に表示）
+- フィルタリング機能
 
 ---
 
@@ -163,9 +211,12 @@ interface CoursesResponse {
 
 **UIマッピング**
 
-| UI要素 | data-figma-content | APIフィールド | 変換 |
-|--------|-------------------|--------------|------|
-| 講座タイトル | course-title | course.title | そのまま |
+| UI要素 | data-figma-content | APIフィールド | 変換 | HTML属性 |
+|--------|-------------------|--------------|------|----------|
+| 講座タイトル | course-title | course.title | そのまま | `data-api-field="course.title"` |
+
+> **Note**: 確定したマッピングは `data-api-*` 属性としてHTMLに反映すること。
+> mapping-overlay.js が自動的に検出・可視化します。
 
 ### API呼び出しタイミング
 

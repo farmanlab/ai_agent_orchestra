@@ -2,7 +2,7 @@
 name: converting-figma-to-html
 description: Provides expertise in converting Figma designs to semantic HTML/CSS with accurate positioning and multi-state handling. Use when transforming Figma files into production-ready markup with data attributes for traceability.
 tools: ["mcp__figma__whoami", "mcp__figma__get_screenshot", "mcp__figma__get_design_context", "mcp__figma__get_metadata", "Read", "Write", "Bash"]
-skills: [converting-figma-to-html]
+skills: [converting-figma-to-html, downloading-figma-assets]
 ---
 
 # Figma to HTML 変換エージェント
@@ -154,12 +154,7 @@ _Hover, _Active, _Disabled, _Selected
 
 **⚠️ 重要: API仕様の有無に関わらず必ず生成すること**
 
-`mapping-overlay.js` は2段階で使用されます：
-
-| フェーズ | 目的 | 必要な情報 |
-|----------|------|------------|
-| **Phase 1: HTML変換時**（必須） | static/dynamic 分類の可視化 | spec.md「コンテンツ分析」セクション |
-| **Phase 2: API確定後**（任意） | エンドポイント・フィールドマッピング追加 | OpenAPI仕様書 |
+この段階では static/dynamic 分類の可視化のみを行います。API確定後のエンドポイント・フィールドマッピングは `mapping-html-to-api` エージェントが担当します。
 
 #### Step 4.1: テンプレートの読み込み（必須）
 
@@ -172,6 +167,7 @@ Read: .agents/templates/mapping-overlay.js
 テンプレートには以下の機能が含まれています：
 - データタイプ可視化（static/dynamic/dynamic_list/asset）
 - インタラクション可視化（navigate/modal/disabled/loading）
+- APIマッピング可視化（data-api-field/data-api-binding/data-api-transform）
 - リアルタイム状態表示（hover/active/focus/selected）
 - フィルタリング機能
 
@@ -218,8 +214,6 @@ const MAPPING_DATA = {
 </html>
 ```
 
----
-
 **検証**:
 - [ ] Figmaスクリーンショットと視覚的に一致
 - [ ] 全要素にdata-figma-node属性がある
@@ -230,7 +224,53 @@ const MAPPING_DATA = {
 
 ---
 
-### Step 5: spec.md の更新
+### Step 5: アセットダウンロード
+
+`downloading-figma-assets` スキルを使用してアセットをダウンロード。
+
+**対象アセット**:
+- `data-figma-icon-svg` 属性を持つ要素 → Figma API でSVGエクスポート
+- `data-figma-asset-url` 属性を持つ要素 → MCP経由でダウンロード
+
+**手順**:
+
+1. HTMLから対象属性を抽出:
+   ```bash
+   grep -oP 'data-figma-icon-svg="\K[^"]+' index.html | sort -u
+   grep -oP 'data-figma-asset-url="\K[^"]+' index.html | sort -u
+   ```
+
+2. `downloading-figma-assets` スキルに従ってダウンロード:
+   - アイコン（SVG）: Figma API export（方法2）
+   - 画像（PNG/JPG）: MCP asset URL（方法1）
+
+3. `assets/` ディレクトリに保存:
+   ```
+   .outputs/{screen-id}/assets/
+   ├── icons/
+   │   ├── icon-name.svg
+   │   └── ...
+   └── images/
+       ├── image-name.png
+       └── ...
+   ```
+
+4. HTMLの参照パスを更新:
+   - Figma MCPのURL → `./assets/icons/xxx.svg` または `./assets/images/xxx.png`
+
+5. SVG後処理（必要に応じて）:
+   - `preserveAspectRatio="none"` を削除
+   - `fill="var(--fill-0, white)"` を `currentColor` に置換
+
+**検証**:
+- [ ] `assets/` ディレクトリが作成されている
+- [ ] 全アセットがダウンロードされている
+- [ ] HTMLの参照パスがローカルパスに更新されている
+- [ ] SVGアイコンが正しく表示される
+
+---
+
+### Step 6: spec.md の更新
 
 `spec.md` の「コンテンツ分析」セクションを更新。詳細は [content-classification.md](../skills/converting-figma-to-html/content-classification.md) を参照。
 
@@ -240,7 +280,7 @@ const MAPPING_DATA = {
 
 ---
 
-### Step 6: 検証とレポート
+### Step 7: 検証とレポート
 
 **最終検証チェックリスト**:
 ```
@@ -249,6 +289,8 @@ const MAPPING_DATA = {
 - [ ] コンテンツ要素に分類属性がある
 - [ ] 全状態が生成されている（複数検出時）
 - [ ] spec.md「コンテンツ分析」セクションが完成している
+- [ ] assets/ ディレクトリにアセットがダウンロードされている
+- [ ] HTMLの参照パスがローカルパスに更新されている
 - [ ] HTMLがブラウザでエラーなく開ける
 ```
 
@@ -260,6 +302,8 @@ const MAPPING_DATA = {
 - {name}.html
 - {name}-{state}.html（該当する場合）
 - spec.md（コンテンツ分析セクション更新済み）
+- assets/icons/*.svg（アイコンアセット）
+- assets/images/*.png（画像アセット）
 
 ### 次のステップ
 1. ブラウザでHTMLを開く: `open {name}.html`
@@ -320,7 +364,7 @@ const MAPPING_DATA = {
 
 > **注意**:
 > - `spec.md` 内の static/dynamic 分類は**仮決定**です。API仕様確定後にレビューし確定してください。
-> - `mapping-overlay.js` はAPI仕様確定前でも必ず生成すること。Phase 2（API確定後）で endpoint/apiField を追加更新します。
+> - `mapping-overlay.js` はAPI仕様確定前でも必ず生成すること。API確定後は `mapping-html-to-api` エージェントが endpoint/apiField を追加更新します。
 > - **複数画面の場合、画面ごとに別ディレクトリを作成**してください。
 
 ---

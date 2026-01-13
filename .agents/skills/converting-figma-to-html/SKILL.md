@@ -124,19 +124,88 @@ https://figma.com/design/XXXXX/Project?node-id=1234-5678
 
 ### 1. data属性による追跡
 
-全ての要素に以下の属性を付与：
+#### 画面レベル属性（ルート要素）
+
+ルート要素（`<body>`または主要コンテナ）には画面識別用の属性を付与：
+
+| 属性 | 用途 | 例 |
+|------|------|-----|
+| `data-figma-node` | FigmaルートノードID | `"2350:6396"` |
+| `data-figma-filekey` | FigmaファイルキーID | `"fLUFVpvmfpCJBrgzYHi5PB"` |
+| `data-figma-name` | Figmaでの画面名 | `"チュートリアル"` |
+| `data-figma-url` | Figmaへのリンク | `"https://www.figma.com/design/..."` |
+| `data-screen-id` | 画面識別ID（ハイフン区切り） | `"tutorial"` |
+| `data-screen-name` | 画面表示名 | `"チュートリアル"` |
+
+#### 要素レベル属性
+
+全ての主要要素に以下の属性を付与：
 
 | 属性 | 用途 | 例 |
 |------|------|-----|
 | `data-figma-node` | FigmaノードID | `"5070:65342"` |
-| `data-figma-content-XXX` | コンテンツ識別子 | `nav-title`, `course-item` |
-| `data-figma-tokens` | デザイントークン | `"background: darkblue"` |
-| `data-figma-font` | フォントトークン | `"JP/16 - Bold"` |
+| `data-figma-name` | Figmaでのレイヤー名 | `"Button/Primary"` |
+| `data-figma-tokens` | デザイントークン（まとめて） | `"background: darkblue"` |
+| `data-figma-token-*` | デザイントークン（個別、推奨） | 下記参照 |
 | `data-figma-icon-svg` | アイコンノードID（getImages用） | `"3428:18627"` |
 | `data-figma-interaction` | インタラクション定義 | `"tap:navigate:/course/1"` |
-| `data-figma-states` | サポートするUI状態 | `"default,hover,active"` |
+| `data-figma-states` | サポートするUI状態 | `"default,hover,active,disabled"` |
 | `data-figma-navigate` | 画面遷移先 | `"/course/detail"` |
-| `data-state` | 現在のUI状態 | `"disabled"`, `"loading"` |
+| `data-state` | 現在のUI状態 | `"default"`, `"disabled"`, `"loading"`, `"selected"` |
+
+#### デザイントークン属性 (data-figma-token-*)
+
+Figmaのデザイントークンをプロパティ別に個別の属性で保持する推奨形式：
+
+| 属性 | 用途 | 値の例 |
+|------|------|--------|
+| `data-figma-token-bg` | 背景色トークン | `"Background/Main/Default"` |
+| `data-figma-token-color` | テキスト色/アイコン色トークン | `"Text/Default/Default"`, `"Icon/Main/Default"` |
+| `data-figma-token-font` | フォントトークン | `"JP/16 - Bold"` |
+| `data-figma-token-radius` | 角丸トークン | `"Radius/200"` |
+| `data-figma-token-padding` | パディングトークン | `"Space/200"` |
+| `data-figma-token-gap` | ギャップトークン | `"Space/150"` |
+| `data-figma-token-height` | 高さトークン | `"56px"` |
+| `data-figma-token-border` | ボーダートークン | `"Border/Main/Default"` |
+| `data-figma-token-size` | サイズトークン（アイコン等） | `"24px"`, `"32px"` |
+
+**例（画面ルート）:**
+```html
+<body data-figma-node="2350:6396"
+      data-figma-filekey="fLUFVpvmfpCJBrgzYHi5PB"
+      data-figma-name="チュートリアル"
+      data-figma-url="https://www.figma.com/design/fLUFVpvmfpCJBrgzYHi5PB?node-id=2350:6396"
+      data-screen-id="tutorial"
+      data-screen-name="チュートリアル"
+      class="...">
+```
+
+**例（ボタン要素）:**
+```html
+<button data-figma-node="2350:6410"
+        data-figma-token-bg="Background/Main/Default"
+        data-figma-token-color="Text/Default/On"
+        data-figma-token-font="JP/18 - Bold"
+        data-figma-token-radius="Radius/Full"
+        data-figma-token-height="56px"
+        data-figma-states="default,hover,active,disabled"
+        data-figma-interaction="tap:navigate:next-step"
+        data-state="default"
+        class="w-full h-14 bg-bg-main-default text-text-default-on font-bold rounded-full">
+  次へ
+</button>
+```
+
+**例（アイコン要素）:**
+```html
+<span data-figma-node="2350:6420"
+      data-figma-token-color="Icon/Main/Default"
+      data-figma-token-size="24px"
+      data-figma-icon-svg="3428:18627"
+      class="w-6 h-6 text-icon-main-default">
+  <svg viewBox="0 0 24 24"><!-- placeholder --></svg>
+</span>
+```
 
 ### 2. コンテンツ分類
 
@@ -181,6 +250,49 @@ HTMLの各コンテンツを以下のカテゴリで整理：
 - Flexbox/Gridで相対的レイアウト
 - absolute/fixed は最小限に
 
+#### Tailwind CDN + Inline Config パターン
+
+standalone HTML 生成時は、Figma トークンを Tailwind config に埋め込む：
+
+```html
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          // Figma Semantic Tokens
+          'text-default': {
+            'default': '#24243f',
+            'secondary': '#67717a',
+            'on': '#ffffff',
+          },
+          'bg-main': {
+            'default': '#0070e0',
+            'secondary': '#cfe5fc',
+          },
+        },
+        spacing: {
+          'space-050': '4px',
+          'space-100': '8px',
+          'space-200': '16px',
+        },
+        borderRadius: {
+          'radius-100': '8px',
+          'radius-200': '16px',
+          'radius-full': '9999px',
+        },
+        fontFamily: {
+          'hiragino': ['"Hiragino Sans"', '"Hiragino Kaku Gothic ProN"', '"Meiryo"', 'sans-serif'],
+        },
+      }
+    }
+  }
+</script>
+```
+
+**トークン取得:** `mcp__figma__get_variable_defs` を使用してFigmaから取得
+
 ### 5. アイコン処理
 
 複雑なSVGパスは再現せず、シンプルなプレースホルダーに置換：
@@ -219,8 +331,10 @@ HTMLの各コンテンツを以下のカテゴリで整理：
 
 **インタラクション形式**: `{trigger}:{action}:{target}`
 - trigger: `tap`, `hover`, `focus`, `longpress`
-- action: `navigate`, `show-modal`, `close-modal`, `submit`
-- target: 遷移先パス、モーダルID等
+- action: `navigate`, `show-modal`, `close-modal`, `submit`, `open-dropdown`, `select`, `toggle`
+- target: 遷移先パス、モーダルID、ドロップダウンID等
+
+**状態値 (data-state)**: `default`, `hover`, `active`, `disabled`, `loading`, `selected`, `expanded`
 
 ### 8. 画面遷移属性の埋め込み
 

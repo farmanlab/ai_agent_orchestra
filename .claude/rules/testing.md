@@ -1,5 +1,5 @@
 ---
-paths: "**/*Test.{ts,js}, **/*_test.py, **/test/**"
+paths:  "**/*Test.{ts,js}, **/*_test.py, **/test/**"
 ---
 
 

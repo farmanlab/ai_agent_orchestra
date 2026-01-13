@@ -1,5 +1,5 @@
 ---
-paths: "**/*.{ts,js,py}"
+paths:  "**/*.{ts,js,py}"
 ---
 
 

@@ -5,6 +5,7 @@
  * 機能:
  * - データタイプ可視化 (static/dynamic/dynamic_list/config/asset/user_asset)
  * - インタラクション可視化 (navigate/modal/disabled/loading)
+ * - APIマッピング可視化 (data-api-field/data-api-binding/data-api-transform)
  * - リアルタイム状態表示 (hover/active/focus/selected)
  * - フィルタリング機能
  *
@@ -15,6 +16,9 @@
  * - data-figma-content-value: Figmaでの表示値
  * - data-figma-content-notes: 補足説明
  * - data-figma-content-data-type: string/number/svg等
+ * - data-api-field: APIレスポンスフィールドパス
+ * - data-api-binding: HTML属性とAPIフィールドのバインディング
+ * - data-api-transform: 変換関数
  */
 
 // ========================================
@@ -34,7 +38,10 @@ const TYPE_COLORS = {
   navigate: { bg: '#ffe0ec', text: '#8b0a50', border: '#de30ca' },
   modal: { bg: '#ffeeba', text: '#856404', border: '#ff9800' },
   disabled: { bg: '#f5f5f5', text: '#999', border: '#ccc' },
-  loading: { bg: '#e3f2fd', text: '#1565c0', border: '#2196f3' }
+  loading: { bg: '#e3f2fd', text: '#1565c0', border: '#2196f3' },
+  // APIマッピングタイプ
+  api: { bg: '#e8f5e9', text: '#1b5e20', border: '#4caf50' },
+  api_transform: { bg: '#fff8e1', text: '#f57f17', border: '#ffc107' }
 };
 
 // タイプ別のラベル
@@ -48,7 +55,9 @@ const TYPE_LABELS = {
   navigate: '画面遷移',
   modal: 'モーダル',
   disabled: '無効',
-  loading: '読込中'
+  loading: '読込中',
+  api: 'API',
+  api_transform: 'API変換'
 };
 
 // ========================================
@@ -89,6 +98,47 @@ function extractMappingDataFromHTML() {
   return mappingData;
 }
 
+// ========================================
+// HTMLからAPIマッピングデータを自動抽出
+// ========================================
+
+function extractApiMappingDataFromHTML() {
+  const apiData = {};
+
+  // data-api-field を持つ全要素を検索
+  document.querySelectorAll('[data-api-field]').forEach(el => {
+    const apiField = el.dataset.apiField;
+    const apiBinding = el.dataset.apiBinding || '';
+    const apiTransform = el.dataset.apiTransform || '';
+    const nodeId = el.dataset.figmaNode || '';
+
+    // ラベル生成
+    let label = apiField;
+    if (label.length > 40) label = label.substring(0, 37) + '...';
+
+    // タイプ決定: transformがあればapi_transform、なければapi
+    const type = apiTransform ? 'api_transform' : 'api';
+
+    // キーとして要素を識別
+    const key = `api-${apiField}-${nodeId || Math.random().toString(36).substr(2, 9)}`;
+
+    apiData[key] = {
+      type: type,
+      field: apiField,
+      binding: apiBinding,
+      transform: apiTransform,
+      label: label,
+      nodeId: nodeId,
+      element: el
+    };
+  });
+
+  return apiData;
+}
+
+// グローバル変数としてAPIデータも保持
+let API_MAPPING_DATA = {};
+
 // グローバル変数として保持（初期化時に設定）
 let MAPPING_DATA = {};
 
@@ -126,6 +176,26 @@ function getMappingInfo(element) {
     if (MAPPING_DATA[key]) {
       return { attr: key, ...MAPPING_DATA[key] };
     }
+  }
+  return null;
+}
+
+// API マッピング情報を取得（data-api-field から）
+function getApiMappingInfo(element) {
+  const apiField = element.dataset.apiField;
+  if (apiField) {
+    const apiBinding = element.dataset.apiBinding || '';
+    const apiTransform = element.dataset.apiTransform || '';
+    const nodeId = element.dataset.figmaNode || '';
+    const type = apiTransform ? 'api_transform' : 'api';
+
+    return {
+      type: type,
+      field: apiField,
+      binding: apiBinding,
+      transform: apiTransform,
+      nodeId: nodeId
+    };
   }
   return null;
 }
@@ -204,8 +274,8 @@ function detectActiveStates(element) {
 // ツールチップ描画
 // ========================================
 
-// データタイプ用ツールチップ
-function renderTooltipContent(info) {
+// データタイプ用ツールチップ（API情報を内包）
+function renderTooltipContent(info, apiInfo = null) {
   const colors = TYPE_COLORS[info.type] || TYPE_COLORS.static;
   const typeLabel = TYPE_LABELS[info.type] || info.type;
 
@@ -252,23 +322,117 @@ function renderTooltipContent(info) {
     `;
   }
 
-  // API情報（後から追加される想定）
-  if (info.endpoint) {
+  // API情報（data-api-* 属性から取得）
+  if (apiInfo) {
+    html += `
+      <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
+        <div style="font-weight: bold; color: #1b5e20; margin-bottom: 4px;">API Field:</div>
+        <code style="display: block; background: #e8f5e9; padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: 12px; color: #1b5e20;">${apiInfo.field}</code>
+      </div>
+    `;
+
+    if (apiInfo.binding) {
+      html += `
+        <div style="margin-top: 8px;">
+          <div style="font-weight: bold; color: #1565c0; margin-bottom: 4px;">Binding:</div>
+          <code style="display: block; background: #e3f2fd; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 11px; color: #1565c0;">${apiInfo.binding}</code>
+        </div>
+      `;
+    }
+
+    if (apiInfo.transform) {
+      html += `
+        <div style="margin-top: 8px;">
+          <div style="font-weight: bold; color: #f57f17; margin-bottom: 4px;">Transform:</div>
+          <code style="display: block; background: #fff8e1; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 11px; color: #f57f17;">${apiInfo.transform}</code>
+        </div>
+      `;
+    }
+  } else if (info.endpoint) {
+    // 旧形式のendpoint情報
     html += `
       <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
         <div style="font-weight: bold; color: #333; margin-bottom: 4px;">Endpoint:</div>
         <code style="display: block; background: #e8f4fd; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 11px; color: #0066cc;">${info.endpoint}</code>
       </div>
     `;
-  } else if (info.type === 'dynamic' || info.type === 'dynamic_list') {
+  } else if ((info.type === 'dynamic' || info.type === 'dynamic_list') && !apiInfo) {
     html += `<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee; color: #999; font-style: italic;">API未確定</div>`;
   }
 
-  if (info.apiField) {
+  if (info.apiField && !apiInfo) {
     html += `
       <div style="margin-top: 8px;">
         <div style="font-weight: bold; color: #333; margin-bottom: 4px;">API Field:</div>
         <code style="display: block; background: #f5f5f5; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">${info.apiField}</code>
+      </div>
+    `;
+  }
+
+  return html;
+}
+
+// API マッピング用ツールチップ
+function renderApiTooltipContent(apiInfo, mappingInfo = null) {
+  let html = '';
+
+  // Figmaマッピング情報がある場合は先に表示
+  if (mappingInfo) {
+    const mappingColors = TYPE_COLORS[mappingInfo.type] || TYPE_COLORS.static;
+    const mappingTypeLabel = TYPE_LABELS[mappingInfo.type] || mappingInfo.type;
+    html += `
+      <div style="margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #ddd;">
+        <div style="font-size: 10px; color: #888; margin-bottom: 4px;">データタイプ</div>
+        <span style="display: inline-block; padding: 2px 8px; border-radius: 4px; background: ${mappingColors.bg}; color: ${mappingColors.text}; border: 1px solid ${mappingColors.border}; font-weight: bold; font-size: 11px;">${mappingTypeLabel}</span>
+        <span style="margin-left: 8px; color: #666; font-size: 11px;">${mappingInfo.label}</span>
+      </div>
+    `;
+  }
+
+  // API情報
+  const colors = TYPE_COLORS[apiInfo.type] || TYPE_COLORS.api;
+  const typeLabel = TYPE_LABELS[apiInfo.type] || apiInfo.type;
+
+  html += `
+    <div style="margin-bottom: 8px;">
+      <div style="font-size: 10px; color: #888; margin-bottom: 4px;">APIマッピング</div>
+      <span style="display: inline-block; padding: 2px 8px; border-radius: 4px; background: ${colors.bg}; color: ${colors.text}; border: 1px solid ${colors.border}; font-weight: bold;">${typeLabel}</span>
+    </div>
+  `;
+
+  // APIフィールド
+  html += `
+    <div style="margin-bottom: 8px;">
+      <div style="font-weight: bold; color: #333; margin-bottom: 4px;">Field:</div>
+      <code style="display: block; background: #e8f5e9; padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: 12px; color: #1b5e20;">${apiInfo.field}</code>
+    </div>
+  `;
+
+  // バインディング
+  if (apiInfo.binding) {
+    html += `
+      <div style="margin-bottom: 8px;">
+        <div style="font-weight: bold; color: #333; margin-bottom: 4px;">Binding:</div>
+        <code style="display: block; background: #e3f2fd; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 11px; color: #1565c0;">${apiInfo.binding}</code>
+      </div>
+    `;
+  }
+
+  // 変換関数
+  if (apiInfo.transform) {
+    html += `
+      <div style="margin-bottom: 8px;">
+        <div style="font-weight: bold; color: #333; margin-bottom: 4px;">Transform:</div>
+        <code style="display: block; background: #fff8e1; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 11px; color: #f57f17;">${apiInfo.transform}</code>
+      </div>
+    `;
+  }
+
+  // ノードID
+  if (apiInfo.nodeId) {
+    html += `
+      <div style="font-size: 11px; color: #888;">
+        node: ${apiInfo.nodeId}
       </div>
     `;
   }
@@ -354,7 +518,10 @@ function renderInteractionTooltipContent(info, mappingInfo = null) {
 function initMappingOverlay() {
   // HTMLからマッピングデータを抽出
   MAPPING_DATA = extractMappingDataFromHTML();
+  API_MAPPING_DATA = extractApiMappingDataFromHTML();
   const mappingCount = Object.keys(MAPPING_DATA).length;
+  const apiCount = Object.keys(API_MAPPING_DATA).length;
+  const totalCount = mappingCount + apiCount;
 
   const tooltip = createTooltip();
   let isEnabled = true;
@@ -365,7 +532,7 @@ function initMappingOverlay() {
   // トグルボタン
   const toggleBtn = document.createElement('button');
   toggleBtn.id = 'mapping-toggle';
-  toggleBtn.innerHTML = `Mapping (${mappingCount})`;
+  toggleBtn.innerHTML = `Mapping (${totalCount})`;
   toggleBtn.style.cssText = `
     position: fixed; top: 10px; right: 10px; z-index: 10001;
     padding: 8px 16px; background: #0070e0; color: white; border: none;
@@ -441,14 +608,16 @@ function initMappingOverlay() {
   function elementMatchesFilter(el) {
     const mappingInfo = getMappingInfo(el);
     const interactionInfo = getInteractionInfo(el);
+    const apiInfo = getApiMappingInfo(el);
 
     if (mappingInfo && activeFilters.has(mappingInfo.type)) return true;
     if (interactionInfo && activeFilters.has(interactionInfo.type)) return true;
+    if (apiInfo && activeFilters.has(apiInfo.type)) return true;
     return false;
   }
 
   function hasMatchingDescendant(el) {
-    const descendants = el.querySelectorAll('[data-mapping-enabled], [data-interaction-enabled]');
+    const descendants = el.querySelectorAll('[data-mapping-enabled], [data-interaction-enabled], [data-api-enabled]');
     for (const desc of descendants) {
       if (elementMatchesFilter(desc)) return true;
     }
@@ -458,7 +627,7 @@ function initMappingOverlay() {
   function applyFilters() {
     const filterCount = document.getElementById('filter-count');
     const filterReset = document.getElementById('filter-reset');
-    const allElements = document.querySelectorAll('[data-mapping-enabled], [data-interaction-enabled]');
+    const allElements = document.querySelectorAll('[data-mapping-enabled], [data-interaction-enabled], [data-api-enabled]');
     let matchedCount = 0;
 
     if (activeFilters.size === 0) {
@@ -478,7 +647,7 @@ function initMappingOverlay() {
           matchedCount++;
           let parent = el.parentElement;
           while (parent) {
-            if (parent.dataset.mappingEnabled || parent.dataset.interactionEnabled) {
+            if (parent.dataset.mappingEnabled || parent.dataset.interactionEnabled || parent.dataset.apiEnabled) {
               parentOfMatched.add(parent);
             }
             parent = parent.parentElement;
@@ -545,7 +714,7 @@ function initMappingOverlay() {
   toggleBtn.addEventListener('click', () => {
     isEnabled = !isEnabled;
     toggleBtn.style.background = isEnabled ? '#0070e0' : '#999';
-    toggleBtn.innerHTML = isEnabled ? `Mapping (${mappingCount})` : 'OFF';
+    toggleBtn.innerHTML = isEnabled ? `Mapping (${totalCount})` : 'OFF';
     legend.style.display = isEnabled ? 'block' : 'none';
     if (!isEnabled) {
       tooltip.style.display = 'none';
@@ -587,6 +756,20 @@ function initMappingOverlay() {
         el.dataset.interactionEnabled = 'true';
       }
     });
+
+    // APIマッピング要素のハイライト（既存のmappingがない要素のみ）
+    document.querySelectorAll('[data-api-field]').forEach(el => {
+      const apiInfo = getApiMappingInfo(el);
+      if (apiInfo) {
+        // 既存のmappingやinteractionがない場合のみ動的スタイルでハイライト
+        if (!el.dataset.mappingEnabled && !el.dataset.interactionEnabled) {
+          const colors = TYPE_COLORS.dynamic;
+          el.style.outline = `2px dashed ${colors.border}`;
+          el.style.outlineOffset = '2px';
+        }
+        el.dataset.apiEnabled = 'true';
+      }
+    });
   }
 
   function removeHighlights() {
@@ -600,6 +783,12 @@ function initMappingOverlay() {
       el.style.outlineOffset = '';
       el.style.boxShadow = '';
       delete el.dataset.interactionEnabled;
+    });
+    document.querySelectorAll('[data-api-enabled]').forEach(el => {
+      el.style.outline = '';
+      el.style.outlineOffset = '';
+      el.style.boxShadow = '';
+      delete el.dataset.apiEnabled;
     });
   }
 
@@ -620,12 +809,17 @@ function initMappingOverlay() {
   function updateTooltipContent(target) {
     const hasInteraction = target.dataset.interactionEnabled;
     const mappingInfo = getMappingInfo(target);
+    const apiInfo = getApiMappingInfo(target);
 
     if (hasInteraction) {
       const interactionInfo = getInteractionInfo(target);
       if (interactionInfo) tooltip.innerHTML = renderInteractionTooltipContent(interactionInfo, mappingInfo);
     } else if (mappingInfo) {
-      tooltip.innerHTML = renderTooltipContent(mappingInfo);
+      // API情報がある場合は動的タイプのツールチップ内に表示
+      tooltip.innerHTML = renderTooltipContent(mappingInfo, apiInfo);
+    } else if (apiInfo) {
+      // mappingInfoがない場合でもAPI情報のみ表示
+      tooltip.innerHTML = renderApiTooltipContent(apiInfo, null);
     }
   }
 
@@ -634,7 +828,7 @@ function initMappingOverlay() {
     if (!isEnabled) return;
     let target = e.target;
     while (target && target !== document.body) {
-      if (target.dataset.interactionEnabled || target.dataset.mappingEnabled) {
+      if (target.dataset.interactionEnabled || target.dataset.mappingEnabled || target.dataset.apiEnabled) {
         currentHoveredElement = target;
         updateTooltipContent(target);
         tooltip.style.display = 'block';
@@ -657,7 +851,7 @@ function initMappingOverlay() {
   document.addEventListener('mouseout', (e) => {
     let target = e.target;
     while (target && target !== document.body) {
-      if (target.dataset.mappingEnabled || target.dataset.interactionEnabled) {
+      if (target.dataset.mappingEnabled || target.dataset.interactionEnabled || target.dataset.apiEnabled) {
         if (stateUpdateInterval) { cancelAnimationFrame(stateUpdateInterval); stateUpdateInterval = null; }
         currentHoveredElement = null;
         tooltip.style.display = 'none';
@@ -672,9 +866,10 @@ function initMappingOverlay() {
 
   // 初期化
   highlightElements();
-  console.log(`Mapping Overlay initialized. ${mappingCount} elements detected.`);
+  console.log(`Mapping Overlay initialized. ${totalCount} elements detected (Figma: ${mappingCount}, API: ${apiCount}).`);
   console.log('- データタイプ: 破線枠');
   console.log('- インタラクション: 実線枠');
+  console.log('- APIマッピング: 動的タイプ内に表示');
   console.log('- 凡例クリックでフィルタリング');
 }
 

@@ -1,5 +1,5 @@
 ---
-paths: ".agents/rules/**/*.md"
+paths:  ".agents/rules/**/*.md"
 ---
 
 

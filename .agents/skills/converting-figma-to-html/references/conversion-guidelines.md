@@ -6,6 +6,46 @@
 
 ---
 
+## 0. 画面レベルのdata属性
+
+### ルール
+
+ルート要素には画面全体を識別するためのdata属性を付与する。
+
+### 必須属性
+
+| 属性 | 用途 | 値の例 |
+|------|------|--------|
+| `data-figma-node` | FigmaルートノードID | `"2350:6396"` |
+| `data-figma-filekey` | FigmaファイルキーまたはブランチキーID | `"fLUFVpvmfpCJBrgzYHi5PB"` |
+| `data-figma-name` | Figmaでの画面名（コンポーネント名） | `"チュートリアル"` |
+| `data-figma-url` | Figmaへのリンク | `"https://www.figma.com/design/..."` |
+| `data-screen-id` | 画面識別ID（ハイフン区切り） | `"tutorial"` |
+| `data-screen-name` | 画面表示名（日本語可） | `"チュートリアル"` |
+
+### 実装例
+
+```html
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>チュートリアル</title>
+</head>
+<body data-figma-node="2350:6396"
+      data-figma-filekey="fLUFVpvmfpCJBrgzYHi5PB"
+      data-figma-name="チュートリアル"
+      data-figma-url="https://www.figma.com/design/fLUFVpvmfpCJBrgzYHi5PB?node-id=2350:6396"
+      data-screen-id="tutorial"
+      data-screen-name="チュートリアル">
+  <!-- 画面コンテンツ -->
+</body>
+</html>
+```
+
+---
+
 ## 1. アイコン・画像アセットの処理
 
 ### ルール
@@ -186,15 +226,112 @@ curl -H "X-Figma-Token: $FIGMA_TOKEN" \
 ### ルール
 
 - Figmaのデザイントークン（CSS変数形式）はTailwindの固定値に変換
-- 元のトークン名は`data-figma-tokens`属性で保持
+- 元のトークン名は`data-figma-token-*`属性で個別に保持（推奨）
+- または`data-figma-tokens`属性でまとめて保持（従来方式）
 - マッピング表を別途作成し、デザインシステムとの整合性を維持
 
-### 実装例
+### トークン属性の形式
+
+**推奨: 個別属性形式 (`data-figma-token-*`)**
+
+| 属性 | 用途 | 値の例 |
+|------|------|--------|
+| `data-figma-token-bg` | 背景色トークン | `"Background/Main/Default"` |
+| `data-figma-token-color` | テキスト色/アイコン色トークン | `"Text/Default/Default"`, `"Icon/Main/Default"` |
+| `data-figma-token-font` | フォントトークン | `"JP/16 - Bold"` |
+| `data-figma-token-radius` | 角丸トークン | `"Radius/200"` |
+| `data-figma-token-padding` | パディングトークン | `"Space/200"` |
+| `data-figma-token-gap` | ギャップトークン | `"Space/150"` |
+| `data-figma-token-height` | 高さトークン | `"56px"` |
+| `data-figma-token-border` | ボーダートークン | `"Border/Main/Default"` |
+| `data-figma-token-size` | サイズトークン（アイコン等） | `"24px"`, `"32px"` |
+
+### 実装例（推奨形式）
+
+```html
+<!-- ボタン -->
+<button data-figma-node="2350:6410"
+        data-figma-token-bg="Background/Main/Default"
+        data-figma-token-color="Text/Default/On"
+        data-figma-token-font="JP/18 - Bold"
+        data-figma-token-radius="Radius/Full"
+        data-figma-token-padding="Space/200"
+        data-figma-token-height="56px"
+        class="w-full h-14 bg-bg-main-default text-text-default-on font-bold text-lg rounded-full py-4">
+  次へ
+</button>
+
+<!-- コンテナ -->
+<div data-figma-node="2350:6400"
+     data-figma-token-bg="Background/Main/Secondary"
+     data-figma-token-padding="Space/200"
+     data-figma-token-gap="Space/150"
+     data-figma-token-radius="Radius/200"
+     class="flex flex-col gap-3 p-4 bg-bg-main-secondary rounded-2xl">
+  <!-- 内容 -->
+</div>
+
+<!-- アイコン -->
+<span data-figma-node="2350:6420"
+      data-figma-token-color="Icon/Main/Default"
+      data-figma-token-size="24px"
+      data-figma-icon-svg="3428:18627"
+      class="w-6 h-6 text-icon-main-default">
+  <svg viewBox="0 0 24 24"><!-- placeholder --></svg>
+</span>
+```
+
+### 実装例（従来形式）
 
 ```html
 <div class="gap-3 px-4 py-3 bg-[#cfe5fc]"
      data-figma-tokens="background: Background/Main/Secondary, gap: Space/150, padding-x: Space/200, padding-y: Space/150">
 ```
+
+### Tailwind CDN Inline Config パターン
+
+standalone HTML で Figma トークンを活用する場合、Tailwind CDN の inline config を使用：
+
+```html
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          // Semantic color tokens
+          'text-default': {
+            'default': '#24243f',
+            'secondary': '#67717a',
+            'on': '#ffffff',
+          },
+          'bg-main': {
+            'default': '#0070e0',
+            'secondary': '#cfe5fc',
+          },
+        },
+        spacing: {
+          'space-050': '4px',
+          'space-100': '8px',
+          'space-150': '12px',
+          'space-200': '16px',
+        },
+        borderRadius: {
+          'radius-100': '8px',
+          'radius-200': '16px',
+          'radius-full': '9999px',
+        },
+      }
+    }
+  }
+</script>
+```
+
+### トークン取得方法
+
+1. `mcp__figma__get_variable_defs` でFigmaからトークン定義を取得
+2. カラー、スペーシング、角丸、タイポグラフィに分類
+3. Tailwind config の extend にマッピング
 
 ### マッピング優先順位
 
@@ -269,9 +406,21 @@ curl -H "X-Figma-Token: $FIGMA_TOKEN" \
 形式: {trigger}:{action}:{target}
 
 trigger: tap, hover, focus, longpress
-action: navigate, show-modal, close-modal, submit, toggle
-target: 遷移先パス, モーダルID, または対象要素
+action: navigate, show-modal, close-modal, submit, toggle, open-dropdown, select
+target: 遷移先パス, モーダルID, ドロップダウンID, または対象要素
 ```
+
+### state属性の値
+
+| 値 | 説明 |
+|------|------|
+| `default` | 通常状態 |
+| `hover` | ホバー状態 |
+| `active` | クリック/タップ中 |
+| `disabled` | 無効状態 |
+| `loading` | 読み込み中 |
+| `selected` | 選択状態 |
+| `expanded` | 展開状態（ドロップダウン等） |
 
 ### 実装例（画面遷移）
 
@@ -310,6 +459,58 @@ target: 遷移先パス, モーダルID, または対象要素
         data-state="loading">
   保存中...
 </button>
+```
+
+### 実装例（ドロップダウン）
+
+```html
+<!-- ドロップダウントリガー -->
+<button data-figma-node="4296:28417"
+        data-figma-states="default,hover,active,expanded"
+        data-figma-interaction="tap:open-dropdown:period-dropdown"
+        data-state="default"
+        class="flex items-center gap-2">
+  <span>過去7日間</span>
+  <svg class="w-4 h-4"><!-- chevron --></svg>
+</button>
+
+<!-- ドロップダウンメニュー（hidden by default） -->
+<div id="period-dropdown"
+     class="hidden absolute bg-white shadow-lg rounded-lg"
+     data-figma-node="4296:28500">
+  <button data-figma-interaction="tap:select:7days">過去7日間</button>
+  <button data-figma-interaction="tap:select:30days">過去30日間</button>
+  <button data-figma-interaction="tap:select:all">すべて</button>
+</div>
+```
+
+### 実装例（ボトムナビゲーション）
+
+```html
+<nav data-figma-node="4296:28350"
+     data-figma-name="BottomNavigation"
+     class="fixed bottom-0 w-full bg-white border-t">
+  <div class="flex justify-around py-2">
+    <button data-figma-states="default,selected"
+            data-figma-interaction="tap:navigate:/chat"
+            data-figma-navigate="/chat"
+            data-state="default">
+      <span class="w-6 h-6" data-figma-icon-svg="3428:18620">
+        <svg><!-- chat icon --></svg>
+      </span>
+      <span>チャット</span>
+    </button>
+    <button data-figma-states="default,selected"
+            data-figma-interaction="tap:navigate:/history"
+            data-figma-navigate="/history"
+            data-state="selected">
+      <span class="w-6 h-6" data-figma-icon-svg="3428:18625">
+        <svg><!-- history icon --></svg>
+      </span>
+      <span>履歴</span>
+    </button>
+  </div>
+</nav>
 ```
 
 ### UI状態のCSS実装
@@ -471,6 +672,46 @@ target: 遷移先パス, モーダルID, または対象要素
 詳細は [content-classification.md](./content-classification.md) を参照。
 
 **概要**: HTMLコンテンツを静的/動的/リストに分類し、データ要件を整理する方法。
+
+### コンテンツ分類属性
+
+| 属性 | 用途 | 値の例 |
+|------|------|--------|
+| `data-figma-content-id` | 一意識別子（snake_case） | `"badge_text"`, `"nav_back_icon"` |
+| `data-figma-content-type` | コンテンツ種別 | `"text"`, `"icon"`, `"ui_state"`, `"number"` |
+| `data-figma-content-classification` | 分類 | `"static"`, `"dynamic"`, `"dynamic_list"`, `"config"`, `"asset"`, `"user_asset"` |
+| `data-figma-content-data-type` | データ型 | `"string"`, `"number"`, `"svg"`, `"date"` |
+| `data-figma-content-value` | Figmaでの表示値 | `"テスト運用版"` |
+| `data-figma-content-notes` | 補足説明 | `"最終ステップでは「はじめる」に変化"` |
+
+### 実装例
+
+```html
+<!-- 静的テキスト -->
+<span data-figma-node="2350:6414"
+      data-figma-content-id="badge_text"
+      data-figma-content-type="text"
+      data-figma-content-value="テスト運用版"
+      data-figma-content-classification="static"
+      data-figma-content-data-type="string">テスト運用版</span>
+
+<!-- 動的リスト項目 -->
+<div data-figma-node="4296:28471"
+     data-figma-content-id="history_item"
+     data-figma-content-type="list_item"
+     data-figma-content-classification="dynamic_list"
+     data-figma-content-data-type="object"
+     data-figma-content-notes="履歴一覧の各項目、0件時は空表示">
+  <span data-figma-content-id="history_title"
+        data-figma-content-type="text"
+        data-figma-content-classification="dynamic"
+        data-figma-content-data-type="string">質問タイトル</span>
+  <span data-figma-content-id="history_date"
+        data-figma-content-type="date"
+        data-figma-content-classification="dynamic"
+        data-figma-content-data-type="date">2024/01/15</span>
+</div>
+```
 
 ---
 

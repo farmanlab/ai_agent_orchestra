@@ -476,7 +476,39 @@ validate_file_naming() {
     log_success "File naming validation complete"
 }
 
-# 7. YAML構文の検証
+# 7. 参照リンクの検証
+validate_references() {
+    log_info "Validating file references..."
+
+    local check_script="$SCRIPT_DIR/../check-references.sh"
+    if [ ! -f "$check_script" ]; then
+        log_warning "check-references.sh not found, skipping reference validation"
+        return
+    fi
+
+    # check-references.sh を実行して結果を取得
+    local result
+    result=$("$check_script" "$AGENTS_DIR" 2>&1)
+    local exit_code=$?
+
+    if [ $exit_code -eq 0 ]; then
+        log_success "All file references are valid"
+    else
+        # Invalid references の数を抽出
+        local invalid_count=$(echo "$result" | grep "Invalid:" | grep -oE '[0-9]+' | head -1)
+        invalid_count=${invalid_count:-0}
+
+        if [ "$invalid_count" -gt 0 ]; then
+            log_error "Found $invalid_count invalid file reference(s)"
+            # 詳細を表示
+            echo "$result" | grep -A 100 "Invalid references found:" | grep "^/" | while read -r line; do
+                log_error "  $line"
+            done
+        fi
+    fi
+}
+
+# 8. YAML構文の検証
 validate_yaml_syntax() {
     log_info "Validating YAML syntax..."
 
@@ -527,6 +559,8 @@ main() {
     validate_commands
     echo ""
     validate_file_naming
+    echo ""
+    validate_references
     echo ""
     validate_yaml_syntax
 

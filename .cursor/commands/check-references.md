@@ -1,0 +1,1 @@
+../../.agents/commands/check-references.md

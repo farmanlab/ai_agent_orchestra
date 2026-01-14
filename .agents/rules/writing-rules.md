@@ -47,6 +47,70 @@ paths: "**/*.{ts,tsx}"                             # 対象ファイルパター
 
 **Note**: sync 実行時にエージェント別形式に自動変換されます。
 
+## Claude Code メモリ階層
+
+Claude Codeは複数レベルでルールを読み込む:
+
+| 優先度 | 場所 | 用途 |
+|--------|------|------|
+| 1 (高) | `CLAUDE.md` | プロジェクト固有ルール |
+| 2 | `.claude/rules/*.md` | プロジェクト詳細ルール |
+| 3 | `~/.claude/CLAUDE.md` | ユーザー共通ルール |
+| 4 (低) | `~/.claude/rules/*.md` | ユーザー詳細ルール |
+
+**ルートレベル `CLAUDE.md`:**
+- 最優先で読み込まれる
+- プロジェクト概要、コーディング規約を記述
+
+**インポート構文:**
+
+```markdown
+# プロジェクトルール
+
+@.claude/rules/architecture.md
+@.claude/rules/testing.md
+```
+
+## Cursor Rules
+
+Cursor では2つの形式をサポート:
+
+### .mdc 形式（新形式）
+
+```
+.cursor/rules/
+├── architecture.mdc
+└── testing.mdc
+```
+
+**Frontmatter:**
+
+```yaml
+---
+description: When to apply this rule
+globs: ["**/*.ts", "**/*.tsx"]
+alwaysApply: false
+---
+```
+
+| フィールド | 必須 | 説明 |
+|-----------|------|------|
+| `description` | ✓ | 適用トリガーの説明 |
+| `globs` | - | 対象ファイルパターン |
+| `alwaysApply` | - | 常時適用するか（default: false） |
+
+### .md 形式（従来形式）
+
+従来の `.cursor/rules/*.md` も引き続きサポート。
+
+### Team Rules（チーム共有）
+
+`.cursor/rules/` をリポジトリにコミットすることでチーム共有:
+
+- プロジェクトルールとして自動読み込み
+- ユーザールール（`~/.cursor/rules/`）より優先
+- `.cursorignore` でフィルタリング可能
+
 ## ファイルサイズ
 
 **推奨: 500行以下**

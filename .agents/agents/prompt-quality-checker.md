@@ -343,7 +343,7 @@ Grep: "must|should|always|never" で検索し、頻出パターンを分析
 
 このエージェントは `ensuring-prompt-quality` スキルを活用しています:
 
-- **[SKILL.md](../../skills/ensuring-prompt-quality/SKILL.md)**: スキル概要
-- **[validation-criteria.md](../../skills/ensuring-prompt-quality/validation-criteria.md)**: 検証観点の詳細
-- **[best-practices.md](../../skills/ensuring-prompt-quality/best-practices.md)**: 公式ベストプラクティス
-- **[examples.md](../../skills/ensuring-prompt-quality/examples.md)**: 良い例・悪い例
+- **[SKILL.md](../skills/ensuring-prompt-quality/SKILL.md)**: スキル概要
+- **[validation-criteria.md](../skills/ensuring-prompt-quality/references/validation-criteria.md)**: 検証観点の詳細
+- **[best-practices.md](../skills/ensuring-prompt-quality/references/best-practices.md)**: 公式ベストプラクティス
+- **[examples.md](../skills/ensuring-prompt-quality/references/examples.md)**: 良い例・悪い例

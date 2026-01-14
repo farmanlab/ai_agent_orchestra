@@ -231,7 +231,7 @@ spec.md「コンテンツ分析」セクションから**全ての要素**を抽
 
 ユーザーが要求した場合、HTMLにマッピング可視化オーバーレイを追加：
 
-1. テンプレートを読み込み: `templates/mapping-overlay.js`
+1. テンプレートを読み込み: `assets/mapping-overlay.js`
 2. マッピングデータを挿入
 3. HTMLに `<script src="mapping-overlay.js"></script>` を追加
 
@@ -408,5 +408,5 @@ OpenAPI仕様書がある場合：
 - **[workflow.md](references/workflow.md)**: 詳細なワークフロー
 - **[api-patterns.md](references/api-patterns.md)**: APIパターン集
 - **[section-template.md](references/section-template.md)**: セクション出力テンプレート
-- **[mapping-overlay.js](templates/mapping-overlay.js)**: オーバーレイテンプレート
+- **[mapping-overlay.js](assets/mapping-overlay.js)**: オーバーレイテンプレート
 - **[managing-screen-specs](../managing-screen-specs/SKILL.md)**: 仕様書管理スキル

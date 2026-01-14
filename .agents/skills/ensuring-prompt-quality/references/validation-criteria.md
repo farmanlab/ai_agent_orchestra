@@ -13,6 +13,7 @@
 5. [Progressive Disclosure](#5-progressive-disclosure段階的開示)
 6. [重複と矛盾の回避](#6-重複と矛盾の回避avoid-duplication--conflicts)
 7. [Workflow & Feedback Loops](#7-workflow--feedback-loopsワークフローとフィードバックループ)
+8. [エージェント固有の検証](#8-エージェント固有の検証)
 
 **技術要件（8-14）**: [validation-criteria-technical.md](validation-criteria-technical.md)
 
@@ -224,4 +225,68 @@ grep -n "Step [0-9]:" [file]
 
 # フィードバックループの存在確認
 grep -ni "if.*fail\|validate\|repeat\|return to" [file]
+```
+
+---
+
+## 8. エージェント固有の検証
+
+### Claude Code Memory Hierarchy
+
+メモリの優先度を理解し、適切な場所に設定を配置しているか確認:
+
+| 優先度 | ファイル | 用途 |
+|--------|---------|------|
+| 1 (最高) | Enterprise Policy | 組織レベルの設定 |
+| 2 | `CLAUDE.md` | プロジェクトメモリ |
+| 3 | `.claude/rules/*.md` | プロジェクトルール |
+| 4 | `~/.claude/rules/*.md` | ユーザーメモリ |
+
+**チェック項目**:
+- [ ] 親ディレクトリの `CLAUDE.md` との重複がないか
+- [ ] `CLAUDE.local.md` は `.gitignore` に含まれているか
+- [ ] インポート構文 `@path/to/file` が5階層以内か
+
+### Cursor Rules
+
+**チェック項目**:
+- [ ] `.cursor/rules/` 内に配置されているか
+- [ ] `.mdc` または `.md` 形式を使用しているか
+- [ ] `globs` フィールドが正しい形式か（`paths` ではない）
+
+### Cursor Subagents
+
+**チェック項目**:
+- [ ] `.cursor/agents/` または `~/.cursor/agents/` に配置されているか
+- [ ] 必須メタデータが含まれているか:
+  - [ ] `name`: エージェント名
+  - [ ] `description`: 第三人称の説明
+- [ ] オプションメタデータが適切か:
+  - [ ] `model`: 使用モデル
+  - [ ] `readonly`: ファイル編集権限
+  - [ ] `is_background`: バックグラウンド実行
+
+### Cursor Team Rules
+
+**チェック項目**:
+- [ ] 優先順位を理解しているか（Team > Project > User）
+- [ ] チーム共有すべき設定と個人設定が分離されているか
+
+### GitHub Copilot Custom Agents
+
+**チェック項目**:
+- [ ] 適切なテンプレートをベースにしているか
+- [ ] タスク固有の指示を避けているか
+
+### allowed-tools 構文 (Agent Skills)
+
+**チェック項目**:
+- [ ] `Bash(pattern:GLOB)` 形式が正しいか
+- [ ] パターンが適切に制限されているか
+
+**検証例**:
+```bash
+# allowed-tools の構文確認
+grep -n "allowed-tools:" [file]
+grep -n "Bash(pattern:" [file]
 ```

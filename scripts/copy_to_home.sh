@@ -284,10 +284,42 @@ interactive_select_agents() {
                 continue
             fi
 
-            # 既存チェック
+            # 既存チェック & 差分チェック
             local exists_mark=""
+            local has_diff=true
             if [ -e "$dest_subdir/$item" ]; then
-                exists_mark=" ${YELLOW}(既存)${NC}"
+                # 差分チェック
+                if [ -d "$item_path" ]; then
+                    # ディレクトリの場合: 全ファイルを比較
+                    has_diff=false
+                    while IFS= read -r src_file; do
+                        local rel="${src_file#$item_path/}"
+                        local dest_file="$dest_subdir/$item/$rel"
+                        if [ ! -f "$dest_file" ] || ! diff -q "$src_file" "$dest_file" > /dev/null 2>&1; then
+                            has_diff=true
+                            break
+                        fi
+                    done < <(find "$item_path" -type f)
+                else
+                    # ファイルの場合
+                    if diff -q "$item_path" "$dest_subdir/$item" > /dev/null 2>&1; then
+                        has_diff=false
+                    fi
+                fi
+
+                if [ "$has_diff" = true ]; then
+                    exists_mark=" ${YELLOW}(変更あり)${NC}"
+                else
+                    exists_mark=" ${GREEN}(同一)${NC}"
+                fi
+            fi
+
+            # 差分がなければ確認をスキップ
+            if [ "$has_diff" = false ]; then
+                if [ "$VERBOSE" = true ]; then
+                    echo -e "  ${GREEN}=${NC} $item_name (同一・スキップ)"
+                fi
+                continue
             fi
 
             echo -e "  ${GREEN}$item_name${NC}$exists_mark"

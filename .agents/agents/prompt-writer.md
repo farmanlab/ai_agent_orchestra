@@ -160,8 +160,8 @@ description: What this command does
 [最小限の例]
 
 ## 詳細ガイド（必要に応じて別ファイルに分離）
-- [patterns.md](patterns.md): パターン集
-- [examples.md](examples.md): 具体例
+- `patterns.md`: パターン集
+- `examples.md`: 具体例
 
 ## Workflow（複雑なタスクの場合）
 Copy this checklist:
@@ -317,8 +317,8 @@ code here
 
 ## 詳細ガイド
 
-- **[patterns.md](patterns.md)**: パターン集
-- **[examples.md](examples.md)**: 具体例
+- **`patterns.md`**: パターン集
+- **`examples.md`**: 具体例
 
 ## Workflow
 
@@ -506,10 +506,10 @@ Agent:
 
 このエージェントは `ensuring-prompt-quality` スキルを活用しています:
 
-- **[SKILL.md](../../skills/ensuring-prompt-quality/SKILL.md)**: スキル概要
-- **[validation-criteria.md](../../skills/ensuring-prompt-quality/validation-criteria.md)**: 検証観点の詳細
-- **[best-practices.md](../../skills/ensuring-prompt-quality/best-practices.md)**: 公式ベストプラクティス
-- **[examples.md](../../skills/ensuring-prompt-quality/examples.md)**: 良い例・悪い例
+- **[SKILL.md](../skills/ensuring-prompt-quality/SKILL.md)**: スキル概要
+- **[validation-criteria.md](../skills/ensuring-prompt-quality/references/validation-criteria.md)**: 検証観点の詳細
+- **[best-practices.md](../skills/ensuring-prompt-quality/references/best-practices.md)**: 公式ベストプラクティス
+- **[examples.md](../skills/ensuring-prompt-quality/references/examples.md)**: 良い例・悪い例
 
 ## 使い方
 

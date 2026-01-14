@@ -1,13 +1,13 @@
 ---
 name: researching-best-practices
-description: Researches official documentation for Claude Code, Cursor, and GitHub Copilot to collect and update best practices. Use when updating ensuring-prompt-quality skill or syncing with latest official guidelines.
+description: Researches official documentation for Agent Skills, Claude Code, Cursor, and GitHub Copilot to collect and update best practices. Use when updating ensuring-prompt-quality skill, writing-*.md rules, or syncing with latest official guidelines.
 tools: ["WebFetch", "WebSearch", "Read", "Write", "Glob", "Grep"]
 skills: [ensuring-prompt-quality]
 ---
 
 # Researching Best Practices Agent
 
-主要AIエージェント（Claude Code、Cursor、GitHub Copilot）の公式ドキュメントからベストプラクティスを収集し、`ensuring-prompt-quality` スキルに反映するエージェントです。
+Agent Skills 標準仕様および主要AIエージェント（Claude Code、Cursor、GitHub Copilot）の公式ドキュメントからベストプラクティスを収集し、`ensuring-prompt-quality` スキルおよび `writing-*.md` ルールに反映するエージェントです。
 
 ## 目次
 
@@ -28,6 +28,15 @@ skills: [ensuring-prompt-quality]
 | Claude Code | https://code.claude.com/docs/en/ | Anthropic公式 |
 | Cursor | https://cursor.com/docs/ | Cursor公式 |
 | GitHub Copilot | https://docs.github.com/en/copilot | GitHub公式 |
+
+### Agent Skills 詳細ページ（必須チェック）
+
+| ページ | URL | 調査対象 |
+|--------|-----|---------|
+| 仕様詳細 | https://agentskills.io/specification | メタデータフィールド、ディレクトリ構成 |
+| What are Skills | https://agentskills.io/what-are-skills | Progressive Disclosure、Zero-context |
+| Best Practices | https://agentskills.io/best-practices | スキル作成のベストプラクティス |
+| Integrate Skills | https://agentskills.io/integrate-skills | ツール統合方法 |
 
 ## Workflow
 
@@ -235,9 +244,10 @@ YYYY-MM-DD
 
 | 項目 | 収集対象 |
 |------|---------|
-| フィールド名 | name, description, paths, globs など |
+| フィールド名 | name, description, paths, globs, allowed-tools など |
 | 型・形式 | string, array, 文字数制限 |
 | 必須/任意 | 必須フィールド、省略可能フィールド |
+| 新規フィールド | license, compatibility, metadata など |
 
 ### ファイル構造
 
@@ -246,6 +256,22 @@ YYYY-MM-DD
 | ディレクトリ | 推奨配置場所 |
 | ファイル名 | 命名規則 |
 | サイズ制限 | 行数、トークン数 |
+
+### ディレクトリ構成（Agent Skills）
+
+| ディレクトリ | チェック項目 |
+|-------------|-------------|
+| `scripts/` | 対応言語、実行方式（Zero-context execution） |
+| `references/` | 推奨ファイル名（REFERENCE.md, FORMS.md）、深さ制限 |
+| `assets/` | 対応ファイル形式（テンプレート、画像、データ） |
+
+### 命名規則チェック
+
+| 項目 | 確認内容 |
+|------|---------|
+| name フィールド | 文字数制限、使用可能文字、ハイフン規則 |
+| ディレクトリ名一致 | name と親ディレクトリ名の一致要件 |
+| 推奨ファイル名 | REFERENCE.md, FORMS.md 等の標準名 |
 
 ### コンテンツ規約
 
@@ -263,8 +289,23 @@ YYYY-MM-DD
 | 新しい機能 | 新しいコマンド、新しい設定項目 |
 | 新しい概念 | 新しいベストプラクティス、新しいパターン |
 | 非推奨 | 削除された機能、非推奨になった機能 |
+| 検証ツール | skills-ref 等の公式検証ツール |
+
+### クロスプラットフォーム互換性
+
+Agent Skills は複数ツールで採用されています。互換性の変化を調査：
+
+| ツール | 確認内容 |
+|--------|---------|
+| Claude Code | 標準準拠状況 |
+| Cursor | 独自拡張の有無 |
+| Gemini CLI | 採用状況 |
+| OpenCode | 採用状況 |
+| VS Code Copilot | 採用状況 |
 
 ## 反映先ファイル
+
+### 主要反映先: ensuring-prompt-quality
 
 ```
 .agents/skills/ensuring-prompt-quality/
@@ -274,6 +315,25 @@ YYYY-MM-DD
     ├── validation-criteria.md  # 検証観点
     └── examples.md             # 良い例・悪い例
 ```
+
+### 追加反映先: writing-*.md ルール
+
+スキル/エージェント/ルール作成規約も更新対象：
+
+```
+.agents/rules/
+├── writing-skills.md           # スキル作成規約
+├── writing-agents.md           # エージェント作成規約
+├── writing-commands.md         # コマンド作成規約
+└── writing-rules.md            # ルール作成規約
+```
+
+| ファイル | 更新対象 |
+|---------|---------|
+| writing-skills.md | メタデータフィールド、ディレクトリ構成、命名規則 |
+| writing-agents.md | Cursor Subagents、モデル指定 |
+| writing-commands.md | 他ツールとの対応 |
+| writing-rules.md | Claude Memory階層、Cursor Rules形式 |
 
 ## 出力形式
 

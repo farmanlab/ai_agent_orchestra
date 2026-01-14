@@ -63,6 +63,7 @@ Quality Validation:
 .agents/rules/     → Rule
 .agents/agents/    → Agent
 .agents/commands/  → Command
+.cursor/agents/    → Cursor Subagent
 ```
 
 ### Step 2: 対応するルールを参照
@@ -129,6 +130,79 @@ head -10 [file]
 # アンチパターン
 grep -n "I can\|You can\|\\\\" [file]
 ```
+
+## エージェント固有機能
+
+### Claude Code Memory Hierarchy
+
+メモリの優先度順（高い順）:
+
+1. **Enterprise Policy**: 組織レベルの設定
+2. **Project Memory**: `CLAUDE.md`（プロジェクトルート）
+3. **Project Rules**: `.claude/rules/*.md`
+4. **User Memory**: `~/.claude/rules/*.md`
+
+**再帰的読み込み**: 親ディレクトリの `CLAUDE.md` も自動読み込み
+
+**CLAUDE.local.md**: `.gitignore` 対象の個人用メモリ
+
+**インポート構文**:
+```markdown
+@docs/architecture.md        # 相対パス
+@~/.claude/preferences.md    # ホームディレクトリ
+```
+- 最大5階層まで
+
+**Quick Memory**: `#` プレフィックスで即座にメモリに追加
+```
+# このプロジェクトでは pnpm を使用
+```
+
+### Cursor Subagents
+
+**保存場所**: `.cursor/agents/` または `~/.cursor/agents/`
+
+**メタデータ**:
+```yaml
+---
+name: code-reviewer
+description: Reviews code for quality and best practices
+model: claude-3-opus         # 使用モデル
+readonly: true               # ファイル編集不可
+is_background: false         # バックグラウンド実行
+---
+```
+
+**特徴**:
+- コンテキスト分離
+- 並列実行サポート
+- 特化した専門性
+
+### Cursor Team Rules
+
+**優先順位**: Team Rules > Project Rules > User Rules
+
+**管理方法**: Cursor ダッシュボードで設定
+
+### GitHub Copilot Custom Agents
+
+**テンプレートライブラリ** (4種類):
+- Your first custom agent
+- Implementation planner
+- Bug fix teammate
+- Cleanup specialist
+
+### allowed-tools 構文詳細 (Agent Skills)
+
+```yaml
+allowed-tools:
+  - Read                     # 全ファイル読み取り可
+  - Write                    # 全ファイル書き込み可
+  - Bash(pattern:npm*)       # npm で始まるコマンドのみ
+  - Bash(pattern:git*)       # git で始まるコマンドのみ
+```
+
+**パターン構文**: `Bash(pattern:GLOB)` 形式で許可するコマンドを制限
 
 ## 参照ファイル
 

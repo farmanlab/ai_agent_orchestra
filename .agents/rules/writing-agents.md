@@ -118,6 +118,29 @@ If validation fails, return to Step 1.
 \```
 ```
 
+## Cursor Subagents
+
+Cursor では `.cursor/agents/` にサブエージェントを配置可能:
+
+```yaml
+---
+name: subagent-name          # 小文字・ハイフン区切り
+description: 使用場面の説明   # Agent の委譲判断に影響
+model: fast | inherit | model-id
+readonly: true               # 読み取り専用（推奨）
+is_background: false         # バックグラウンド実行
+---
+```
+
+**特徴:**
+- コンテキスト分離（独立したトークンウィンドウ）
+- 並列実行可能
+- 特化した専門性
+
+**保存場所:**
+- プロジェクト: `.cursor/agents/`
+- グローバル: `~/.cursor/agents/`
+
 ## テンプレート
 
 ```yaml

@@ -130,7 +130,7 @@ curl -H "X-Figma-Token: $FIGMA_TOKEN" \
 
 ### アイコンコンテナの配置ルール（重要）
 
-**Figma MCPで明確な配置指定がない場合、アイコンはコンテナ内で中央配置をデフォルトとする。**
+**⚠️ Figma MCPで明確な配置指定がない場合、アイコンはコンテナ内で中央配置をデフォルトとする。**
 
 | アイコンの配置方法 | 実装 |
 |-------------------|------|
@@ -141,9 +141,14 @@ curl -H "X-Figma-Token: $FIGMA_TOKEN" \
 ### 実装例（アイコンコンテナ）
 
 ```html
-<!-- ✅ divで囲む場合 -->
+<!-- ✅ 必須パターン: divで囲む場合 -->
 <div class="w-6 h-6 flex items-center justify-center">
   <img src="icon.svg" class="max-w-full max-h-full" alt="">
+</div>
+
+<!-- ✅ overflow-hidden がある場合も flex 指定を追加 -->
+<div class="w-6 h-6 flex items-center justify-center overflow-hidden">
+  <img src="icon.svg" ... />
 </div>
 
 <!-- ✅ ボタン内のアイコン（親がflex） -->
@@ -151,6 +156,23 @@ curl -H "X-Figma-Token: $FIGMA_TOKEN" \
   <img src="icon.svg" class="w-6 h-6 object-contain" alt="">
   <span>ラベル</span>
 </button>
+
+<!-- ❌ 禁止パターン: flex指定なし -->
+<div class="w-6 h-6">
+  <img src="icon.svg" ... />
+</div>
+```
+
+### アイコンコンテナのチェックリスト（必須）
+
+**変換完了時に以下を必ず確認すること:**
+
+```
+Icon Container Check:
+- [ ] すべてのアイコンコンテナに `flex items-center justify-center` がある
+- [ ] `overflow-hidden` がある場合も flex 指定が含まれている
+- [ ] ボタン内のアイコン+テキストが同一センターライン上にある
+- [ ] アイコンがコンテナ内で垂直・水平中央に配置されている
 ```
 
 ### 理由
@@ -158,11 +180,107 @@ curl -H "X-Figma-Token: $FIGMA_TOKEN" \
 - Figmaでは要素は常に中央に配置されているように見えるが、明示的な指定がないことが多い
 - HTMLでは明示的に配置を指定しないと左上に寄る
 - デフォルトで中央配置にすることで、Figmaデザインとの乖離を防ぐ
+- **アイコンとテキストのセンターラインがずれる問題を防止**
 
 ### 注意事項
 
 - FigmaアセットURLは**7日間で期限切れ**になるため、実装時に再取得またはダウンロードが必要
 - 後処理スクリプトで`data-figma-icon-svg`属性からURLを抽出し、アセットをダウンロード可能
+
+### SVGアイコンの後処理（必須）
+
+**⚠️ Figma APIからダウンロードしたSVGは必ず以下の後処理を行うこと**
+
+Figma APIはSVGを `width="100%" height="100%"` と `preserveAspectRatio="none"` でエクスポートする。
+これにより、アイコンがコンテナサイズに引き伸ばされてアスペクト比が崩れる。
+
+| 処理 | 変更前 | 変更後 |
+|------|--------|--------|
+| **寸法の固定化** | `width="100%" height="100%"` | `width="{viewBox幅}" height="{viewBox高さ}"` |
+| **アスペクト比** | `preserveAspectRatio="none"` | 削除 |
+| **不要属性** | `overflow="visible" style="display: block;"` | 削除 |
+
+**変換例:**
+
+```xml
+<!-- ❌ Figma APIからの出力（問題あり） -->
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible"
+     style="display: block;" viewBox="0 0 20 18" fill="none" xmlns="...">
+  <path .../>
+</svg>
+
+<!-- ✅ 後処理後（正しい形式） -->
+<svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="...">
+  <path .../>
+</svg>
+```
+
+**寸法の取得方法:**
+- `viewBox="0 0 {width} {height}"` から幅と高さを抽出
+- 例: `viewBox="0 0 20 18"` → `width="20" height="18"`
+
+**検証・修正スクリプト:**
+```bash
+# SVGファイルの問題を検出
+.agents/skills/converting-figma-to-html/scripts/svg-validate.sh assets/
+
+# SVGファイルの問題を自動修正
+.agents/skills/converting-figma-to-html/scripts/svg-fix.sh assets/
+```
+
+### アイコンの `<img>` タグサイズ指定
+
+**⚠️ アイコンを `<img>` タグで表示する場合、サイズ指定に注意が必要**
+
+| 方法 | 推奨度 | 説明 |
+|------|--------|------|
+| **実寸指定** | ⭐⭐⭐ | SVGのviewBox寸法に合わせた固定サイズ |
+| **object-contain** | ⭐⭐ | コンテナサイズ固定でアスペクト比維持 |
+| **固定サイズのみ** | ❌ | アスペクト比が崩れる可能性あり |
+
+**推奨パターン（実寸指定）:**
+
+SVGの `viewBox` 寸法に合わせてサイズを指定する:
+
+```html
+<!-- viewBox="0 0 20 18" のSVG → w-5 h-[18px] -->
+<img src="assets/audio.svg" class="w-5 h-[18px]" alt="音声" />
+
+<!-- viewBox="0 0 22 17" のSVG → w-[22px] h-[17px] -->
+<img src="assets/invisible.svg" class="w-[22px] h-[17px]" alt="非表示" />
+
+<!-- viewBox="0 0 16 20" のSVG → w-4 h-5 -->
+<img src="assets/bookmark.svg" class="w-4 h-5" alt="ブックマーク" />
+```
+
+**代替パターン（object-contain）:**
+
+コンテナサイズを固定しつつアスペクト比を維持:
+
+```html
+<div class="w-6 h-6 flex items-center justify-center">
+  <img src="assets/icon.svg" class="max-w-full max-h-full object-contain" alt="" />
+</div>
+```
+
+**❌ 避けるべきパターン:**
+
+```html
+<!-- 20x18のSVGを24x24に引き伸ばしてしまう -->
+<img src="assets/audio.svg" class="w-6 h-6" alt="音声" />
+```
+
+**アイコンサイズ確認方法:**
+
+```bash
+# SVGのviewBox寸法を一括確認
+grep -o 'viewBox="[^"]*"' assets/*.svg
+
+# 出力例:
+# assets/audio.svg:viewBox="0 0 20 18"      → w-5 h-[18px]
+# assets/bookmark.svg:viewBox="0 0 16 20"   → w-4 h-5
+# assets/message.svg:viewBox="0 0 22 20"    → w-[22px] h-5
+```
 
 ---
 

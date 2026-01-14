@@ -30,10 +30,10 @@ Figmaデザインをプロダクション対応のHTMLファイルに変換し�
 
 詳細な変換手順とガイドラインは [converting-figma-to-html](../skills/converting-figma-to-html/SKILL.md) スキルを参照してください：
 
-- **[workflow.md](../skills/converting-figma-to-html/workflow.md)**: Figma MCPツールの実行順序と各ステップの詳細
-- **[conversion-guidelines.md](../skills/converting-figma-to-html/conversion-guidelines.md)**: 変換時の判断基準と処理ルール
-- **[quick-reference.md](../skills/converting-figma-to-html/quick-reference.md)**: data属性・命名規則のクイックリファレンス
-- **[content-classification.md](../skills/converting-figma-to-html/content-classification.md)**: コンテンツ分類体系
+- **[workflow.md](../skills/converting-figma-to-html/references/workflow.md)**: Figma MCPツールの実行順序と各ステップの詳細
+- **[conversion-guidelines.md](../skills/converting-figma-to-html/references/conversion-guidelines.md)**: 変換時の判断基準と処理ルール
+- **[quick-reference.md](../skills/converting-figma-to-html/references/quick-reference.md)**: data属性・命名規則のクイックリファレンス
+- **[content-classification.md](../skills/converting-figma-to-html/references/content-classification.md)**: コンテンツ分類体系
 
 ## ワークフロー概要
 
@@ -124,7 +124,7 @@ _Hover, _Active, _Disabled, _Selected
 
 ### Step 4: HTMLへの変換
 
-変換ルールの詳細は [conversion-guidelines.md](../skills/converting-figma-to-html/conversion-guidelines.md) を参照。
+変換ルールの詳細は [conversion-guidelines.md](../skills/converting-figma-to-html/references/conversion-guidelines.md) を参照。
 
 **主要ルール**:
 - セマンティックHTML + Tailwind CSS
@@ -272,7 +272,7 @@ const MAPPING_DATA = {
 
 ### Step 6: spec.md の更新
 
-`spec.md` の「コンテンツ分析」セクションを更新。詳細は [content-classification.md](../skills/converting-figma-to-html/content-classification.md) を参照。
+`spec.md` の「コンテンツ分析」セクションを更新。詳細は [content-classification.md](../skills/converting-figma-to-html/references/content-classification.md) を参照。
 
 **更新セクション**: コンテンツ一覧、リストデータ、分類集計
 

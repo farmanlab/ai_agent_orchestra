@@ -123,9 +123,9 @@ SKILL.md → patterns.md (1階層)
 
 ## 詳細ガイド
 
-- **[patterns.md](patterns.md)**: 一般的な処理パターン
-- **[edge-cases.md](edge-cases.md)**: エッジケースの対処法
-- **[examples.md](examples.md)**: 実装例
+- **`patterns.md`**: 一般的な処理パターン
+- **`edge-cases.md`**: エッジケースの対処法
+- **`examples.md`**: 実装例
 
 ## クイックスタート
 

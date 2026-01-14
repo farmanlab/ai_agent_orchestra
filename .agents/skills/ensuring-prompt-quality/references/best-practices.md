@@ -251,7 +251,38 @@ ALWAYS use this exact template:
 
 共通原則の上に、各エージェントが持つ固有の要件です。
 
-### Claude Skills/Agents 固有
+### Claude Code 固有
+
+#### Memory Hierarchy（優先度順）
+
+1. **Enterprise Policy**: 組織レベルの設定（最高優先度）
+2. **Project Memory**: `CLAUDE.md`（プロジェクトルート）
+3. **Project Rules**: `.claude/rules/*.md`
+4. **User Memory**: `~/.claude/rules/*.md`
+
+#### 再帰的読み込み
+
+親ディレクトリの `CLAUDE.md` も自動的に読み込まれる。
+
+#### CLAUDE.local.md
+
+`.gitignore` 対象の個人用メモリファイル。チームに共有しない設定を記述。
+
+#### インポート構文
+
+```markdown
+@docs/architecture.md        # 相対パスでインポート
+@~/.claude/preferences.md    # ホームディレクトリからインポート
+```
+
+- 最大5階層までの深さ制限
+
+#### Quick Memory
+
+`#` プレフィックスで即座にメモリに追加:
+```
+# このプロジェクトでは pnpm を使用
+```
 
 #### 命名規則
 
@@ -312,6 +343,18 @@ description: ...    # 1024文字以内、空でない、XMLタグなし
 
 **公式引用**: "Use fully qualified tool names (ServerName:tool_name) for MCP tools"
 
+#### allowed-tools 構文詳細
+
+```yaml
+allowed-tools:
+  - Read                     # 全ファイル読み取り可
+  - Write                    # 全ファイル書き込み可
+  - Bash(pattern:npm*)       # npm で始まるコマンドのみ
+  - Bash(pattern:git*)       # git で始まるコマンドのみ
+```
+
+**パターン構文**: `Bash(pattern:GLOB)` 形式で許可するコマンドを制限
+
 ---
 
 ### Cursor 固有
@@ -320,11 +363,39 @@ description: ...    # 1024文字以内、空でない、XMLタグなし
 
 ```
 .cursor/rules/
-├── rule-name/
-│   ├── RULE.md        # メインルール
-│   ├── patterns.md    # 詳細パターン
-│   └── examples.md    # 具体例
+├── rule-name.mdc    # .mdc または .md ファイル形式
+├── rule-name.md
+└── another-rule/
+    ├── RULE.md        # メインルール
+    ├── patterns.md    # 詳細パターン
+    └── examples.md    # 具体例
 ```
+
+#### Subagents
+
+**保存場所**: `.cursor/agents/` または `~/.cursor/agents/`
+
+**メタデータ**:
+```yaml
+---
+name: code-reviewer
+description: Reviews code for quality and best practices
+model: claude-3-opus         # 使用モデル
+readonly: true               # ファイル編集不可
+is_background: false         # バックグラウンド実行
+---
+```
+
+**特徴**:
+- コンテキスト分離: 各サブエージェントは独自のコンテキストを持つ
+- 並列実行: 複数のサブエージェントを同時実行可能
+- 特化した専門性: 特定タスクに特化したエージェントを定義
+
+#### Team Rules
+
+**優先順位**: Team Rules > Project Rules > User Rules
+
+**管理方法**: Cursor ダッシュボードで設定
 
 #### Frontmatter 形式
 
@@ -373,6 +444,15 @@ applyTo: "**/*.ts,**/*.tsx"  # カンマ区切り
 ---
 ```
 
+#### Custom Agents テンプレートライブラリ
+
+4つのテンプレートが用意されている:
+
+1. **Your first custom agent**: 初心者向けの基本テンプレート
+2. **Implementation planner**: 実装計画を立てるエージェント
+3. **Bug fix teammate**: バグ修正を支援するエージェント
+4. **Cleanup specialist**: コード整理・リファクタリングを行うエージェント
+
 ---
 
 ## クイックリファレンス
@@ -394,15 +474,18 @@ applyTo: "**/*.ts,**/*.tsx"  # カンマ区切り
 
 ### エージェント別の主な違い
 
-| 項目 | Claude Skills | Cursor | Copilot |
-|-----|--------------|--------|---------|
+| 項目 | Claude Code | Cursor | Copilot |
+|-----|------------|--------|---------|
 | **最大サイズ** | 500行 (SKILL.md) | 500行 | 2ページ (~1000行) |
 | **命名規則** | gerund形式 (-ing) | - | - |
 | **description** | 第三人称 + トリガー | - | - |
 | **Frontmatter** | name, description, allowed-tools | description, alwaysApply, globs | applyTo |
 | **配列形式** | カンマ区切り文字列 | カンマ区切り文字列 | カンマ区切り文字列 |
 | **MCPツール** | 完全修飾名必須 | - | - |
-| **特記事項** | - | `.cursor/rules/` 構造 | タスク非依存性を特に強調 |
+| **Rules格納場所** | `.claude/rules/` | `.cursor/rules/` | `.github/` |
+| **ルール優先度** | Enterprise > Project > User | Team > Project > User | - |
+| **Subagents** | `.agents/agents/` | `.cursor/agents/` | テンプレートライブラリ |
+| **特記事項** | Memory Hierarchy, Quick Memory | Team Rules, コンテキスト分離 | タスク非依存性を特に強調 |
 
 ---
 

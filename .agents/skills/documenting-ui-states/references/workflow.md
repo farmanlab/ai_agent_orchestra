@@ -268,7 +268,7 @@ stateDiagram-v2
 
 ### テンプレート
 
-[output-template.md](output-template.md) を参照。
+出力テンプレートは [REFERENCE.md](REFERENCE.md) を参照。
 
 ### 検証チェックリスト
 

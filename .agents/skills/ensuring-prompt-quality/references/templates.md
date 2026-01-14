@@ -81,8 +81,8 @@ code here
 
 ## References
 
-- **[patterns.md](patterns.md)**: Pattern collection
-- **[examples.md](examples.md)**: Concrete examples
+- **`patterns.md`**: Pattern collection
+- **`examples.md`**: Concrete examples
 
 ## Workflow
 

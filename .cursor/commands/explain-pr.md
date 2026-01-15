@@ -1,1 +1,0 @@
-../../.agents/commands/explain-pr.md

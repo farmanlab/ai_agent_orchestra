@@ -92,7 +92,7 @@ init_dirs() {
     mkdir -p "$REPO_ROOT/.claude"/{rules,agents,commands}
     log_success "Created .claude/ directory structure"
 
-    mkdir -p "$REPO_ROOT/.cursor"/{rules,commands}
+    mkdir -p "$REPO_ROOT/.cursor"/{rules,agents}
     log_success "Created .cursor/ directory structure"
 
     mkdir -p "$REPO_ROOT/.github"/{instructions,prompts}
@@ -111,7 +111,7 @@ clean_generated() {
         [ -d "$REPO_ROOT/.claude/agents" ] && echo "  .claude/agents/"
         [ -d "$REPO_ROOT/.claude/commands" ] && echo "  .claude/commands/"
         [ -d "$REPO_ROOT/.cursor/rules" ] && echo "  .cursor/rules/"
-        [ -d "$REPO_ROOT/.cursor/commands" ] && echo "  .cursor/commands/"
+        [ -d "$REPO_ROOT/.cursor/agents" ] && echo "  .cursor/agents/"
         [ -d "$REPO_ROOT/.github/instructions" ] && echo "  .github/instructions/"
         [ -d "$REPO_ROOT/.github/prompts" ] && echo "  .github/prompts/"
         [ -f "$REPO_ROOT/AGENTS.md" ] && echo "  AGENTS.md"
@@ -120,7 +120,7 @@ clean_generated() {
     fi
 
     rm -rf "$REPO_ROOT/.claude/rules" "$REPO_ROOT/.claude/agents" "$REPO_ROOT/.claude/commands"
-    rm -rf "$REPO_ROOT/.cursor/rules" "$REPO_ROOT/.cursor/commands"
+    rm -rf "$REPO_ROOT/.cursor/rules" "$REPO_ROOT/.cursor/agents"
     rm -rf "$REPO_ROOT/.github/instructions" "$REPO_ROOT/.github/prompts"
     rm -f "$REPO_ROOT/CLAUDE.md" "$REPO_ROOT/AGENTS.md"
 
@@ -175,13 +175,13 @@ prune_file() {
             # skills はディレクトリの場合がある
             local skill_name=$(echo "$target_path" | cut -d'/' -f2)
             targets+=("$REPO_ROOT/.claude/skills/$skill_name")
-            targets+=("$REPO_ROOT/.cursor/skills/$skill_name")
             targets+=("$REPO_ROOT/.github/skills/$skill_name")
+            # Note: Cursor は .claude/ から直接読み込むため cursor/skills は不要
             ;;
         commands)
             targets+=("$REPO_ROOT/.claude/commands/$filename")
-            targets+=("$REPO_ROOT/.cursor/commands/$filename")
             targets+=("$REPO_ROOT/.github/prompts/$filename")
+            # Note: Cursor は .claude/ から直接読み込むため cursor/commands は不要
             ;;
         *)
             log_warning "Unknown file type: $file_type"
@@ -319,6 +319,32 @@ sync_to_cursor() {
         return
     fi
 
+    # 既存の .cursor/skills/ と .cursor/commands/ をクリーンアップ
+    # (.agents/ または .claude/ に存在するものを削除)
+    for dir_type in skills commands; do
+        cursor_dir="$REPO_ROOT/.cursor/$dir_type"
+        if [ -d "$cursor_dir" ]; then
+            log_verbose "Cleaning up .cursor/$dir_type/..."
+            for item in "$cursor_dir"/*; do
+                [ -e "$item" ] || continue
+                item_name=$(basename "$item")
+                # .agents/ または .claude/ に存在するか確認
+                if [ -e "$REPO_ROOT/.agents/$dir_type/$item_name" ] || \
+                   [ -d "$REPO_ROOT/.agents/$dir_type/$item_name" ] || \
+                   [ -e "$REPO_ROOT/.claude/$dir_type/$item_name" ] || \
+                   [ -d "$REPO_ROOT/.claude/$dir_type/$item_name" ]; then
+                    rm -rf "$item"
+                    log_verbose "Removed .cursor/$dir_type/$item_name (exists in .agents/ or .claude/)"
+                fi
+            done
+            # フォルダが空になったら削除
+            if [ -z "$(ls -A "$cursor_dir" 2>/dev/null)" ]; then
+                rmdir "$cursor_dir"
+                log_verbose "Removed empty .cursor/$dir_type/"
+            fi
+        fi
+    done
+
     if [ ! -f "$SCRIPT_DIR/to-cursor.sh" ]; then
         log_error "to-cursor.sh not found"
         return 1
@@ -332,20 +358,8 @@ sync_to_cursor() {
         "$SCRIPT_DIR/to-cursor.sh" > /dev/null 2>&1
     fi
 
-    # Skills symlinks (file-level)
-    mkdir -p "$REPO_ROOT/.cursor/skills"
-    for skill_dir in "$REPO_ROOT/.agents/skills"/*/; do
-        if [ -d "$skill_dir" ]; then
-            skill_name=$(basename "$skill_dir")
-            target="$REPO_ROOT/.cursor/skills/$skill_name"
-            if [ ! -L "$target" ]; then
-                ln -sf "../../.agents/skills/$skill_name" "$target"
-                log_verbose "Created .cursor/skills/$skill_name symlink"
-            fi
-        fi
-    done
-
-    # Agents symlinks (file-level)
+    # Note: skills と commands は Cursor が .claude/ から直接読み込むため sync 不要
+    # agents symlinks (file-level) - agents は引き続き必要
     mkdir -p "$REPO_ROOT/.cursor/agents"
     for agent_file in "$REPO_ROOT/.agents/agents"/*.md; do
         if [ -f "$agent_file" ]; then

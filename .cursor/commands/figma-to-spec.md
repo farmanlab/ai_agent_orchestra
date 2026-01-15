@@ -1,1 +1,0 @@
-../../.agents/commands/figma-to-spec.md

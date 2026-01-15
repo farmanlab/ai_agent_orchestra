@@ -209,38 +209,14 @@ fi
 # fi
 # ==============================================================================
 
-# Note: Skills はファイルレベルのシンボリックリンクで管理（sync.sh で作成）
-
-# Commands 変換
-echo ""
-echo "Converting Commands..."
-if [ -d "$AGENTS_DIR/commands" ]; then
-    mkdir -p "$CURSOR_DIR/commands"
-
-    find "$AGENTS_DIR/commands" -type f -name "*.md" | while read -r command_file; do
-        filename=$(basename "$command_file")
-        relative_path="${command_file#$AGENTS_DIR/}"
-        target="$CURSOR_DIR/commands/$filename"
-
-        echo "  Processing: $filename"
-
-        # 既存のシンボリックリンクまたはファイルを削除
-        [ -L "$target" ] && rm "$target"
-        [ -f "$target" ] && rm "$target"
-
-        # シンボリックリンクを作成
-        rel_path="../../.agents/$relative_path"
-        ln -s "$rel_path" "$target"
-
-        echo "    → $target (symlink)"
-    done
-fi
+# Note: Skills と Commands は Cursor が .claude/ から直接読み込むため sync 不要
+# Agents は sync.sh でシンボリックリンクを作成
 
 echo ""
 echo "=== Cursor conversion complete ==="
 echo ""
 echo "Generated files:"
 echo "  .cursor/rules/*.mdc (rules)"
-echo "  .cursor/commands/*.md (commands)"
-# [FUTURE] Cursor が新形式に対応したら出力を以下に変更:
-# echo "  .cursor/rules/*/RULE.mdc (rules)"
+echo "  .cursor/agents/*.md (agents, symlinks)"
+echo ""
+echo "Note: skills と commands は .claude/ から直接読み込まれます"

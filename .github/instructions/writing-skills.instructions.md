@@ -48,7 +48,7 @@ name: pdf--processing    # 連続ハイフン禁止
 name: my-skill           # ディレクトリが other-name/ なら不一致
 ```
 
-## ディレクトリ構成
+### ディレクトリ構成
 
 ```
 .agents/skills/
@@ -104,15 +104,13 @@ references/
 ├── REFERENCE.md      # 技術リファレンス（推奨）
 ├── FORMS.md          # フォームテンプレート（推奨）
 ├── patterns.md       # パターン集
-├── examples.md       # 具体例
-└── troubleshooting.md # トラブルシューティング
+└── examples.md       # 具体例
 ```
 
 **ベストプラクティス**:
 - 各ファイルは単一トピックに集中（自己完結型チャンク）
 - 100行超は目次必須
 - 小さいファイル = 少ないコンテキスト消費
-- ファイル名は内容を明確に表す
 
 ### assets/ フォルダ
 
@@ -128,8 +126,7 @@ references/
 assets/
 ├── template-report.md    # レポートテンプレート
 ├── config-example.yaml   # 設定例
-├── lookup-table.json     # 参照データ
-└── diagram.png           # 図解
+└── lookup-table.json     # 参照データ
 ```
 
 ## メタデータ要件
@@ -167,6 +164,33 @@ allowed-tools: [Read, Write, Bash]     # 実験的機能
 | `metadata` | - | 任意オブジェクト |
 | `allowed-tools` | - | **実験的機能** |
 
+### allowed-tools 詳細構文（実験的）
+
+**基本形式:**
+
+```yaml
+allowed-tools: [Read, Write, Bash]          # 配列形式
+allowed-tools: ["*"]                         # 全ツール許可
+allowed-tools: ["*", "-Edit", "-Write"]     # 全許可から除外
+allowed-tools: ["mcp__*"]                   # MCPツール全許可
+```
+
+**ワイルドカード:**
+
+| パターン | 意味 | 例 |
+|----------|------|-----|
+| `*` | 全ツール許可 | すべて |
+| `-ToolName` | 除外 | `-Edit` で編集禁止 |
+| `mcp__*` | MCPサーバー全ツール | 全MCPツール |
+| `mcp__server__*` | 特定サーバーの全ツール | `mcp__figma__*` |
+
+**readonly パターン:**
+
+```yaml
+# 読み取り専用スキル
+allowed-tools: ["*", "-Edit", "-Write", "-Bash"]
+```
+
 ### description の書き方
 
 **第三人称 + トリガー**:
@@ -185,15 +209,35 @@ description: Processes data
 description: Processes Excel files and generates reports. Use when analyzing spreadsheets or .xlsx files.
 ```
 
+## ファイルサイズ
+
+| ファイル | 上限 | 備考 |
+|---------|------|------|
+| SKILL.md | 500行 | エントリーポイント |
+| references/*.md | 制限なし | 100行超は目次必須 |
+
+## Claude Code インポート構文
+
+スキル内で他のファイルを参照する場合、`@path` 構文でインポート可能:
+
+```markdown
+## References
+
+詳細は以下を参照:
+
+@references/patterns.md
+@references/examples.md
+```
+
+**特徴:**
+
+- 相対パス（スキルディレクトリからの相対）
+- ファイル内容がコンテキストに展開される
+- 必要なときだけ読み込む遅延参照
+
+**注意:** この構文はClaude Code固有。他エージェントでは通常のリンクを使用。
+
 ## Progressive Disclosure
-
-スキルは3段階で読み込まれる:
-
-| 段階 | 読み込み内容 | トークン目安 |
-|------|-------------|-------------|
-| 1. Discovery | `name` + `description` のみ | ~100 |
-| 2. Activation | `SKILL.md` 全体 | <5000推奨 |
-| 3. Execution | `scripts/`, `references/`, `assets/` | 必要時のみ |
 
 **参照の深さは1階層まで**:
 
@@ -205,13 +249,6 @@ SKILL.md → patterns.md (実際の情報)
 # Bad: 2階層以上
 SKILL.md → advanced.md → details.md → 実際の情報
 ```
-
-## ファイルサイズ
-
-| ファイル | 上限 | 備考 |
-|---------|------|------|
-| SKILL.md | 500行 | エントリーポイント |
-| references/*.md | 制限なし | 100行超は目次必須 |
 
 ## 必須構成要素
 
@@ -239,14 +276,6 @@ Task Progress:
 If validation fails at Step 3, return to Step 2 and revise.
 ````
 
-## 検証
-
-`skills-ref` ツールで検証可能:
-
-```bash
-skills-ref validate ./my-skill
-```
-
 ## テンプレート
 
 ```yaml
@@ -272,7 +301,7 @@ This skill provides [purpose].
 
 ## References
 
-- **[patterns.md](references/patterns.md)**: Pattern collection
+- **`references/patterns.md`**: Pattern collection
 
 ## Workflow
 

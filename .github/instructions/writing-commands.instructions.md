@@ -49,6 +49,16 @@ description: Creates a commit with conventional format. Use when committing chan
 - 500行以下推奨
 - 複雑なロジックはスキルに分離
 
+## 他ツールとの対応
+
+| ツール | コマンド相当機能 |
+|--------|------------------|
+| Claude Code | `/command-name` スラッシュコマンド |
+| Cursor | `@agent-name` メンション |
+| GitHub Copilot | カスタムエージェント（`.github/copilot-agents.yml`） |
+
+**Note**: `.agents/commands/` のコマンドは sync により各ツール形式に変換されます。
+
 ## 必須構成要素
 
 1. **概要**: コマンドの目的（1-2文）

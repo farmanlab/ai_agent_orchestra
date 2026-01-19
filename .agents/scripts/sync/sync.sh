@@ -127,6 +127,189 @@ clean_generated() {
     log_success "Cleanup complete"
 }
 
+# 孤立ファイルを検出（.agents/ に対応するソースがないファイル）
+# 結果は ORPHANED_FILES 配列に格納
+declare -a ORPHANED_FILES=()
+
+detect_orphaned_files() {
+    ORPHANED_FILES=()
+
+    # Claude Code: rules
+    if [ -d "$REPO_ROOT/.claude/rules" ]; then
+        for file in "$REPO_ROOT/.claude/rules"/*.md; do
+            [ -e "$file" ] || continue
+            filename=$(basename "$file" .md)
+            if [ ! -f "$REPO_ROOT/.agents/rules/${filename}.md" ]; then
+                ORPHANED_FILES+=("$file")
+            fi
+        done
+    fi
+
+    # Claude Code: agents
+    if [ -d "$REPO_ROOT/.claude/agents" ]; then
+        for file in "$REPO_ROOT/.claude/agents"/*.md; do
+            [ -e "$file" ] || continue
+            filename=$(basename "$file")
+            if [ ! -f "$REPO_ROOT/.agents/agents/$filename" ]; then
+                ORPHANED_FILES+=("$file")
+            fi
+        done
+    fi
+
+    # Claude Code: commands
+    if [ -d "$REPO_ROOT/.claude/commands" ]; then
+        for file in "$REPO_ROOT/.claude/commands"/*.md; do
+            [ -e "$file" ] || continue
+            filename=$(basename "$file")
+            if [ ! -f "$REPO_ROOT/.agents/commands/$filename" ]; then
+                ORPHANED_FILES+=("$file")
+            fi
+        done
+    fi
+
+    # Claude Code: skills (directories)
+    if [ -d "$REPO_ROOT/.claude/skills" ]; then
+        for dir in "$REPO_ROOT/.claude/skills"/*/; do
+            [ -d "$dir" ] || continue
+            dirname=$(basename "$dir")
+            if [ ! -d "$REPO_ROOT/.agents/skills/$dirname" ]; then
+                ORPHANED_FILES+=("$dir")
+            fi
+        done
+    fi
+
+    # Cursor: rules (.mdc extension)
+    if [ -d "$REPO_ROOT/.cursor/rules" ]; then
+        for file in "$REPO_ROOT/.cursor/rules"/*.mdc; do
+            [ -e "$file" ] || continue
+            filename=$(basename "$file" .mdc)
+            if [ ! -f "$REPO_ROOT/.agents/rules/${filename}.md" ]; then
+                ORPHANED_FILES+=("$file")
+            fi
+        done
+    fi
+
+    # Cursor: agents
+    if [ -d "$REPO_ROOT/.cursor/agents" ]; then
+        for file in "$REPO_ROOT/.cursor/agents"/*.md; do
+            [ -e "$file" ] || continue
+            filename=$(basename "$file")
+            if [ ! -f "$REPO_ROOT/.agents/agents/$filename" ]; then
+                ORPHANED_FILES+=("$file")
+            fi
+        done
+    fi
+
+    # Cursor: skills (directories) - Cursor は .claude/ から読み込むため .cursor/skills/ は不要
+    # .agents/ または .claude/ に存在するものは削除対象
+    if [ -d "$REPO_ROOT/.cursor/skills" ] && [ ! -L "$REPO_ROOT/.cursor/skills" ]; then
+        for item in "$REPO_ROOT/.cursor/skills"/*; do
+            [ -e "$item" ] || continue
+            item_name=$(basename "$item")
+            if [ -d "$REPO_ROOT/.agents/skills/$item_name" ] || [ -d "$REPO_ROOT/.claude/skills/$item_name" ]; then
+                ORPHANED_FILES+=("$item")
+            fi
+        done
+    fi
+
+    # Cursor: commands - Cursor は .claude/ から読み込むため .cursor/commands/ は不要
+    # .agents/ または .claude/ に存在するものは削除対象
+    if [ -d "$REPO_ROOT/.cursor/commands" ]; then
+        for file in "$REPO_ROOT/.cursor/commands"/*; do
+            [ -e "$file" ] || continue
+            filename=$(basename "$file")
+            if [ -f "$REPO_ROOT/.agents/commands/$filename" ] || [ -f "$REPO_ROOT/.claude/commands/$filename" ]; then
+                ORPHANED_FILES+=("$file")
+            fi
+        done
+    fi
+
+    # GitHub Copilot: instructions (.instructions.md)
+    if [ -d "$REPO_ROOT/.github/instructions" ]; then
+        for file in "$REPO_ROOT/.github/instructions"/*.instructions.md; do
+            [ -e "$file" ] || continue
+            filename=$(basename "$file" .instructions.md)
+            if [ ! -f "$REPO_ROOT/.agents/rules/${filename}.md" ]; then
+                ORPHANED_FILES+=("$file")
+            fi
+        done
+    fi
+
+    # GitHub Copilot: prompts (commands) - .prompt.md extension
+    if [ -d "$REPO_ROOT/.github/prompts" ]; then
+        for file in "$REPO_ROOT/.github/prompts"/*.prompt.md; do
+            [ -e "$file" ] || continue
+            # foo.prompt.md -> foo.md
+            filename=$(basename "$file" .prompt.md)
+            if [ ! -f "$REPO_ROOT/.agents/commands/${filename}.md" ]; then
+                ORPHANED_FILES+=("$file")
+            fi
+        done
+    fi
+
+    # GitHub Copilot: agents (.agents.md)
+    if [ -d "$REPO_ROOT/.github/agents" ]; then
+        for file in "$REPO_ROOT/.github/agents"/*.agents.md; do
+            [ -e "$file" ] || continue
+            filename=$(basename "$file" .agents.md)
+            if [ ! -f "$REPO_ROOT/.agents/agents/${filename}.md" ]; then
+                ORPHANED_FILES+=("$file")
+            fi
+        done
+    fi
+}
+
+# 孤立ファイルを確認付きで削除
+cleanup_orphaned_files() {
+    detect_orphaned_files
+
+    if [ ${#ORPHANED_FILES[@]} -eq 0 ]; then
+        log_verbose "No orphaned files found"
+        return 0
+    fi
+
+    echo ""
+    log_warning "Found ${#ORPHANED_FILES[@]} orphaned file(s) (no source in .agents/):"
+    echo ""
+    for file in "${ORPHANED_FILES[@]}"; do
+        # REPO_ROOT からの相対パスを表示
+        relative_path="${file#$REPO_ROOT/}"
+        echo "  - $relative_path"
+    done
+    echo ""
+
+    if [ "$DRY_RUN" = true ]; then
+        log_warning "DRY RUN: Would prompt to delete these files"
+        return 0
+    fi
+
+    # 確認プロンプト
+    printf "Delete these orphaned files? [y/N]: "
+    read -r response
+    case "$response" in
+        [yY][eE][sS]|[yY])
+            for file in "${ORPHANED_FILES[@]}"; do
+                rm -rf "$file"
+                relative_path="${file#$REPO_ROOT/}"
+                log_verbose "Deleted: $relative_path"
+            done
+            log_success "Deleted ${#ORPHANED_FILES[@]} orphaned file(s)"
+
+            # 空になったフォルダを削除
+            for dir in "$REPO_ROOT/.cursor/skills" "$REPO_ROOT/.cursor/commands"; do
+                if [ -d "$dir" ] && [ -z "$(ls -A "$dir" 2>/dev/null)" ]; then
+                    rmdir "$dir"
+                    relative_path="${dir#$REPO_ROOT/}"
+                    log_verbose "Removed empty folder: $relative_path"
+                fi
+            done
+            ;;
+        *)
+            log_info "Skipped deletion of orphaned files"
+            ;;
+    esac
+}
+
 # 指定ファイルとシンボリックリンク/コピーを削除
 prune_file() {
     local target_path="$1"
@@ -319,31 +502,8 @@ sync_to_cursor() {
         return
     fi
 
-    # 既存の .cursor/skills/ と .cursor/commands/ をクリーンアップ
-    # (.agents/ または .claude/ に存在するものを削除)
-    for dir_type in skills commands; do
-        cursor_dir="$REPO_ROOT/.cursor/$dir_type"
-        if [ -d "$cursor_dir" ]; then
-            log_verbose "Cleaning up .cursor/$dir_type/..."
-            for item in "$cursor_dir"/*; do
-                [ -e "$item" ] || continue
-                item_name=$(basename "$item")
-                # .agents/ または .claude/ に存在するか確認
-                if [ -e "$REPO_ROOT/.agents/$dir_type/$item_name" ] || \
-                   [ -d "$REPO_ROOT/.agents/$dir_type/$item_name" ] || \
-                   [ -e "$REPO_ROOT/.claude/$dir_type/$item_name" ] || \
-                   [ -d "$REPO_ROOT/.claude/$dir_type/$item_name" ]; then
-                    rm -rf "$item"
-                    log_verbose "Removed .cursor/$dir_type/$item_name (exists in .agents/ or .claude/)"
-                fi
-            done
-            # フォルダが空になったら削除
-            if [ -z "$(ls -A "$cursor_dir" 2>/dev/null)" ]; then
-                rmdir "$cursor_dir"
-                log_verbose "Removed empty .cursor/$dir_type/"
-            fi
-        fi
-    done
+    # Note: .cursor/skills/ と .cursor/commands/ のクリーンアップは
+    # cleanup_orphaned_files() で確認付きで行う
 
     if [ ! -f "$SCRIPT_DIR/to-cursor.sh" ]; then
         log_error "to-cursor.sh not found"
@@ -439,6 +599,9 @@ sync_all() {
     sync_to_cursor
     echo ""
     sync_to_copilot
+
+    # 孤立ファイルの検出と確認付き削除
+    cleanup_orphaned_files
 
     echo ""
     log_success "All agents synced successfully"

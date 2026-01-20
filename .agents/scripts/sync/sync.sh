@@ -685,12 +685,15 @@ case $COMMAND in
         ;;
     claude)
         sync_to_claude
+        cleanup_orphaned_files
         ;;
     cursor)
         sync_to_cursor
+        cleanup_orphaned_files
         ;;
     copilot)
         sync_to_copilot
+        cleanup_orphaned_files
         ;;
     validate)
         run_validation

@@ -8,7 +8,8 @@
     "agents/researching-best-practices.md"
   ],
   "skills": [
-    "skills/ensuring-prompt-quality"
+    "skills/ensuring-prompt-quality",
+    "skills/checking-references"
   ],
   "commands": [
     "commands/write-prompt.md"

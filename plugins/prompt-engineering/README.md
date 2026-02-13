@@ -23,6 +23,7 @@ AI エージェントのプロンプトファイル（rules, skills, agents, com
 | Skill | 説明 |
 |-------|------|
 | `ensuring-prompt-quality` | プロンプト品質検証の専門知識を提供 |
+| `checking-references` | ファイル参照の整合性を検証 |
 
 ### References
 

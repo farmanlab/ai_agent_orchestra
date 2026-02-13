@@ -1,0 +1,16 @@
+{
+  "name": "prompt-engineering",
+  "version": "0.1.0",
+  "description": "Prompt engineering toolkit for creating, validating, and researching best practices for AI agent prompts (Claude Code, Cursor, GitHub Copilot).",
+  "agents": [
+    "agents/prompt-writer.md",
+    "agents/prompt-quality-checker.md",
+    "agents/researching-best-practices.md"
+  ],
+  "skills": [
+    "skills/ensuring-prompt-quality"
+  ],
+  "commands": [
+    "commands/write-prompt.md"
+  ]
+}

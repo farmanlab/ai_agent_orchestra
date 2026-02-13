@@ -1,0 +1,213 @@
+---
+name: ensuring-prompt-quality
+description: Validates prompt files against best practices. Use after creating or editing rules, skills, agents, commands in .agents/ for quality review.
+compatibility: Claude Code
+allowed-tools: Read Grep Glob WebFetch WebSearch
+---
+
+# Prompt Quality Skill
+
+プロンプトファイルの品質を検証するスキルです。
+
+## 記載ルール
+
+**作成・編集時は以下のルールを参照**:
+
+- **[writing-skills.md](references/writing-skills.md)**: Skills の記載ルール
+- **[writing-rules.md](references/writing-rules.md)**: Rules の記載ルール
+- **[writing-agents.md](references/writing-agents.md)**: Agents の記載ルール
+- **[writing-commands.md](references/writing-commands.md)**: Commands の記載ルール
+
+## 検証観点
+
+| # | 観点 | 概要 |
+|---|------|------|
+| 1 | 明確性と具体性 | 曖昧な表現を避け、具体的な指示 |
+| 2 | 構造化と可読性 | 適切な見出し、500行以下 |
+| 3 | 具体例の提供 | Before/After 形式のコード例 |
+| 4 | スコープの適切性 | タスク非依存、リポジトリレベル |
+| 5 | Progressive Disclosure | 参照1階層、100行超は目次 |
+| 6 | 重複と矛盾の回避 | DRY原則 |
+| 7 | Workflow & Feedback Loops | チェックリスト、検証ループ |
+| 8 | 命名とパス適用 | gerund形式、paths/globs |
+| 9 | アクション指向 | 動詞から始まる指示 |
+| 10 | メタデータの完全性 | 第三人称、トリガー含む |
+| 11 | トーンと文体 | 命令形、一貫性 |
+| 12 | テンプレートと例 | 出力形式テンプレート |
+| 13 | アンチパターン検出 | Windows パス、時間依存 |
+| 14 | 簡潔性 | 既知情報の繰り返しなし |
+
+詳細は参照ファイルを確認:
+- **[validation-criteria.md](references/validation-criteria.md)**: 観点1-7の詳細
+- **[validation-criteria-technical.md](references/validation-criteria-technical.md)**: 観点8-14の詳細
+
+## Workflow
+
+品質検証時にこのチェックリストをコピー:
+
+```
+Quality Validation:
+- [ ] Step 1: ファイルタイプを特定（skill/rule/agent/command）
+- [ ] Step 2: 対応するルールを参照
+- [ ] Step 3: メタデータを検証
+- [ ] Step 4: コンテンツを検証（14観点）
+- [ ] Step 5: ファイルサイズを確認
+- [ ] Step 6: レポートを生成
+```
+
+### Step 1: ファイルタイプを特定
+
+```bash
+# パスからタイプを判定
+.agents/skills/    → Skill
+.agents/rules/     → Rule
+.agents/agents/    → Agent
+.agents/commands/  → Command
+.cursor/agents/    → Cursor Subagent
+```
+
+### Step 2: 対応するルールを参照
+
+```bash
+Read: references/writing-{type}.md
+```
+
+### Step 3: メタデータを検証
+
+```bash
+# 一人称・二人称チェック
+grep -n "I can\|I will\|You can\|You should" [file]
+
+# 第三人称 + トリガー確認
+grep -n "description:" [file]
+```
+
+**チェック項目**:
+- [ ] name: 64文字以内、小文字・数字・ハイフン
+- [ ] description: 第三人称、トリガー含む、1024文字以内
+- [ ] paths/globs/allowed-tools: 適切に設定
+
+### Step 4: コンテンツを検証
+
+```bash
+# 曖昧表現
+grep -i "できれば\|なるべく\|maybe\|perhaps" [file]
+
+# Windows パス
+grep -n "\\\\" [file]
+
+# 時間依存情報
+grep -ni "before.*20[0-9][0-9]\|after.*20[0-9][0-9]" [file]
+
+# Workflow チェックリスト
+grep -n "- \[ \]" [file]
+```
+
+### Step 5: ファイルサイズを確認
+
+```bash
+wc -l [file]
+# 500行以下推奨
+```
+
+### Step 6: レポートを生成
+
+[report-template.md](references/report-template.md) 形式で出力。
+
+If validation fails, identify issues and recommend fixes.
+
+## クイック検証
+
+単一ファイルの簡易チェック:
+
+```bash
+# 行数
+wc -l [file]
+
+# メタデータ
+head -10 [file]
+
+# アンチパターン
+grep -n "I can\|You can\|\\\\" [file]
+```
+
+## エージェント固有機能
+
+### Claude Code Memory Hierarchy
+
+メモリの優先度順（高い順）:
+
+1. **Enterprise Policy**: 組織レベルの設定
+2. **Project Memory**: `CLAUDE.md`（プロジェクトルート）
+3. **Project Rules**: `.claude/rules/*.md`
+4. **User Memory**: `~/.claude/rules/*.md`
+
+**再帰的読み込み**: 親ディレクトリの `CLAUDE.md` も自動読み込み
+
+**CLAUDE.local.md**: `.gitignore` 対象の個人用メモリ
+
+**インポート構文**:
+```markdown
+@docs/architecture.md        # 相対パス
+@~/.claude/preferences.md    # ホームディレクトリ
+```
+- 最大5階層まで
+
+**Quick Memory**: `#` プレフィックスで即座にメモリに追加
+```
+# このプロジェクトでは pnpm を使用
+```
+
+### Cursor Subagents
+
+**保存場所**: `.cursor/agents/` または `~/.cursor/agents/`
+
+**メタデータ**:
+```yaml
+---
+name: code-reviewer
+description: Reviews code for quality and best practices
+model: claude-3-opus         # 使用モデル
+readonly: true               # ファイル編集不可
+is_background: false         # バックグラウンド実行
+---
+```
+
+**特徴**:
+- コンテキスト分離
+- 並列実行サポート
+- 特化した専門性
+
+### Cursor Team Rules
+
+**優先順位**: Team Rules > Project Rules > User Rules
+
+**管理方法**: Cursor ダッシュボードで設定
+
+### GitHub Copilot Custom Agents
+
+**テンプレートライブラリ** (4種類):
+- Your first custom agent
+- Implementation planner
+- Bug fix teammate
+- Cleanup specialist
+
+### allowed-tools 構文詳細 (Agent Skills)
+
+```yaml
+allowed-tools:
+  - Read                     # 全ファイル読み取り可
+  - Write                    # 全ファイル書き込み可
+  - Bash(pattern:npm*)       # npm で始まるコマンドのみ
+  - Bash(pattern:git*)       # git で始まるコマンドのみ
+```
+
+**パターン構文**: `Bash(pattern:GLOB)` 形式で許可するコマンドを制限
+
+## 参照ファイル
+
+- **[validation-criteria.md](references/validation-criteria.md)**: コンテンツ品質（1-7）
+- **[validation-criteria-technical.md](references/validation-criteria-technical.md)**: 技術要件（8-14）
+- **[best-practices.md](references/best-practices.md)**: 公式推奨事項
+- **[examples.md](references/examples.md)**: 良い例・悪い例
+- **[report-template.md](references/report-template.md)**: レポート形式

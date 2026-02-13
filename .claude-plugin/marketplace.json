@@ -1,0 +1,21 @@
+{
+  "name": "ai-agent-orchestra",
+  "owner": {
+    "name": "farmanlab"
+  },
+  "metadata": {
+    "description": "AI agent configuration plugins for Claude Code, Cursor, and GitHub Copilot",
+    "version": "0.1.0",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "prompt-engineering",
+      "source": "./plugins/prompt-engineering",
+      "description": "Prompt engineering toolkit for creating, validating, and researching best practices for AI agent prompts.",
+      "version": "0.1.0",
+      "license": "MIT",
+      "keywords": ["prompt-engineering", "quality", "validation"]
+    }
+  ]
+}

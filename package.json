@@ -1,0 +1,35 @@
+{
+  "name": "ai-agent-orchestra",
+  "version": "0.1.0",
+  "description": "Manage AI agent configs (Claude Code, Cursor, GitHub Copilot) from a single source",
+  "bin": {
+    "ai-agent-orchestra": "./bin/cli.js",
+    "aao": "./bin/cli.js"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "scripts/",
+    "templates/",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "os": [
+    "darwin",
+    "linux"
+  ],
+  "keywords": [
+    "ai-agent",
+    "claude-code",
+    "cursor",
+    "github-copilot",
+    "sync"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/ai-agent-orchestra"
+  },
+  "license": "MIT"
+}

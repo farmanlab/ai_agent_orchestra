@@ -27,40 +27,54 @@
 
 ## クイックスタート
 
-### 1. 初めて使う場合
+### npx で導入（推奨）
 
 ```bash
-# このリポジトリをクローン
-git clone https://github.com/farmanlab/ai_agent_orchestra.git
-cd ai_agent_orchestra
+# プロジェクトルートで初期化
+npx ai-agent-orchestra init
 
-# 設定を生成
-.agents/scripts/sync/sync.sh all
+# 対話式プロンプトでフォルダ名とエージェントを選択
+# ? Unified folder name (.agents): .agents
+# ? Enable Claude Code? (Y/n): Y
+# ? Enable Cursor? (Y/n): Y
+# ? Enable GitHub Copilot? (Y/n): Y
 
-# 動作確認
-cat CLAUDE.md
+# 同期実行
+npx ai-agent-orchestra sync
 ```
 
-### 2. 既存プロジェクトで使う場合
+CLI フラグでも指定可能:
 
 ```bash
-# プロジェクトルートで .agents/ フォルダをコピー
-cp -r /path/to/ai_agent_orchestra/.agents .
+npx ai-agent-orchestra init --dir .agent --agents claude,copilot
+```
 
-# 初期化と同期
-.agents/scripts/sync/sync.sh init
+短縮コマンド `aao` も使えます（グローバルインストール時）:
+
+```bash
+npm install -g ai-agent-orchestra
+aao init
+aao sync
+```
+
+### リポジトリをクローンして使う場合
+
+```bash
+git clone https://github.com/farmanlab/ai_agent_orchestra.git
+cd ai_agent_orchestra
 .agents/scripts/sync/sync.sh all
+```
 
-# Git に追加
+### 既存プロジェクトに手動で追加する場合
+
+```bash
+cp -r /path/to/ai_agent_orchestra/.agents .
+.agents/scripts/sync/sync.sh all
 git add .agents/ .claude/ .cursor/ .github/ CLAUDE.md AGENTS.md
 git commit -m "Add AI agent configuration"
 ```
 
-### 3. ホームディレクトリにコピーして全プロジェクトで使う
-
-このリポジトリの設定フォルダをホームディレクトリにコピーすると、すべてのプロジェクトで利用できます。
-
-#### 方法1: リポジトリをクローンして実行
+### ホームディレクトリにコピーして全プロジェクトで使う
 
 ```bash
 git clone https://github.com/farmanlab/ai_agent_orchestra.git
@@ -72,36 +86,6 @@ cd ai_agent_orchestra
 
 ```bash
 ./scripts/copy_to_home.sh -f
-```
-
-#### 方法2: GitHub CLIで直接実行
-
-リポジトリをクローンせずに、ghコマンドで直接スクリプトを実行できます。
-
-確認ありでコピー:
-
-```bash
-bash <(gh api repos/farmanlab/ai_agent_orchestra/contents/scripts/copy_to_home.sh --jq '.content' | base64 -d)
-```
-
-強制上書き:
-
-```bash
-bash <(gh api repos/farmanlab/ai_agent_orchestra/contents/scripts/copy_to_home.sh --jq '.content' | base64 -d) -f
-```
-
-または、curlを使用する場合。
-
-確認ありでコピー:
-
-```bash
-bash <(curl -s https://raw.githubusercontent.com/farmanlab/ai_agent_orchestra/main/scripts/copy_to_home.sh)
-```
-
-強制上書き:
-
-```bash
-bash <(curl -s https://raw.githubusercontent.com/farmanlab/ai_agent_orchestra/main/scripts/copy_to_home.sh) -f
 ```
 
 ## 使い方
@@ -249,25 +233,35 @@ AGENTS.md                        # Copilot エージェント定義
 
 ## コマンドリファレンス
 
+### CLI (`aao` / `npx ai-agent-orchestra`)
+
 ```bash
-# 全エージェントに同期
+aao init                     # 対話式で初期化
+aao init --dir .agent --agents claude,copilot  # フラグ指定
+aao update                   # sync スクリプトを最新版に更新
+aao sync                     # 全エージェントに同期
+aao sync claude              # Claude Code のみ
+aao sync cursor              # Cursor のみ
+aao sync copilot             # GitHub Copilot のみ
+aao reverse                  # 逆同期（全エージェントから）
+aao reverse claude           # Claude Code から逆同期
+aao validate                 # 構造とコンテンツを検証
+aao check-size               # プロンプトサイズチェック
+aao check-quality            # プロンプト品質チェック
+aao plugins                  # プラグイン同期
+aao install-hooks            # Git hooks インストール
+aao clean                    # 生成ファイルをクリーンアップ
+aao prune rules/foo.md       # ファイルと同期先を一括削除
+aao --verbose sync           # 詳細ログ表示
+aao --dry-run sync           # ドライラン
+```
+
+### 直接スクリプト実行
+
+```bash
 .agents/scripts/sync/sync.sh all
-
-# 特定エージェントのみ
 .agents/scripts/sync/sync.sh claude
-.agents/scripts/sync/sync.sh cursor
-.agents/scripts/sync/sync.sh copilot
-
-# Git hooks をインストール（コミット時に自動同期）
-.agents/scripts/sync/sync.sh install-hooks
-
-# 生成ファイルをクリーンアップ
-.agents/scripts/sync/sync.sh clean
-
-# 詳細ログ表示
 .agents/scripts/sync/sync.sh --verbose all
-
-# ドライラン（変更せず確認のみ）
 .agents/scripts/sync/sync.sh --dry-run all
 ```
 

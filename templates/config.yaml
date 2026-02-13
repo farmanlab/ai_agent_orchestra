@@ -1,0 +1,10 @@
+# AI Agent Orchestra Configuration
+# This file controls which agents are synced.
+
+agents:
+  claude:
+    enabled: {{AGENT_CLAUDE_ENABLED}}
+  cursor:
+    enabled: {{AGENT_CURSOR_ENABLED}}
+  copilot:
+    enabled: {{AGENT_COPILOT_ENABLED}}

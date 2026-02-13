@@ -1,7 +1,7 @@
 {
   "name": "ai-agent-orchestra",
   "version": "0.1.0",
-  "description": "Manage AI agent configs (Claude Code, Cursor, GitHub Copilot) from a single source",
+  "description": "Manage AI agent configs (Claude Code, GitHub Copilot) from a single source",
   "bin": {
     "ai-agent-orchestra": "./bin/cli.js",
     "aao": "./bin/cli.js"
@@ -23,7 +23,6 @@
   "keywords": [
     "ai-agent",
     "claude-code",
-    "cursor",
     "github-copilot",
     "sync"
   ],

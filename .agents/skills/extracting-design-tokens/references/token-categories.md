@@ -371,10 +371,13 @@ Collection: Semantic
 | `color/text/primary` | `color/text/primary` |
 | `spacing/md` | `spacing/md` |
 
-### data-figma-tokens属性
+### data-figma-token-* 属性
 
-HTMLに埋め込まれるトークン情報：
+HTMLに埋め込まれるトークン情報（個別属性形式）：
 
 ```html
-<button data-figma-tokens="background: color/primary/default; color: color/text/inverse; padding: spacing/md; border-radius: border/radius/md">
+<button data-figma-token-bg="color/primary/default"
+        data-figma-token-color="color/text/inverse"
+        data-figma-token-padding="spacing/md"
+        data-figma-token-radius="border/radius/md">
 ```

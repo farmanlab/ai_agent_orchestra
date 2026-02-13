@@ -61,6 +61,7 @@ Taskツールで起動するサブエージェント:
 |---------------|------|:--------:|
 | `converting-figma-to-html` | Figma → HTML変換 | 必須 |
 | `comparing-figma-html` | HTML品質検証 | 必須 |
+| `downloading-figma-assets` | アセットダウンロード | アイコンあり |
 | `documenting-ui-states` | UI状態の文書化 | 必須 |
 | `extracting-interactions` | インタラクション仕様 | 必須 |
 | `defining-form-specs` | フォーム仕様 | フォームあり |

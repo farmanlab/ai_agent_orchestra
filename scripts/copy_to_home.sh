@@ -25,7 +25,7 @@ usage() {
     echo "  -h, --help        このヘルプメッセージを表示"
     echo ""
     echo "このスクリプトは以下のフォルダとファイルをコピーします:"
-    echo "  フォルダ: .agents, .claude, .cursor, .github"
+    echo "  フォルダ: .agents, .claude, .github"
     echo "  ファイル: AGENTS.md, CLAUDE.md"
     echo ""
     echo "デフォルトでは各フォルダのコピー前に確認を求めます。"
@@ -110,7 +110,7 @@ cleanup() {
 trap cleanup EXIT
 
 # コピー対象のフォルダ
-FOLDERS=(".agents" ".claude" ".cursor" ".github")
+FOLDERS=(".agents" ".claude" ".github")
 
 # コピー対象のファイル（ルートレベル）
 ROOT_FILES=("AGENTS.md" "CLAUDE.md")

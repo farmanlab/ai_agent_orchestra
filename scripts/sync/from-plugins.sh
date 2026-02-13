@@ -19,7 +19,7 @@ NC='\033[0m'
 # オプション
 VERBOSE=false
 DRY_RUN=false
-COPY_MODE=false
+COPY_MODE=true
 SCOPE="all"  # project|user|all
 
 # ログ関数
@@ -39,7 +39,8 @@ Usage: $0 [OPTIONS]
 Options:
   --scope <project|user|all>  Scope to process (default: all)
   --dry-run                   Show what would be done without making changes
-  --copy                      Copy files instead of creating symlinks
+  --copy                      Copy files instead of creating symlinks (default)
+  --symlink                   Create symlinks instead of copying
   --verbose                   Show detailed output
   -h, --help                  Show this help message
 
@@ -148,6 +149,11 @@ create_link_or_copy() {
     fi
 
     if [ "$COPY_MODE" = true ]; then
+        # コピー前に既存ディレクトリを削除（古いファイルが残らないように）
+        if [ -d "$target" ]; then
+            rm -rf "$target"
+            log_verbose "Removed existing directory before copy: $target"
+        fi
         cp -R "$source" "$target"
         log_verbose "Copied: $source → $target"
     else
@@ -362,6 +368,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --copy)
             COPY_MODE=true
+            shift
+            ;;
+        --symlink)
+            COPY_MODE=false
             shift
             ;;
         --verbose)

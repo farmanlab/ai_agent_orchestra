@@ -59,7 +59,7 @@ get_field_value() {
     echo "$frontmatter" | grep "^${field}:" | sed "s/^${field}:\s*//" | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//'
 }
 
-# 配列フィールドを取得（例: agents: [claude, cursor, copilot]）
+# 配列フィールドを取得（例: agents: [claude, copilot]）
 get_array_field() {
     local frontmatter="$1"
     local field="$2"
@@ -111,7 +111,7 @@ validate_description_length() {
     return 0
 }
 
-# ファイル行数の検証（公式仕様: Cursor推奨 500行以下）
+# ファイル行数の検証（推奨 500行以下）
 validate_line_count() {
     local file="$1"
     local filename="$2"
@@ -237,7 +237,7 @@ validate_rules() {
         local relative_path="${file#$AGENTS_DIR/rules/}"
         local frontmatter=$(extract_frontmatter "$file")
 
-        # 行数チェック（公式仕様: Cursor推奨 500行以下）
+        # 行数チェック（推奨 500行以下）
         validate_line_count "$file" "rules/$relative_path"
 
         # frontmatter はオプション（Claude Code公式仕様）

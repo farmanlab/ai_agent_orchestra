@@ -28,16 +28,65 @@ HTML要素・UIコンポーネントとAPIエンドポイントの対応関係�
 6. **データバインディング**: UIフィールドとAPIフィールドの対応
 7. **API呼び出しタイミング**: いつAPIを呼ぶか
 
+## 動作モード
+
+このスキルは2つのモードで動作します：
+
+| モード | 条件 | 用途 |
+|--------|------|------|
+| **確定モード** | OpenAPI/Contract仕様書が存在 | 既存APIとのマッピング整理 |
+| **提案モード** | API未確定（仕様書なし） | HTML要素からAPI要件を提案 |
+
+### モード判定フロー
+
+```
+1. contract/ フォルダにAPI検証ファイルがあるか確認
+   ├─ あり → 確定モード（実データ優先）
+   └─ なし → 2へ
+
+2. OpenAPI/Contract仕様書を探す
+   ├─ 見つかった → 確定モード（仕様書ベース）
+   └─ 見つからない → 提案モード
+```
+
 ## ワークフロー上の位置づけ
 
 ```
 1. converting-figma-to-html
    └─> Figmaから静的/動的を推測 → spec.md「コンテンツ分析」に仮決定
 
-2. mapping-html-to-api（このスキル）
-   └─> 全コンテンツ要素をAPI仕様書と照合
+2. executing-api-from-openapi（オプション）
+   └─> OpenAPIからAPIを実行してレスポンス形式を取得
+   └─> contract/{endpoint-name}.json に検証結果を保存
+
+3. mapping-html-to-api（このスキル）
+   └─> contract/ フォルダのAPI検証ファイルを参照（あれば）
+   └─> 全コンテンツ要素をAPI仕様書/実データと照合
    └─> 動的要素の確定 + 静的→動的への再分類
    └─> spec.md「APIマッピング」に確定結果を記載
+```
+
+### API検証ファイルの判定
+
+このスキル実行時、以下の順序でAPI情報を探す：
+
+```
+1. contract/{endpoint-name}.json を確認
+   ├─ 存在する → 実際のレスポンスデータを使用（高精度）
+   └─ 存在しない → OpenAPI仕様書のみを使用
+```
+
+**contract ファイル形式:**
+
+```json
+{
+  "endpoint": "/api/v1/messages",
+  "method": "GET",
+  "executed_at": "2024-01-15T10:30:00Z",
+  "request": { ... },
+  "response": { ... },
+  "schema_diff": [ ... ]
+}
 ```
 
 ### 再分類の例
@@ -84,9 +133,54 @@ HTML要素・UIコンポーネントとAPIエンドポイントの対応関係�
 ```
 .agents/tmp/{screen-id}/
 ├── spec.md                 # ← このスキルが「APIマッピング」セクションを更新
-├── index.html              # 参照用HTML
+├── index.html              # ← APIマッピング属性を追加
+├── contract/               # API検証結果（executing-api-from-openapiで生成）
+│   ├── get-messages.json   # 例: GET /api/v1/messages の検証結果
+│   └── post-feedback.json  # 例: POST /api/v1/feedback の検証結果
 └── assets/
 ```
+
+## HTML APIマッピング属性
+
+動的要素にAPIマッピング情報を埋め込む。`converting-figma-to-html` で付与された `data-figma-content-classification="dynamic"` の要素が対象。
+
+### 属性一覧
+
+| 属性 | 用途 | 必須 | 例 |
+|------|------|:----:|-----|
+| `data-api-endpoint` | APIエンドポイント | ✓ | `"GET /student_api/ask_ai/submission/{id}"` |
+| `data-api-response-field` | レスポンスのフィールドパス | △ | `"is_bookmarked"` |
+| `data-api-request-body` | リクエストボディテンプレート | △ | `'{"rating": 1}'` |
+| `data-api-contract` | 契約ファイル名 | ✓ | `"get_submission.md"` |
+
+※ △ = GETは `data-api-response-field`、POSTは `data-api-request-body` を使用
+
+### 埋め込み例
+
+```html
+<!-- GET: データ表示 -->
+<img data-figma-content-id="question_image"
+     data-figma-content-classification="dynamic"
+     data-api-endpoint="GET /student_api/ask_ai/submission/{id}/info"
+     data-api-response-field="image_uri"
+     data-api-contract="get_submission_info.md"
+     src="placeholder.png">
+
+<!-- POST: アクション送信 -->
+<button data-figma-content-id="feedback_positive"
+        data-figma-content-classification="static"
+        data-api-endpoint="POST /student_api/ask_ai/feedback"
+        data-api-request-body='{"question_id": "{id}", "rating": 1}'
+        data-api-contract="post_feedback.md">
+  解決した
+</button>
+```
+
+### 注意事項
+
+- `data-figma-content-classification="static"` でも、アクションを送信する要素には `data-api-endpoint` を付与
+- フィールドパスは配列インデックスやフィルタ条件を含めてよい（例: `ask_ai_messages[role=ai].content`）
+- 契約ファイル名は `contract/` フォルダ内のファイル名と一致させる
 
 ## クイックスタート
 
@@ -119,15 +213,20 @@ APIマッピング時にこのチェックリストをコピー：
 ```
 API Mapping Progress:
 - [ ] Step 0: spec.md の存在確認
-- [ ] Step 1: 全コンテンツ要素を抽出（静的・動的両方）
-- [ ] Step 2: APIエンドポイントを特定
-- [ ] Step 3: リクエスト構造を定義
-- [ ] Step 4: レスポンス構造を定義
-- [ ] Step 5: データバインディングを整理（静的→動的の再分類含む）
-- [ ] Step 6: API呼び出しタイミングを決定
-- [ ] Step 7: エラーハンドリングを定義
-- [ ] Step 8: spec.md の「APIマッピング」セクションを更新
-- [ ] Step 9: マッピングオーバーレイ生成（任意）
+- [ ] Step 1: contract/ フォルダのAPI検証ファイルを確認
+- [ ] Step 2: 全コンテンツ要素を抽出（静的・動的両方）
+- [ ] Step 3: APIエンドポイントを特定
+- [ ] Step 4: リクエスト構造を定義
+- [ ] Step 5: レスポンス構造を定義
+- [ ] Step 6: データバインディングを整理（静的→動的の再分類含む）
+- [ ] Step 7: API呼び出しタイミングを決定
+- [ ] Step 8: エラーハンドリングを定義
+- [ ] Step 9: spec.md の「APIマッピング」セクションを更新
+- [ ] Step 10: HTMLにdata-api-*属性を追加
+- [ ] Step 11: マッピングオーバーレイ生成（任意）
+  - [ ] テンプレートをコピー: ../../templates/mapping-overlay.js
+  - [ ] CONTRACT_DATA にGET APIのサンプルJSONを追加
+  - [ ] HTMLに <script src="mapping-overlay.js"></script> を追加
 ```
 
 ### Step 0: spec.md の存在確認
@@ -136,7 +235,21 @@ API Mapping Progress:
 ls .agents/tmp/{screen-id}/spec.md
 ```
 
-### Step 1: 全コンテンツ要素を抽出
+### Step 1: contract/ フォルダのAPI検証ファイルを確認
+
+```bash
+ls .agents/tmp/{screen-id}/contract/*.json 2>/dev/null
+```
+
+**ファイルが存在する場合:**
+- 実際のAPIレスポンスを使用してマッピング（高精度）
+- `response` フィールドから実際のデータ構造を取得
+
+**ファイルが存在しない場合:**
+- OpenAPI仕様書のみを使用してマッピング
+- 仕様と実装の乖離がある可能性を注記
+
+### Step 2: 全コンテンツ要素を抽出
 
 spec.md「コンテンツ分析」セクションから**全ての要素**を抽出：
 
@@ -153,7 +266,7 @@ spec.md「コンテンツ分析」セクションから**全ての要素**を抽
 - ボタンテキスト（状態によって変わる可能性）
 - 説明文（APIから取得する可能性）
 
-### Step 2: APIエンドポイントを特定
+### Step 3: APIエンドポイントを特定
 
 各データソースに対するAPI：
 
@@ -163,20 +276,20 @@ spec.md「コンテンツ分析」セクションから**全ての要素**を抽
 | 講座詳細 | /api/courses/:id | GET |
 | ユーザー情報 | /api/users/me | GET |
 
-### Step 3: リクエスト構造を定義
+### Step 4: リクエスト構造を定義
 
 - パスパラメータ
 - クエリパラメータ
 - リクエストボディ
 - ヘッダー
 
-### Step 4: レスポンス構造を定義
+### Step 5: レスポンス構造を定義
 
 - レスポンスボディの型
 - ページネーション情報
 - メタデータ
 
-### Step 5: データバインディングを整理（再分類含む）
+### Step 6: データバインディングを整理（再分類含む）
 
 全コンテンツ要素とAPIフィールドの対応を整理し、再分類を行う：
 
@@ -202,7 +315,7 @@ spec.md「コンテンツ分析」セクションから**全ての要素**を抽
 | 作成日 | dynamic | course.created_at | dynamic | formatDate |
 | 「閉じる」ボタン | static | - | static | - |
 
-### Step 6: API呼び出しタイミングを決定
+### Step 7: API呼び出しタイミングを決定
 
 | タイミング | API | トリガー |
 |----------|-----|---------|
@@ -210,7 +323,7 @@ spec.md「コンテンツ分析」セクションから**全ての要素**を抽
 | 検索実行時 | GET /api/courses?q=xxx | 検索ボタンクリック |
 | フォーム送信時 | POST /api/courses | 送信ボタンクリック |
 
-### Step 7: エラーハンドリングを定義
+### Step 8: エラーハンドリングを定義
 
 | エラー | HTTPステータス | UI対応 |
 |--------|--------------|--------|
@@ -219,7 +332,7 @@ spec.md「コンテンツ分析」セクションから**全ての要素**を抽
 | 未検出 | 404 | 空状態表示 |
 | サーバーエラー | 500 | リトライ促進 |
 
-### Step 8: spec.md の「APIマッピング」セクションを更新
+### Step 9: spec.md の「APIマッピング」セクションを更新
 
 1. セクションを特定（`## APIマッピング`）
 2. ステータスを「完了 ✓」に更新
@@ -227,12 +340,12 @@ spec.md「コンテンツ分析」セクションから**全ての要素**を抽
 4. 完了チェックリストを更新
 5. 変更履歴に追記
 
-### Step 9: マッピングオーバーレイ生成（任意）
+### Step 10: マッピングオーバーレイ生成（任意）
 
 ユーザーが要求した場合、HTMLにマッピング可視化オーバーレイを追加：
 
-1. テンプレートを読み込み: `assets/mapping-overlay.js`
-2. マッピングデータを挿入
+1. テンプレートを読み込み: `../../templates/mapping-overlay.js`
+2. CONTRACT_DATA にAPIサンプルJSONを追加
 3. HTMLに `<script src="mapping-overlay.js"></script>` を追加
 
 **オーバーレイのタイプ別色分け:**
@@ -242,8 +355,68 @@ spec.md「コンテンツ分析」セクションから**全ての要素**を抽
 | static | グレー | 固定ラベル・UI文言 |
 | dynamic | 緑 | APIから取得 |
 | dynamic_list | 青 | API配列データ |
-| local | 紫 | ローカルステート |
+| config | 紫 | 設定値 |
 | asset | 黄 | 画像・アイコン |
+| user_asset | オレンジ | ユーザーアップロード画像 |
+
+**インタラクション:**
+
+| タイプ | 色 | 説明 |
+|--------|-----|------|
+| navigate | ピンク | 画面遷移 |
+| modal | オレンジ | モーダル表示 |
+
+**API連携:**
+
+| タイプ | 色 | 説明 |
+|--------|-----|------|
+| api_get | 青 | GET API |
+| api_post | オレンジ | POST API |
+
+#### CONTRACT_DATA 設定
+
+mapping-overlay.js の `CONTRACT_DATA` オブジェクトに、GET APIのサンプルJSONを登録：
+
+```javascript
+const CONTRACT_DATA = {
+  'get_api_endpoint_name.md': {
+    endpoint: 'GET /api/path/{id}',
+    json: {
+      "field1": "value1",
+      "field2": {
+        "nested": "value"
+      }
+    }
+  }
+};
+```
+
+**ファイル名**: contract/ フォルダ内のファイル名と一致させる
+
+#### JSONプレビュー機能
+
+GET APIの要素にホバーすると：
+
+1. **凡例の下にJSONプレビューパネル**が表示
+2. **フィールド自動検出**: 要素の `data-figma-content-value` や `textContent` からJSONフィールドを自動検出
+3. **パスハイライト**: 該当フィールドとその親パスが黄色/水色でハイライト
+
+**ハイライト表示:**
+
+| 色 | 説明 |
+|----|------|
+| 黄色背景 | ターゲットのkey/value |
+| 水色テキスト | ターゲットへのパス上の親キー |
+| 緑色 (🔍) | 自動検出されたパス |
+| 黄色 (→) | data-api-response-field で指定されたパス |
+
+#### Contract未登録警告
+
+`data-api-contract` で参照しているファイルが `CONTRACT_DATA` に登録されていない場合：
+
+1. **凡例に警告セクション**が表示（オレンジ色）
+2. **コンソールに警告**と追加方法のテンプレートを出力
+3. **ホバー時に警告パネル**を表示
 
 ## 出力形式
 
@@ -408,5 +581,66 @@ OpenAPI仕様書がある場合：
 - **[workflow.md](references/workflow.md)**: 詳細なワークフロー
 - **[api-patterns.md](references/api-patterns.md)**: APIパターン集
 - **[section-template.md](references/section-template.md)**: セクション出力テンプレート
-- **[mapping-overlay.js](assets/mapping-overlay.js)**: オーバーレイテンプレート
+- **[../../templates/mapping-overlay.js](../../templates/mapping-overlay.js)**: オーバーレイテンプレート（JSONプレビュー・自動検出機能付き）
 - **[managing-screen-specs](../managing-screen-specs/SKILL.md)**: 仕様書管理スキル
+
+## mapping-overlay.js の機能
+
+テンプレート `assets/mapping-overlay.js` には以下の機能が含まれます：
+
+### 1. データタイプ可視化
+- `data-figma-content-classification` に基づく要素のハイライト
+- 破線アウトラインでタイプ別に色分け
+
+### 2. インタラクション可視化
+- `data-figma-interaction`, `data-figma-navigate` の要素をハイライト
+- 実線アウトラインで画面遷移/モーダルを表示
+
+### 3. APIマッピング可視化
+- `data-api-endpoint`, `data-api-contract` の要素を検出
+- GET/POST/LOCAL別の色分け表示
+- ツールチップにAPI詳細を表示
+
+### 4. JSONプレビューパネル
+
+GET API要素ホバー時にJSONプレビューを表示：
+
+**パネル機能:**
+| 機能 | 説明 |
+|------|------|
+| ヘッダー常時表示 | Mappingオン時は常にヘッダー（📋 JSON Preview）を表示 |
+| ドラッグ移動 | ヘッダーをドラッグしてパネル位置を自由に移動 |
+| ホールド（📌）ボタン | クリックでピン留め、マウスアウトしてもコンテンツ維持 |
+| 自動検出 | 要素の値からJSONフィールドを自動特定（🔍 緑色で表示） |
+| パス指定 | `data-api-response-field` で明示指定（→ 黄色で表示） |
+
+**ハイライト表示:**
+| 色 | 説明 |
+|----|------|
+| 黄色背景 | ターゲットのkey/value |
+| 水色テキスト | ターゲットへのパス上の親キー |
+| 緑色 (🔍) | 自動検出されたパス |
+| 黄色 (→) | data-api-response-field で指定されたパス |
+
+**パネル状態:**
+| 状態 | 表示 |
+|------|------|
+| 通常 | マウスオーバーでコンテンツ表示、マウスアウトで非表示 |
+| ホールド中 | 緑枠線、マウスアウトしてもコンテンツ維持 |
+| Mappingオフ | パネル全体が非表示 |
+
+### 5. Contract未登録警告
+- `CONTRACT_DATA` に登録されていないcontractを検出
+- 凡例に警告セクション表示（オレンジ色）
+- コンソールに追加方法を出力
+- ホバー時に警告パネル表示
+
+### 6. フィルタリング機能
+- 凡例のバッジクリックでタイプ別フィルタリング
+- 複数タイプの同時選択可能
+- マッチしない要素は半透明表示
+- [リセット]ボタンでフィルター解除
+
+### 7. Mappingトグル
+- 右上の「Mapping (N)」ボタンでオン/オフ切り替え
+- オフ時: 全ハイライト解除、凡例・JSONプレビュー非表示

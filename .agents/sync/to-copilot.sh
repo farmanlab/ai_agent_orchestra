@@ -6,8 +6,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-AGENTS_DIR="$REPO_ROOT/.agents"
+AGENTS_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+REPO_ROOT="$(cd "$AGENTS_DIR/.." && pwd)"
 GITHUB_DIR="$REPO_ROOT/.github"
 
 echo "=== Converting to GitHub Copilot format ==="

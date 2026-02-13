@@ -75,7 +75,7 @@ Figma Variablesが定義されていない場合は、以降のステップで�
 
 1. **Figma Variables**: `mcp__figma__get_variable_defs`
 2. **デザインコンテキスト**: `mcp__figma__get_design_context`
-3. **生成済みHTML**: `data-figma-tokens`属性、インラインスタイル
+3. **生成済みHTML**: `data-figma-token-*`属性、インラインスタイル
 
 ### 抽出対象
 
@@ -120,7 +120,7 @@ colors:
 
 1. **Figma Variables**: フォント関連変数
 2. **デザインコンテキスト**: テキスト要素のスタイル
-3. **生成済みHTML**: `data-figma-font`属性
+3. **生成済みHTML**: `data-figma-token-font`属性
 
 ### 抽出対象
 
@@ -315,10 +315,11 @@ animation:
 
 ### HTMLからのトークン抽出
 
-`data-figma-tokens`属性がある場合：
+`data-figma-token-*`属性がある場合：
 
 ```html
-<button data-figma-tokens="background: color/primary/default; padding: spacing/md">
+<button data-figma-token-bg="color/primary/default"
+        data-figma-token-padding="spacing/md">
 ```
 
 解析して対応表に追加。

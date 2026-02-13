@@ -56,7 +56,6 @@ allowed-tools: Read, Glob, Grep, Write, AskUserQuestion, Bash(echo:*)
 2. 以下の情報を記録:
    - プロジェクトルート: $CWD または pwd の結果
    - .agents/ の存在確認: $CWD/.agents/
-   - .cursor/rules/ の存在確認: $CWD/.cursor/rules/
 3. ルール保存先を決定:
    - .agents/rules/ が存在する場合: そこに保存
    - 存在しない場合: ユーザーに確認
@@ -332,7 +331,6 @@ Hook経由で呼び出される場合、以下の環境変数が利用可能:
 
 詳細なhook設定例は以下を参照:
 - `.agents/hooks/review-session-claude.json` - Claude Code用
-- `.agents/hooks/review-session-cursor.json` - Cursor用
 
 ## 注意事項
 

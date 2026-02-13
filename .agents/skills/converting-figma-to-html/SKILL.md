@@ -58,7 +58,9 @@ https://figma.com/design/XXXXX/Project?node-id=1234-5678
 .outputs/{screen-name}/
 ├── index.html              # メインHTML（data属性付き）
 ├── index-{state}.html      # 状態バリエーション（該当する場合）
-├── spec.md                 # 画面仕様書
+├── spec.md                 # 概要仕様書
+├── spec-visual.md          # ← このスキルが「構造・スタイル」「コンテンツ分析」セクションを更新
+├── spec-behavior.md        # 動作仕様書
 ├── mapping-overlay.js      # マッピング可視化
 └── preview.html            # プレビュー（オプション）
 ```
@@ -70,10 +72,14 @@ https://figma.com/design/XXXXX/Project?node-id=1234-5678
 │   ├── index.html
 │   ├── index-empty.html    # 同一画面の状態バリエーション
 │   ├── spec.md
+│   ├── spec-visual.md      # ← 構造・コンテンツ分析
+│   ├── spec-behavior.md
 │   └── mapping-overlay.js
 ├── {screen-b}/
 │   ├── index.html
 │   ├── spec.md
+│   ├── spec-visual.md
+│   ├── spec-behavior.md
 │   └── mapping-overlay.js
 └── ...
 ```
@@ -81,7 +87,7 @@ https://figma.com/design/XXXXX/Project?node-id=1234-5678
 `{screen-name}` はFigmaの画面名から生成した短い識別名（例: `homework-modal`）
 
 > **注意**:
-> - spec.md 内の static/dynamic 分類は**仮決定**です。実装時にレビューしてください。
+> - spec-visual.md 内の static/dynamic 分類は**仮決定**です。実装時にレビューしてください。
 > - 複数フレームは「同一画面の状態バリエーション」か「別画面」かを判定し、適切な構造で出力します。
 
 ## 詳細ガイド
@@ -93,7 +99,7 @@ https://figma.com/design/XXXXX/Project?node-id=1234-5678
 
 - Step 1: Figmaデータ取得（screenshot, design_context, metadata）
 - Step 2: HTML生成ルール（Tailwind CSS、data属性、レイアウト）
-- Step 3: spec.md 更新（構造・スタイル、コンテンツ分析セクション）
+- Step 3: spec-visual.md 更新（構造・スタイル、コンテンツ分析セクション）
 - Step 4: 品質チェック（ビジュアル確認、属性確認）
 
 ### 変換ガイドライン
@@ -145,8 +151,7 @@ https://figma.com/design/XXXXX/Project?node-id=1234-5678
 |------|------|-----|
 | `data-figma-node` | FigmaノードID | `"5070:65342"` |
 | `data-figma-name` | Figmaでのレイヤー名 | `"Button/Primary"` |
-| `data-figma-tokens` | デザイントークン（まとめて） | `"background: darkblue"` |
-| `data-figma-token-*` | デザイントークン（個別、推奨） | 下記参照 |
+| `data-figma-token-*` | デザイントークン（個別） | 下記参照 |
 | `data-figma-icon-svg` | アイコンノードID（getImages用） | `"3428:18627"` |
 | `data-figma-interaction` | インタラクション定義 | `"tap:navigate:/course/1"` |
 | `data-figma-states` | サポートするUI状態 | `"default,hover,active,disabled"` |
@@ -426,12 +431,12 @@ spec.md の「インタラクション」「画面フロー」セクションを
    └─> data-figma-content-data-type（string/number/svg等）
 
 7. 画面遷移属性の埋め込み ★新規
-   ├─> spec.md のインタラクション/画面フローを参照
+   ├─> spec-behavior.md のインタラクション/spec.md の画面フローを参照
    ├─> data-figma-interaction（トリガー:アクション:ターゲット）
    ├─> data-figma-navigate（遷移先パス）
    └─> data-figma-states（対応UI状態）
 
-8. spec.md 更新
+8. spec-visual.md 更新
    ├─> 「構造・スタイル」セクション
    ├─> 「コンテンツ分析」セクション
    └─> 完了チェックリストを更新
@@ -463,9 +468,9 @@ spec.md の「インタラクション」「画面フロー」セクションを
   - data-figma-content-type
   - data-figma-content-classification
   - data-figma-content-data-type
-- [ ] spec.md の「構造・スタイル」セクションが更新されている
-- [ ] spec.md の「コンテンツ分析」セクションが更新されている
-- [ ] spec.md の「インタラクション」セクションが更新されている
+- [ ] spec-visual.md の「構造・スタイル」セクションが更新されている
+- [ ] spec-visual.md の「コンテンツ分析」セクションが更新されている
+- [ ] spec-behavior.md の「インタラクション」セクションが更新されている（extracting-interactions担当）
 - [ ] プレビューHTMLが正しく表示される（オプション）
 ```
 

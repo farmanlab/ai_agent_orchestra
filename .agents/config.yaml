@@ -13,17 +13,6 @@ agents:
       Claude Code v2.0.64+ では .claude/rules/ ディレクトリによる
       モジュラールールをサポート。CLAUDE.md は非推奨。
 
-  cursor:
-    enabled: true
-    output_dir: .cursor
-    features:
-      rules: true
-      skills: true  # Rules に統合される
-      agents: false
-    notes: |
-      Skills は単一 MDC ファイルに統合される。
-      Agent mode 用の instructions として使用可能。
-
   copilot:
     enabled: true
     output_dir: .github
@@ -44,18 +33,15 @@ conversion:
     # priority によるソート
     sort_by_priority: true
 
-    # ファイル名のプレフィックス（Cursor用）
-    file_prefix_format: "%02d"
-
   skills:
     # Skills を progressive disclosure として保持（Claude Code）
     preserve_structure_for_claude: true
 
-    # Skills を単一ファイルに統合（Cursor, Copilot）
+    # Skills を単一ファイルに統合（Copilot）
     merge_to_single_file_for_others: true
 
     # scripts ディレクトリの扱い
-    include_scripts: false  # Cursor, Copilot は実行不可のため除外
+    include_scripts: false  # Copilot は実行不可のため除外
 
   agents:
     # Claude Code 用の frontmatter フィールド
@@ -96,7 +82,6 @@ git:
   # Git で管理するファイル
   tracked_files:
     - .claude/
-    - .cursor/
     - .github/
     - CLAUDE.md
     - AGENTS.md

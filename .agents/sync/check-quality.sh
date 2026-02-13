@@ -4,8 +4,8 @@
 # ベストプラクティスに基づいて構成を検証
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-AGENTS_DIR="$REPO_ROOT/.agents"
+AGENTS_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+REPO_ROOT="$(cd "$AGENTS_DIR/.." && pwd)"
 
 # カラー定義
 GREEN='\033[0;32m'
@@ -178,7 +178,7 @@ check_task_specific() {
     return 0
 }
 
-# 5. ファイルサイズチェック（Cursor 500行推奨）
+# 5. ファイルサイズチェック（500行推奨）
 check_file_size() {
     local file="$1"
     local filename=$(basename "$file")
@@ -190,7 +190,7 @@ check_file_size() {
         log_high "[$relative_path] Exceeds 1000 lines ($line_count) - split into multiple files"
         return 2
     elif [ $line_count -gt 500 ]; then
-        log_medium "[$relative_path] Exceeds Cursor recommendation ($line_count lines > 500)"
+        log_medium "[$relative_path] Exceeds recommendation ($line_count lines > 500)"
         return 1
     fi
 
@@ -414,14 +414,14 @@ main() {
     fi
 
     log_info "Checking against best practices from:"
-    log_detail "✓ Cursor: Keep rules under 500 lines"
+    log_detail "✓ Keep rules under 500 lines"
     log_detail "✓ GitHub Copilot: Max 2 pages, not task-specific"
     log_detail "✓ Claude Code: Concrete examples, structured format"
     echo ""
 
     echo -e "${CYAN}💡 Tip:${NC} For checks against the ${CYAN}latest${NC} official documentation,"
     echo -e "   use the ${CYAN}prompt-quality-checker${NC} agent in Claude Code."
-    echo -e "   It fetches current guidelines from Cursor, Copilot, and Claude docs."
+    echo -e "   It fetches current guidelines from Copilot and Claude docs."
     echo ""
 
     # カテゴリ別チェック
@@ -474,7 +474,7 @@ main() {
             echo -e "${CYAN}Recommendations:${NC}"
             echo "  - Fix high priority issues (missing metadata, excessive size)"
             echo "  - Review medium priority issues (structure, clarity)"
-            echo "  - Consider best practices from Cursor, Copilot, Claude docs"
+            echo "  - Consider best practices from Copilot, Claude docs"
             echo ""
             echo -e "${RED}Quality check found issues requiring attention.${NC}"
             exit 1

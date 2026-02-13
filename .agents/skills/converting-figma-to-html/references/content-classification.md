@@ -131,7 +131,7 @@ course_items            4296:28471
       data-figma-content-value="テスト運用版"
       data-figma-content-classification="static"
       data-figma-content-data-type="string"
-      data-figma-font="JP/10 - Bold">テスト運用版</span>
+      data-figma-token-font="JP/10 - Bold">テスト運用版</span>
 
 <!-- アイコン（アセット） -->
 <button data-figma-node="I2350:6398;48:622"

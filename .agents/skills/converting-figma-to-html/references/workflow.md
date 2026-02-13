@@ -87,8 +87,13 @@
 | 属性 | 用途 | 付与対象 |
 |------|------|----------|
 | data-figma-node | FigmaノードID | 主要な全要素 |
-| data-figma-tokens | デザイントークン | 色・スペーシング使用要素 |
-| data-figma-font | フォントトークン | テキスト要素 |
+| data-figma-token-bg | 背景色トークン | 背景色使用要素 |
+| data-figma-token-color | テキスト/アイコン色トークン | テキスト・アイコン要素 |
+| data-figma-token-font | フォントトークン | テキスト要素 |
+| data-figma-token-padding | パディングトークン | パディング使用要素 |
+| data-figma-token-gap | Gapトークン | Flexbox/Grid要素 |
+| data-figma-token-radius | 角丸トークン | 角丸使用要素 |
+| data-figma-token-border | ボーダートークン | ボーダー使用要素 |
 | data-figma-icon-svg | アイコンURL | SVGアイコン |
 | data-figma-content-XXX | コンテンツID | コンテンツ要素 |
 
@@ -123,8 +128,11 @@
 1. {component_name}.html
    - 変換後のHTML（data属性付き）
 
-2. spec.md
-   - 画面仕様書（コンテンツ分析セクション含む）
+2. 仕様書ファイル（3ファイル構成）
+   - spec.md - 概要仕様書（PM/全員向け）
+   - spec-visual.md - ビジュアル仕様書（デザイナー/開発者向け）
+     - ★このスキルが「構造・スタイル」「コンテンツ分析」セクションを更新
+   - spec-behavior.md - 動作仕様書（開発者/QA向け）
 
 3. {component_name}_preview.html（オプション）
    - デバイスフレーム付きプレビュー
@@ -224,7 +232,7 @@ Step 4で分析した内容をHTML要素に data 属性として埋め込む。
       data-figma-content-value="テスト運用版"
       data-figma-content-classification="static"
       data-figma-content-data-type="string"
-      data-figma-font="JP/10 - Bold">テスト運用版</span>
+      data-figma-token-font="JP/10 - Bold">テスト運用版</span>
 
 <!-- アイコン（アセット） -->
 <button class="nav-icon"
@@ -534,12 +542,18 @@ HTMLで使用されているデザイントークンの一覧を作成してく�
 | `data-figma-node` | FigmaノードID | `"5070:65342"` |
 | `data-figma-content-XXX` | コンテンツ識別子 | `nav-title`, `course-item` |
 
-### 推奨属性
+### 推奨属性（デザイントークン）
 
 | 属性 | 用途 | 値の例 |
 |------|------|--------|
-| `data-figma-tokens` | デザイントークン | `"background: darkblue"` |
-| `data-figma-font` | フォントトークン | `"System Font: Size 16"` |
+| `data-figma-token-bg` | 背景色トークン | `"Background/Default/Default"` |
+| `data-figma-token-color` | テキスト/アイコン色トークン | `"Text/Default/Default"` |
+| `data-figma-token-font` | フォントトークン | `"JP/16 - Bold"` |
+| `data-figma-token-padding` | パディングトークン | `"Space/200"` |
+| `data-figma-token-gap` | Gapトークン | `"Space/050"` |
+| `data-figma-token-radius` | 角丸トークン | `"Spacing/Spacing-02"` |
+| `data-figma-token-border` | ボーダートークン | `"Border/Default/Tertiary"` |
+| `data-figma-token-height` | 高さトークン | `"56px"` |
 | `data-figma-icon-svg` | アイコンURL | `"https://figma.com/api/..."` |
 | `data-figma-icon-color` | アイコンカラー | `"Icon/Main/Default"` |
 

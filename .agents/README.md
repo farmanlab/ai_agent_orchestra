@@ -1,6 +1,6 @@
 # AI Coding Agent 統一管理システム
 
-Claude Code, Cursor, GitHub Copilot のエージェント設定を単一ソースから管理するシステム。
+Claude Code, GitHub Copilot のエージェント設定を単一ソースから管理するシステム。
 
 ## 設計思想
 
@@ -13,7 +13,6 @@ Single Source of Truth (.agents/) → 各エージェント固有形式へ変換
 | エージェント | Rules | Skills | Subagents | Commands |
 |-------------|-------|--------|-----------|----------|
 | Claude Code | ✅ .claude/rules/*.md | ✅ .claude/skills/* | ✅ .claude/agents/*.md | ✅ .claude/commands/ |
-| Cursor | ✅ .cursor/rules/*/RULE.md | ✅ .cursor/skills/* | ✅ .cursor/agents/*.md | ✅ .cursor/commands/ |
 | GitHub Copilot | ✅ .github/copilot-instructions.md | ✅ .github/skills/* | ✅ .github/agents/*.agents.md | ✅ .github/prompts/ |
 
 ### クロスプラットフォーム互換性
@@ -59,7 +58,6 @@ Single Source of Truth (.agents/) → 各エージェント固有形式へ変換
 └── sync/                        # 同期スクリプト
     ├── sync.sh                  # メイン同期スクリプト
     ├── to-claude.sh             # Claude Code用変換
-    ├── to-cursor.sh             # Cursor用変換
     └── to-copilot.sh            # GitHub Copilot用変換
 ```
 
@@ -80,7 +78,7 @@ paths: "**/*.{ts,js,py}"            # 適用対象 (オプション、カンマ�
 ルールの本文...
 ```
 
-**注意**: `paths` はカンマ区切りの単一文字列で記述します（ブレース展開可）。各エージェント向けに変換される際、フィールド名のみ変換されます（Cursor: `globs`、Copilot: `applyTo`）。
+**注意**: `paths` はカンマ区切りの単一文字列で記述します（ブレース展開可）。各エージェント向けに変換される際、フィールド名のみ変換されます（Copilot: `applyTo`）。
 
 ### 2. Skills (.agents/skills/{name}/SKILL.md)
 
@@ -104,7 +102,7 @@ triggers: [keyword1, keyword2]     # 自動検出用キーワード
 - [checklist.md](checklist.md)
 ```
 
-> **Note**: GitHub Copilot は triggers による自動読み込み機能を持たないため、Skills は claude/cursor 専用です。
+> **Note**: GitHub Copilot は triggers による自動読み込み機能を持たないため、Skills は Claude Code 専用です。
 
 ### 3. Agents (.agents/agents/*.md)
 
@@ -162,7 +160,6 @@ allowed-tools: [Tool1, Tool2, ...]  # Claude Code用（オプション）
 
 # 特定エージェントのみ
 .agents/scripts/sync/sync.sh claude
-.agents/scripts/sync/sync.sh cursor
 .agents/scripts/sync/sync.sh copilot
 ```
 
@@ -229,7 +226,6 @@ allowed-tools: [Tool1, Tool2, ...]  # Claude Code用（オプション）
 10. **トーン**: 一貫したプロフェッショナルな文体
 
 **公式ベストプラクティス準拠**:
-- Cursor: ルールは500行以下、具体例を含める
 - GitHub Copilot: 最大2ページ、タスク非依存、明確で簡潔
 - Claude Code: 具体的なコンテキスト、構造化形式
 
@@ -275,41 +271,30 @@ claude --plugin-dir plugins/prompt-engineering
 
 ### Rules 変換
 
-| 統一形式 | Claude Code | Cursor | Copilot |
-|---------|-------------|--------|---------|
-| `_base.md` | .claude/rules/_base.md | .cursor/rules/_base/RULE.md | copilot-instructions.md に統合 |
-| `{name}.md` | .claude/rules/{name}.md | .cursor/rules/{name}/RULE.md | instructions/{name}.instructions.md |
-| `paths` (YAML配列) | `paths` (YAML配列) | `globs` (カンマ区切り単一行) | `applyTo` (カンマ区切り単一行) |
+| 統一形式 | Claude Code | Copilot |
+|---------|-------------|---------|
+| `_base.md` | .claude/rules/_base.md | copilot-instructions.md に統合 |
+| `{name}.md` | .claude/rules/{name}.md | instructions/{name}.instructions.md |
+| `paths` (YAML配列) | `paths` (YAML配列) | `applyTo` (カンマ区切り単一行) |
 
 **形式の違い**:
 - `.agents/rules/`: `paths:` + YAML配列形式（`- "**/*.ts"`）+ メタデータ（`name`, `description`）
 - `.claude/rules/`: `paths:` + YAML配列形式（そのまま維持）
-- `.cursor/rules/`: `description`と`alwaysApply`（と`globs`）のみ、`globs`はカンマ区切り単一行
 - `.github/instructions/`: `applyTo:` + カンマ区切り単一行（`"**/*.ts", "**/*.js"`）
-
-**重要**:
-- Cursor の RULE.md には `name` などは不要で、`description`, `alwaysApply`, `globs` のみが有効です
-- `alwaysApply` の自動判定ルール：
-  - `description` または `globs` が指定されている場合: `alwaysApply: false`
-  - どちらも指定されていない場合: `alwaysApply: true`（実質的にはほぼ使われない）
-- **適用範囲の優先順位**：
-  - `globs` が指定されている場合: `globs` パターンに一致するファイルのみに適用
-  - `globs` がなく `description` のみの場合: 全ファイルに適用
-  - `description` と `globs` の両方がある場合: `globs` が優先され、パターンに一致するファイルのみに適用
 
 ### Skills 変換
 
-| 統一形式 | Claude Code | Cursor | Copilot |
-|---------|-------------|--------|---------|
-| `{name}/` | .claude/skills/{name} (symlink) | .cursor/skills/{name} (symlink) | .github/skills/{name} (symlink) |
+| 統一形式 | Claude Code | Copilot |
+|---------|-------------|---------|
+| `{name}/` | .claude/skills/{name} (symlink) | .github/skills/{name} (symlink) |
 
 > **Note**: 各ディレクトリはファイル単位のシンボリックリンクで管理されるため、エージェント固有のスキルを追加可能です。
 
 ### Agents 変換
 
-| 統一形式 | Claude Code | Cursor | Copilot |
-|---------|-------------|--------|---------|
-| `{name}.md` | .claude/agents/{name}.md (symlink) | .cursor/agents/{name}.md (symlink) | .github/agents/{name}.agents.md (symlink) |
+| 統一形式 | Claude Code | Copilot |
+|---------|-------------|---------|
+| `{name}.md` | .claude/agents/{name}.md (symlink) | .github/agents/{name}.agents.md (symlink) |
 | `tools`, `model` | 保持 | 保持 | 保持 |
 
 > **Note**: 各ディレクトリはファイル単位のシンボリックリンクで管理されるため、エージェント固有のファイルを追加可能です。
@@ -317,11 +302,11 @@ claude --plugin-dir plugins/prompt-engineering
 
 ### Commands 変換
 
-| 統一形式 | Claude Code | Cursor | Copilot |
-|---------|-------------|--------|---------|
-| `{name}.md` | .claude/commands/{name}.md | .cursor/commands/{name}.md | .github/prompts/{name}.prompt.md |
-| フォーマット | そのまま | そのまま | .prompt.md 拡張子 |
-| 用途 | Slash Commands | Slash Commands | GitHub Prompts |
+| 統一形式 | Claude Code | Copilot |
+|---------|-------------|---------|
+| `{name}.md` | .claude/commands/{name}.md | .github/prompts/{name}.prompt.md |
+| フォーマット | そのまま | .prompt.md 拡張子 |
+| 用途 | Slash Commands | GitHub Prompts |
 
 ## 生成されるファイル
 
@@ -343,12 +328,6 @@ project/
 │   ├── skills/*                  # → .agents/skills/* (symlinks)
 │   ├── agents/*.md               # → .agents/agents/* (symlinks)
 │   └── commands/                 # Slash Commands
-│
-├── .cursor/                      # Cursor 用
-│   ├── rules/*/RULE.md           # Cursor 用 Rules
-│   ├── skills/*                  # → .agents/skills/* (symlinks)
-│   ├── agents/*.md               # → .agents/agents/* (symlinks)
-│   └── commands/*.md             # Slash Commands
 │
 └── .github/                      # GitHub Copilot 用
     ├── copilot-instructions.md   # Copilot 用メイン
@@ -373,7 +352,7 @@ vim .agents/rules/new-rule.md
 .agents/scripts/sync/sync.sh all
 
 # 3. コミット
-git add .agents/ .claude/ .cursor/ .github/ CLAUDE.md AGENTS.md
+git add .agents/ .claude/ .github/ CLAUDE.md AGENTS.md
 git commit -m "Add new-rule"
 ```
 
@@ -439,22 +418,12 @@ chmod +x .agents/scripts/sync/*.sh
 
 ### 特定エージェントで認識されない
 
-```bash
-# 生成ファイルを確認
-cat .cursor/rules/00-_base.mdc
-
-# frontmatter の形式確認
-# --- で始まり --- で終わる必要あり
-```
-
 ### 変更が反映されない
 
-- **Cursor**: Cursor を再起動
 - **Claude Code**: 新しいセッションを開始
 - **Copilot**: VS Code をリロード
 
 ## 関連ドキュメント
 
 - [Claude Code Memory Management](https://code.claude.com/docs/en/memory)
-- [Cursor Rules](https://docs.cursor.com/context/rules)
 - [GitHub Copilot Custom Instructions](https://docs.github.com/en/copilot/customizing-copilot/adding-custom-instructions-for-github-copilot)

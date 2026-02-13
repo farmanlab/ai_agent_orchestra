@@ -344,13 +344,12 @@ grep -o 'viewBox="[^"]*"' assets/*.svg
 ### ルール
 
 - Figmaのデザイントークン（CSS変数形式）はTailwindの固定値に変換
-- 元のトークン名は`data-figma-token-*`属性で個別に保持（推奨）
-- または`data-figma-tokens`属性でまとめて保持（従来方式）
+- 元のトークン名は`data-figma-token-*`属性で個別に保持
 - マッピング表を別途作成し、デザインシステムとの整合性を維持
 
 ### トークン属性の形式
 
-**推奨: 個別属性形式 (`data-figma-token-*`)**
+**個別属性形式 (`data-figma-token-*`)**
 
 | 属性 | 用途 | 値の例 |
 |------|------|--------|
@@ -364,7 +363,7 @@ grep -o 'viewBox="[^"]*"' assets/*.svg
 | `data-figma-token-border` | ボーダートークン | `"Border/Main/Default"` |
 | `data-figma-token-size` | サイズトークン（アイコン等） | `"24px"`, `"32px"` |
 
-### 実装例（推奨形式）
+### 実装例
 
 ```html
 <!-- ボタン -->
@@ -397,13 +396,6 @@ grep -o 'viewBox="[^"]*"' assets/*.svg
       class="w-6 h-6 text-icon-main-default">
   <svg viewBox="0 0 24 24"><!-- placeholder --></svg>
 </span>
-```
-
-### 実装例（従来形式）
-
-```html
-<div class="gap-3 px-4 py-3 bg-[#cfe5fc]"
-     data-figma-tokens="background: Background/Main/Secondary, gap: Space/150, padding-x: Space/200, padding-y: Space/150">
 ```
 
 ### Tailwind CDN Inline Config パターン
@@ -463,7 +455,7 @@ standalone HTML で Figma トークンを活用する場合、Tailwind CDN の i
 
 ### ルール
 
-- Figmaのフォントトークン名を`data-figma-font`属性で埋め込む
+- Figmaのフォントトークン名を`data-figma-token-font`属性で埋め込む
 - フォントファミリーはシステムフォント依存を考慮しフォールバックを設定
 - Webフォントとして利用不可のフォント（Hiragino Sans等）は代替フォントを明示
 
@@ -471,8 +463,8 @@ standalone HTML で Figma トークンを活用する場合、Tailwind CDN の i
 
 ```html
 <span class="font-hiragino text-base leading-[1.5]"
-      data-figma-font="JP/16 - Regular"
-      data-figma-tokens="color: Text/Default/Default">
+      data-figma-token-font="JP/16 - Regular"
+      data-figma-token-color="Text/Default/Default">
   テキスト
 </span>
 ```
@@ -707,8 +699,7 @@ target: 遷移先パス, モーダルID, ドロップダウンID, または対�
 ### 変換中
 
 - [ ] アイコンは仮置き + `data-figma-icon-svg`属性でFigma URLを埋め込み
-- [ ] フォントトークンは`data-figma-font`属性で保持
-- [ ] カラー/スペーシングトークンは`data-figma-tokens`属性で保持
+- [ ] デザイントークンは`data-figma-token-*`属性で個別に保持（bg, color, font, padding, gap, radius, border等）
 - [ ] ノードIDは`data-figma-node`属性で保持
 
 ### 変換後

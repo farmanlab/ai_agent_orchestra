@@ -23,7 +23,6 @@ aao sync
 
 # Sync to a specific agent
 aao sync claude
-aao sync cursor
 aao sync copilot
 
 # Validate configuration

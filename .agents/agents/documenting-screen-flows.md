@@ -28,7 +28,9 @@ skills: [documenting-screen-flows, managing-screen-specs]
 
 ```
 .outputs/{screen-id}/
-├── spec.md             # ← このエージェントが「画面フロー」セクションを更新
+├── spec.md             # ← このエージェントが「画面フロー」セクションを更新（概要仕様書）
+├── spec-visual.md      # ビジュアル仕様書
+├── spec-behavior.md    # 動作仕様書
 ├── index.html
 └── assets/
 ```
@@ -45,6 +47,17 @@ skills: [documenting-screen-flows, managing-screen-specs]
 - 特定のナビゲーションライブラリの提案
 - 他のセクションの変更
 
+## データソースラベル（必須）
+
+**各項目には必ずソースラベルを付与すること。**
+
+| ラベル | 使用場面 |
+|--------|----------|
+| `[Figma]` | Figmaプロトタイプで定義された画面遷移 |
+| `[HTML]` | HTMLのdata-figma-navigate属性から取得 |
+| `[推奨]` | 一般的なナビゲーションパターン |
+| `[要確認]` | 遷移先画面名、パラメータ、アニメーション詳細の推測 |
+
 ## Workflow
 
 ```
@@ -60,7 +73,7 @@ Screen Flow Documentation Progress:
 
 ---
 
-### Step 0: spec.md の存在確認
+### Step 0: spec.md（概要仕様書）の存在確認
 
 ```bash
 ls .outputs/{screen-id}/spec.md

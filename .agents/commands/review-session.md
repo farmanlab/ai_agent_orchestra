@@ -56,7 +56,6 @@ allowed-tools: Read, Glob, Grep, Write, AskUserQuestion, Bash(echo:*)
 2. 以下の情報を記録:
    - プロジェクトルート: $CWD または pwd の結果
    - .agents/ の存在確認: $CWD/.agents/
-   - .cursor/rules/ の存在確認: $CWD/.cursor/rules/
 3. ルール保存先を決定:
    - .agents/rules/ が存在する場合: そこに保存
    - 存在しない場合: ユーザーに確認
@@ -123,21 +122,11 @@ Transcript（JSONL形式）を解析し、以下のパターンを検出：
 **検出パターン**:
 - 明示的な規約言及（「このプロジェクトでは」「いつも」「必ず」）
 - 特定のワークフローの繰り返し
+- トラブルシュート後の解決パターン
 
 **記録項目**:
 - 暗黙のルール内容
 - ルール化すべきか判定
-
-#### 2.5 トラブルシュート解決の検出
-
-**検出パターン**:
-- エラー発生 → 調査 → 解決のフロー
-- 成功報告キーワード: 「これで解決」「動いた」「fixed」「resolved」
-
-**記録項目**:
-- エラー内容と原因
-- 解決方法
-- 再発防止策（ルール化候補）
 
 ### Step 3: 既存ルールとの比較
 
@@ -171,55 +160,14 @@ AskUserQuestionツールを使用して各提案について確認：
 - 「作成する」「更新する」「スキップ」の選択肢
 - 修正したい場合は内容を編集
 
-### Step 6: 保存先の選択と実行
+### Step 6: 実行
 
-ユーザーが承認した提案について、AskUserQuestionで保存先を確認：
-
-```yaml
-question: "承認されたKnowledgeをどこに保存しますか？"
-header: "保存先"
-options:
-  - label: "別ブランチで作成（推奨）"
-    description: "現在の変更をstashし、新しいブランチでルール作成→コミット＆プッシュ後、元のブランチに戻してstash popする"
-  - label: "現在のブランチに追加"
-    description: "今のブランチに直接追加する（コミットはユーザーに任せる）"
-  - label: "ユーザーローカルに追加"
-    description: "~/.claude/rules/ または ~/.agents/rules/ に保存（プロジェクト共有なし）"
-```
-
-#### 別ブランチで作成（推奨）
-
-```bash
-# 1. 現在のブランチ名を記録
-ORIGINAL_BRANCH=$(git branch --show-current)
-
-# 2. 未コミットの変更があればstash
-git stash push -m "review-session: temp stash for rule creation"
-
-# 3. mainブランチから新しいブランチを作成
-git checkout main && git pull origin main
-git checkout -b add-rule-[rule-name]
-
-# 4. ルールファイルを作成 → sync実行
-# 5. コミット＆プッシュ → PR作成（オプション）
-
-# 6. 元のブランチに戻る → stash pop
-git checkout $ORIGINAL_BRANCH && git stash pop
-```
-
-#### 現在のブランチに追加
+ユーザーが承認した提案を実行：
 
 ```
 1. ファイル作成/更新
 2. .agents/scripts/sync/sync.sh all でSync実行
-3. 完了報告（コミットはユーザーに任せる）
-```
-
-#### ユーザーローカルに追加
-
-```
-1. ~/.claude/rules/ または ~/.agents/rules/ にファイル作成
-2. 完了報告（Gitの対象外、プロジェクト共有なし）
+3. 完了報告
 ```
 
 ## 検出パターン
@@ -290,24 +238,6 @@ content: |
   全ての変更にテストを含める（必須）
 ```
 
-### パターン5: トラブルシュート解決
-
-```
-AI: エラー: Module not found 'xyz'
-AI: 調査... package.json を確認
-AI: devDependencies に追加して解決しました
-User: 動いた！  ← 検出
-```
-
-**提案**:
-```yaml
-type: new_rule
-target: .agents/rules/dependency-management.md
-content: |
-  新しいモジュールを使用する際は devDependencies への追加を確認する
-  エラー: Module not found → package.json の依存関係を確認
-```
-
 ## 出力形式
 
 ### 検出サマリー
@@ -323,7 +253,6 @@ content: |
 | 判断の迷い | N件 |
 | 繰り返し指示 | N件 |
 | 暗黙のルール | N件 |
-| トラブルシュート解決 | N件 |
 
 ### 改善提案
 
@@ -332,7 +261,7 @@ content: |
 | 項目 | 内容 |
 |------|------|
 | 種別 | 新規ルール / ルール更新 / スキル |
-| 検出理由 | [修正/迷い/繰り返し/暗黙/解決] |
+| 検出理由 | [修正/迷い/繰り返し/暗黙] |
 | 対象ファイル | `.agents/rules/[name].md` |
 
 **内容:**
@@ -402,26 +331,10 @@ Hook経由で呼び出される場合、以下の環境変数が利用可能:
 
 詳細なhook設定例は以下を参照:
 - `.agents/hooks/review-session-claude.json` - Claude Code用
-- `.agents/hooks/review-session-cursor.json` - Cursor用
 
-## 提案ガイドライン
+## 注意事項
 
-### 提案すべきもの
-
-- プロジェクト固有の設定・規約
-- チーム共通のワークフロー
-- 繰り返し使える解決パターン
-- ツール/ライブラリの使い方
-
-### 提案を控えるもの
-
-- 一般的なベストプラクティス（すでに知られている）
-- 一度限りの特殊なケース
-- ユーザーの好み程度の軽微な指摘
-- セキュリティに関わる機密情報
-
-### 検出頻度の制約
-
-- **過度な提案を避ける**: 1セッションで最大3件まで
-- **重複回避**: 既存のrules/skillsと重複する内容は提案しない
-- **タイミング**: タスク完了後や会話の区切りで提案（作業中は控える）
+- 提案は最大5件まで（過度な提案を避ける）
+- 既存ルールと重複する内容は提案しない
+- セキュリティに関わる機密情報はルール化しない
+- 一度限りの特殊ケースは対応不要と判定

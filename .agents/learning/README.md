@@ -41,7 +41,6 @@ learning/
 ## 対応ツール
 
 - Claude Code: `.claude/rules/session-learning.md`
-- Cursor: `.cursor/rules/session-learning/RULE.md`
 - GitHub Copilot: `.github/instructions/session-learning.instructions.md`
 
 ## 使用方法

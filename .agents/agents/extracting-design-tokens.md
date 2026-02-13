@@ -17,7 +17,9 @@ Figmaデザインからデザイントークン（色、タイポグラフィ、
 
 ```
 .outputs/{screen-id}/
-├── spec.md             # ← このエージェントが「デザイントークン」セクションを更新
+├── spec.md             # 概要仕様書
+├── spec-visual.md      # ← このエージェントが「デザイントークン」セクションを更新
+├── spec-behavior.md    # 動作仕様書
 ├── index.html
 └── assets/
 ```
@@ -33,6 +35,16 @@ Figmaデザインからデザイントークン（色、タイポグラフィ、
 - CSS/Sass/CSS-in-JS実装コードの生成
 - 特定のデザインシステムライブラリの提案
 - 他のセクションの変更
+
+## データソースラベル（必須）
+
+**各項目には必ずソースラベルを付与すること。**
+
+| ラベル | 使用場面 |
+|--------|----------|
+| `[Figma]` | get_variable_defs、get_design_contextで取得したトークン値 |
+| `[HTML]` | HTMLのdata-figma-token-*属性から取得 |
+| `[要確認]` | トークン名の推測、値の補完 |
 
 ## 対象トークン
 
@@ -62,10 +74,10 @@ Design Token Extraction Progress:
 
 ---
 
-### Step 0: spec.md の存在確認
+### Step 0: spec-visual.md の存在確認
 
 ```bash
-ls .outputs/{screen-id}/spec.md
+ls .outputs/{screen-id}/spec-visual.md
 ```
 
 ### Step 1: Figma Variablesを取得
@@ -78,7 +90,7 @@ mcp__figma__get_variable_defs(fileKey, nodeId)
 
 詳細は [extracting-design-tokens SKILL.md](../skills/extracting-design-tokens/SKILL.md) を参照。
 
-### Step 8: spec.md の「デザイントークン」セクションを更新
+### Step 8: spec-visual.md の「デザイントークン」セクションを更新
 
 1. セクションを特定（`## デザイントークン`）
 2. ステータスを「完了 ✓」に更新
@@ -105,7 +117,7 @@ Figma URL: https://figma.com/design/XXXXX/Project?node-id=1234-5678
 @extracting-design-tokens
 
 講座一覧画面で使用されているデザイントークンを抽出してください。
-spec.md は .outputs/course-list/ にあります。
+spec-visual.md は .outputs/course-list/ にあります。
 ```
 
 ---
@@ -126,7 +138,7 @@ spec.md は .outputs/course-list/ にあります。
 
 **更新したセクションに署名コメントを含めること。**
 
-### spec.md の「デザイントークン」セクション
+### spec-visual.md の「デザイントークン」セクション
 
 セクション見出しの直後に署名を追加：
 

@@ -17,42 +17,70 @@ allowed-tools: [Read, Write, Glob]
 ```
 .agents/
 ├── templates/
-│   └── screen-spec.md          # 画面仕様書テンプレート
+│   ├── screen-spec.md          # 概要仕様書テンプレート（PM/全員向け）
+│   ├── screen-spec-visual.md   # ビジュアル仕様書テンプレート（デザイナー/開発者向け）
+│   └── screen-spec-behavior.md # 動作仕様書テンプレート（開発者/QA向け）
 └── tmp/
     └── {screen-id}/
-        ├── spec.md             # 画面仕様書（メインドキュメント）
+        ├── spec.md             # 概要仕様書
+        ├── spec-visual.md      # ビジュアル仕様書
+        ├── spec-behavior.md    # 動作仕様書
         ├── index.html          # 参照用HTML
         └── assets/             # 画像等のアセット
 ```
 
+### 3ファイル構成の役割分担
+
+| ファイル | 対象読者 | 含まれるセクション |
+|----------|----------|-------------------|
+| spec.md | PM、全員 | 概要、画面フロー、生成ファイル一覧、変更履歴 |
+| spec-visual.md | デザイナー、開発者 | 構造・スタイル、コンテンツ分析、UI状態、デザイントークン |
+| spec-behavior.md | 開発者、QA | インタラクション、フォーム仕様、APIマッピング、アクセシビリティ |
+
 ## テンプレート構造
 
-統一テンプレートは以下のセクションで構成されます：
+3つの仕様書ファイルで構成されます：
+
+### spec.md（概要仕様書）
 
 | セクション | 説明 |
 |-----------|------|
 | 概要 | 画面の基本情報（名前、Figma URL、HTML、説明） |
+| 画面フロー | mermaid stateDiagram-v2と遷移テーブル |
+| 生成ファイル一覧 | 関連ファイルの一覧 |
+| 変更履歴 | 日付、変更内容、担当の履歴 |
+
+### spec-visual.md（ビジュアル仕様書）
+
+| セクション | 説明 |
+|-----------|------|
 | 構造・スタイル | HTML構造とdata-figma属性 |
 | コンテンツ分析 | 静的/動的コンテンツの分類とAPI依存 |
 | UI状態 | デフォルト状態、ボタン状態、タブ状態など |
+| デザイントークン | カラー、タイポグラフィ、スペーシング |
+
+### spec-behavior.md（動作仕様書）
+
+| セクション | 説明 |
+|-----------|------|
 | インタラクション | INT-XXX形式でトリガー、アクション、遷移先を定義 |
+| フォーム仕様 | 入力バリデーション、送信処理 |
 | APIマッピング | APIエンドポイントとの関連付け |
 | アクセシビリティ | セマンティック要件、フォーカス管理、キーボード操作 |
-| デザイントークン | カラー、タイポグラフィ、スペーシング |
-| 画面フロー | mermaid stateDiagram-v2と遷移テーブル |
-| 変更履歴 | 日付、変更内容、担当の履歴 |
 
 ## ワークフロー
 
 ### 1. 仕様書の初期化
 
-新しい画面の仕様書を作成する場合：
+新しい画面の仕様書を作成する場合、3つのファイルを初期化：
 
 ```bash
 # テンプレートをコピー
 cp .agents/templates/screen-spec.md .outputs/{screen-id}/spec.md
+cp .agents/templates/screen-spec-visual.md .outputs/{screen-id}/spec-visual.md
+cp .agents/templates/screen-spec-behavior.md .outputs/{screen-id}/spec-behavior.md
 
-# 基本情報を置換
+# 全ファイル共通の基本情報を置換
 - {{SCREEN_NAME}} → 画面名
 - {{SCREEN_ID}} → 画面識別子
 - {{FIGMA_URL}} → Figma URL
@@ -90,18 +118,30 @@ cp .agents/templates/screen-spec.md .outputs/{screen-id}/spec.md
 
 ### 3. セクション別の責任範囲
 
+#### spec.md（概要仕様書）
+
 | セクション | 担当スキル | 主なプレースホルダー |
 |-----------|-----------|---------------------|
 | 概要 | managing-screen-specs | `{{SCREEN_NAME}}`, `{{FIGMA_URL}}`, `{{HTML_FILE}}`, `{{DESCRIPTION}}` |
+| 画面フロー | documenting-screen-flows | `{{CURRENT_SCREEN}}`, `{{NEXT_SCREEN}}`, 遷移テーブル |
+
+#### spec-visual.md（ビジュアル仕様書）
+
+| セクション | 担当スキル | 主なプレースホルダー |
+|-----------|-----------|---------------------|
 | 構造・スタイル | converting-figma-to-html | `{{HTML_STRUCTURE}}`, `{{SCREEN_ID}}`, `{{ROOT_NODE_ID}}` |
 | コンテンツ分析 | converting-figma-to-html | `{{CONTENT_NAME}}`, `{{DATA_ATTRIBUTE}}`, `{{API_SOURCE}}` |
-| UI状態 | documenting-ui-states | `{{ELEMENT_NAME}}`, `{{ELEMENT_STATE}}`, ボタン状態各種 |
-| インタラクション | extracting-interactions | `{{INTERACTION_NAME}}`, `{{TRIGGER}}`, `{{ACTION}}`, `{{DESTINATION}}` |
-| フォーム仕様 | defining-form-specs | （テンプレートには含まない、必要時に追加） |
-| APIマッピング | mapping-html-to-api | `{{API_MAPPING_DESCRIPTION}}` |
-| アクセシビリティ | defining-accessibility-requirements | `{{ELEMENT}}`, `{{ROLE}}`, `{{ARIA_ATTRS}}`, フォーカス/キーボード設定 |
-| デザイントークン | extracting-design-tokens | カラー/タイポグラフィ/スペーシングの各トークン |
-| 画面フロー | documenting-screen-flows | `{{CURRENT_SCREEN}}`, `{{NEXT_SCREEN}}`, 遷移テーブル |
+| UI状態 | documenting-ui-states | `{{UI_STATES_CONTENT}}` |
+| デザイントークン | extracting-design-tokens | `{{DESIGN_TOKENS_CONTENT}}` |
+
+#### spec-behavior.md（動作仕様書）
+
+| セクション | 担当スキル | 主なプレースホルダー |
+|-----------|-----------|---------------------|
+| インタラクション | extracting-interactions | `{{INTERACTIONS_CONTENT}}` |
+| フォーム仕様 | defining-form-specs | `{{FORM_SPECS_CONTENT}}` |
+| APIマッピング | mapping-html-to-api | `{{API_MAPPING_CONTENT}}` |
+| アクセシビリティ | defining-accessibility-requirements | `{{ACCESSIBILITY_CONTENT}}` |
 
 ## セクション更新のルール
 
@@ -226,4 +266,6 @@ HTMLファイル: top.html
 
 ## 参照
 
-- **[screen-spec.md](../../templates/screen-spec.md)**: テンプレートファイル
+- **[screen-spec.md](../../templates/screen-spec.md)**: 概要仕様書テンプレート
+- **[screen-spec-visual.md](../../templates/screen-spec-visual.md)**: ビジュアル仕様書テンプレート
+- **[screen-spec-behavior.md](../../templates/screen-spec-behavior.md)**: 動作仕様書テンプレート

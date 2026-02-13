@@ -74,10 +74,12 @@ grep "^## " {target}/spec.md
 - 画面フロー
 - APIマッピング
 - テスト項目
-- 受け入れ要件
 - 成果物
 - HTML検証結果
 - 変更履歴
+
+**別スキルに委譲**:
+- 受け入れ要件 → `/generating-acceptance-criteria` で生成
 
 ### Phase 4: セクション追加・更新
 
@@ -230,3 +232,13 @@ grep -c "{{" {target}/spec.md
 2. **既存内容保持**: 既存のセクション内容を削除しない
 3. **ソース明記**: 追加した情報のソースを明記
 4. **変更履歴**: 必ず変更履歴を更新
+5. **受け入れ要件は委譲**: 受け入れ要件セクションは追加しない（`/generating-acceptance-criteria` で生成）
+
+---
+
+## 推奨フロー
+
+```
+1. /refining-screen-specs    ← 先に実行（仕様書から詳細追加）
+2. /generating-acceptance-criteria  ← 後に実行（受け入れ要件生成）
+```

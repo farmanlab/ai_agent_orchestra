@@ -19,7 +19,9 @@ Figmaデザインからインタラクション仕様（hover、遷移、アニ�
 
 ```
 .outputs/{screen-id}/
-├── spec.md             # ← このエージェントが「インタラクション」セクションを更新
+├── spec.md             # 概要仕様書
+├── spec-visual.md      # ビジュアル仕様書
+├── spec-behavior.md    # ← このエージェントが「インタラクション」セクションを更新
 ├── index.html          # 参照用HTML
 └── assets/
 ```
@@ -39,6 +41,17 @@ Figmaデザインからインタラクション仕様（hover、遷移、アニ�
 ### documenting-ui-states で扱うもの
 
 - 画面全体の loading / error / empty
+
+## データソースラベル（必須）
+
+**各項目には必ずソースラベルを付与すること。**
+
+| ラベル | 使用場面 |
+|--------|----------|
+| `[Figma]` | Figmaプロトタイプで定義されたインタラクション |
+| `[HTML]` | HTMLのdata-figma-interaction属性から取得 |
+| `[推奨]` | 一般的なUXパターン（hover/active等） |
+| `[要確認]` | 遷移先、アニメーション詳細等の推測 |
 
 ## スキル参照
 
@@ -67,17 +80,17 @@ Interaction Extraction Progress:
 
 ---
 
-### Step 0: spec.md の存在確認
+### Step 0: spec-behavior.md の存在確認
 
 ```bash
-ls .outputs/{screen-id}/spec.md
+ls .outputs/{screen-id}/spec-behavior.md
 ```
 
 ### Step 1-6: インタラクション情報の収集
 
 詳細は [extracting-interactions SKILL.md](../skills/extracting-interactions/SKILL.md) を参照。
 
-### Step 7: spec.md の「インタラクション」セクションを更新
+### Step 7: spec-behavior.md の「インタラクション」セクションを更新
 
 1. セクションを特定（`## インタラクション`）
 2. ステータスを「完了 ✓」に更新
@@ -104,7 +117,7 @@ Figma URL: https://figma.com/design/XXXXX/Project?node-id=1234-5678
 @extracting-interactions
 
 講座一覧画面のインタラクション仕様を抽出してください。
-spec.md は .outputs/course-list/ にあります。
+spec-behavior.md は .outputs/course-list/ にあります。
 ```
 
 ---
@@ -113,7 +126,7 @@ spec.md は .outputs/course-list/ にあります。
 
 **更新したセクションに署名コメントを含めること。**
 
-### spec.md の「インタラクション」セクション
+### spec-behavior.md の「インタラクション」セクション
 
 セクション見出しの直後に署名を追加：
 

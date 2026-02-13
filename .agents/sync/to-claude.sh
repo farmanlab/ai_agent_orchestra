@@ -6,8 +6,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-AGENTS_DIR="$REPO_ROOT/.agents"
+AGENTS_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+REPO_ROOT="$(cd "$AGENTS_DIR/.." && pwd)"
 CLAUDE_DIR="$REPO_ROOT/.claude"
 
 echo "=== Converting to Claude Code format ==="
@@ -15,12 +15,15 @@ echo "Source: $AGENTS_DIR"
 echo "Target: $CLAUDE_DIR"
 echo ""
 
-# ディレクトリ作成
-mkdir -p "$CLAUDE_DIR/rules"
-
 # Rules 変換
 echo "Converting Rules..."
 if [ -d "$AGENTS_DIR/rules" ]; then
+    # .claude/rules がシンボリックリンクの場合はスキップ（同じファイルを指すため変換不要）
+    if [ -L "$CLAUDE_DIR/rules" ]; then
+        echo "  .claude/rules is a symlink to .agents/rules — skipping conversion"
+    else
+    mkdir -p "$CLAUDE_DIR/rules"
+
     find "$AGENTS_DIR/rules" -type f -name "*.md" | while read -r rule_file; do
         filename=$(basename "$rule_file")
         target="$CLAUDE_DIR/rules/$filename"
@@ -86,6 +89,7 @@ if [ -d "$AGENTS_DIR/rules" ]; then
 
         echo "    → $target"
     done
+    fi
 fi
 
 # Agents 変換
@@ -103,6 +107,10 @@ echo "  (Managed via file-level symlinks in sync.sh)"
 echo ""
 echo "Converting Commands..."
 if [ -d "$AGENTS_DIR/commands" ]; then
+    # .claude/commands がディレクトリレベルのシンボリックリンクの場合はスキップ
+    if [ -L "$CLAUDE_DIR/commands" ]; then
+        echo "  .claude/commands is a symlink to .agents/commands — skipping conversion"
+    else
     mkdir -p "$CLAUDE_DIR/commands"
 
     find "$AGENTS_DIR/commands" -type f -name "*.md" | while read -r command_file; do
@@ -122,6 +130,7 @@ if [ -d "$AGENTS_DIR/commands" ]; then
 
         echo "    → $target (symlink)"
     done
+    fi
 fi
 
 echo ""

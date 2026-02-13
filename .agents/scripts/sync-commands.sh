@@ -2,7 +2,7 @@
 
 # スクリプトの説明
 # .agents配下のコマンドファイル(.md)に対して、
-# .cursor/commands、.claude/commands、.github/promptsから自動的にシンボリックリンクを作成します
+# .claude/commands、.github/promptsから自動的にシンボリックリンクを作成します
 # .github/promptsでは拡張子が.prompt.mdになります
 #
 # 使い方:
@@ -17,7 +17,6 @@ show_help() {
 Usage: $0 [FILE]
 
 Create symlinks for command files from .agents/ to:
-  - .cursor/commands/
   - .claude/commands/
   - .github/prompts/ (as .prompt.md)
 
@@ -49,7 +48,6 @@ TARGET_FILE="$1"
 
 # 対象ディレクトリ
 AGENTS_DIR="$REPO_ROOT/.agents"
-CURSOR_COMMANDS_DIR="$REPO_ROOT/.cursor/commands"
 CLAUDE_COMMANDS_DIR="$REPO_ROOT/.claude/commands"
 GITHUB_PROMPTS_DIR="$REPO_ROOT/.github/prompts"
 
@@ -58,7 +56,6 @@ echo "Repository root: $REPO_ROOT"
 echo ""
 
 # 各ディレクトリが存在することを確認
-mkdir -p "$CURSOR_COMMANDS_DIR"
 mkdir -p "$CLAUDE_COMMANDS_DIR"
 mkdir -p "$GITHUB_PROMPTS_DIR"
 
@@ -76,7 +73,6 @@ cleanup_broken_links() {
 }
 
 # 壊れたシンボリックリンクを削除
-cleanup_broken_links "$CURSOR_COMMANDS_DIR"
 cleanup_broken_links "$CLAUDE_COMMANDS_DIR"
 cleanup_broken_links "$GITHUB_PROMPTS_DIR"
 echo ""
@@ -99,10 +95,6 @@ create_symlinks_for_file() {
 
     echo "Processing: $relative_path"
 
-    # .cursor/commandsからの相対パスを計算
-    local cursor_target="../../.agents/$relative_path"
-    local cursor_link="$CURSOR_COMMANDS_DIR/$filename"
-
     # .claude/commandsからの相対パスを計算
     local claude_target="../../.agents/$relative_path"
     local claude_link="$CLAUDE_COMMANDS_DIR/$filename"
@@ -114,14 +106,10 @@ create_symlinks_for_file() {
     local github_link="$GITHUB_PROMPTS_DIR/$github_filename"
 
     # 既存のシンボリックリンクを削除
-    [ -L "$cursor_link" ] && rm "$cursor_link"
     [ -L "$claude_link" ] && rm "$claude_link"
     [ -L "$github_link" ] && rm "$github_link"
 
     # 新しいシンボリックリンクを作成
-    ln -s "$cursor_target" "$cursor_link"
-    echo "  Created: .cursor/commands/$filename -> $cursor_target"
-
     ln -s "$claude_target" "$claude_link"
     echo "  Created: .claude/commands/$filename -> $claude_target"
 
@@ -160,7 +148,6 @@ else
     echo "⚠️  WARNING: This will create/update symlinks for ALL command files in .agents/"
     echo ""
     echo "This will affect the following directories:"
-    echo "  - .cursor/commands/"
     echo "  - .claude/commands/"
     echo "  - .github/prompts/"
     echo ""
@@ -190,6 +177,5 @@ fi
 echo "=== Sync complete ==="
 echo ""
 echo "Summary:"
-echo "  .cursor/commands: $(find "$CURSOR_COMMANDS_DIR" -type l | wc -l | tr -d ' ') symlinks"
 echo "  .claude/commands: $(find "$CLAUDE_COMMANDS_DIR" -type l | wc -l | tr -d ' ') symlinks"
 echo "  .github/prompts: $(find "$GITHUB_PROMPTS_DIR" -type l | wc -l | tr -d ' ') symlinks"

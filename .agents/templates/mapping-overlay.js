@@ -1,11 +1,11 @@
 /**
- * Content & Interaction Mapping Overlay
+ * Content & Interaction & API Mapping Overlay
  * Auto-extraction version - HTMLのdata属性から自動的にマッピング情報を抽出
  *
  * 機能:
  * - データタイプ可視化 (static/dynamic/dynamic_list/config/asset/user_asset)
  * - インタラクション可視化 (navigate/modal/disabled/loading)
- * - APIマッピング可視化 (data-api-field/data-api-binding/data-api-transform)
+ * - APIマッピング可視化 (data-api-endpoint, data-api-response-field, etc.)
  * - リアルタイム状態表示 (hover/active/focus/selected)
  * - フィルタリング機能
  *
@@ -16,10 +16,95 @@
  * - data-figma-content-value: Figmaでの表示値
  * - data-figma-content-notes: 補足説明
  * - data-figma-content-data-type: string/number/svg等
- * - data-api-field: APIレスポンスフィールドパス
- * - data-api-binding: HTML属性とAPIフィールドのバインディング
- * - data-api-transform: 変換関数
+ * - data-api-endpoint: APIエンドポイント (例: GET /api/users)
+ * - data-api-response-field: レスポンスフィールドパス
+ * - data-api-request-body: リクエストボディテンプレート
+ * - data-api-contract: 契約ファイル名
  */
+
+// ========================================
+// Contract JSONデータ (GET APIのみ)
+// ========================================
+
+const CONTRACT_DATA = {
+  'get_student_api_ask_ai_submission_by_submission_id.md': {
+    endpoint: 'GET /student_api/ask_ai/submission/{submission_id}',
+    json: {
+      "category": "解き方を教えて",
+      "id": "01KFW1CPRTX5YSKY729YAE9EEE",
+      "is_bookmarked": false,
+      "last_updated_at": "2026-01-26T02:16:13.338642Z",
+      "questions": [],
+      "status": "success",
+      "subject": "math"
+    }
+  },
+  'get_student_api_ask_ai_submission_by_submission_id_info.md': {
+    endpoint: 'GET /student_api/ask_ai/submission/{submission_id}/info',
+    json: {
+      "category": "解き方を教えて",
+      "image_uri": "data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/..."
+    }
+  },
+  'get_student_api_ask_ai_steps_by_step_id_messages.md': {
+    endpoint: 'GET /student_api/ask_ai/steps/{step_id}/messages',
+    json: {
+      "ask_ai_messages": [
+        {
+          "id": "msg_001",
+          "step_id": "01JYFMKBXCSBC68Z5SQ7QKRR4W",
+          "role": "ai",
+          "content": "この問題は二重根号を外す問題ですね。",
+          "created_at": "2026-01-26T02:06:20Z"
+        }
+      ],
+      "is_processing": false,
+      "step_inquiry_candidates": [
+        {
+          "id": "01JYFMKF7R6DD6P31MRW4HXAEA",
+          "text": "二重根号を外す公式は？"
+        },
+        {
+          "id": "01JYFMKF7R6DD6P31MRYW4SDXH",
+          "text": "なぜこの公式を直接使えないのですか？"
+        }
+      ]
+    }
+  },
+  'get_student_api_ask_ai_submissions_by_submission_id_hint_sessions.md': {
+    endpoint: 'GET /student_api/ask_ai/submissions/{submission_id}/hint_sessions',
+    json: {
+      "id": "01KFW1DQ17QVVZTRJ732WQQ8PW",
+      "submission_id": "01KFW1CPRTX5YSKY729YAE9EEE",
+      "status": "waiting_for_answer",
+      "failed_reason": null,
+      "created_at": "2026-01-26T02:16:46.37606Z",
+      "updated_at": "2026-01-26T02:16:46.37606Z",
+      "hint_steps": [
+        {
+          "id": "01KFW1DQ17QVVZTRJ736HKDY79",
+          "content": "やっほー！今日は数学だね。まずはどっちの問題から一緒に解いていこうか？",
+          "created_at": "2026-01-26T02:16:46.383579Z",
+          "updated_at": "2026-01-26T02:16:46.383579Z",
+          "quiz_options": [
+            {
+              "id": "01KFW1DQ17QVVZTRJ736JX0PYR",
+              "option_text": "【1】二重根号の計算",
+              "created_at": "2026-01-26T02:16:46.402498Z",
+              "updated_at": "2026-01-26T02:16:46.402498Z"
+            },
+            {
+              "id": "01KFW1DQ17QVVZTRJ737K66VNY",
+              "option_text": "【2】因数分解",
+              "created_at": "2026-01-26T02:16:46.413596Z",
+              "updated_at": "2026-01-26T02:16:46.413596Z"
+            }
+          ]
+        }
+      ]
+    }
+  }
+};
 
 // ========================================
 // タイプ設定
@@ -41,7 +126,8 @@ const TYPE_COLORS = {
   loading: { bg: '#e3f2fd', text: '#1565c0', border: '#2196f3' },
   // APIマッピングタイプ
   api: { bg: '#e8f5e9', text: '#1b5e20', border: '#4caf50' },
-  api_transform: { bg: '#fff8e1', text: '#f57f17', border: '#ffc107' }
+  api_get: { bg: '#e3f2fd', text: '#0d47a1', border: '#2196f3' },
+  api_post: { bg: '#fff3e0', text: '#e65100', border: '#ff9800' }
 };
 
 // タイプ別のラベル
@@ -56,8 +142,9 @@ const TYPE_LABELS = {
   modal: 'モーダル',
   disabled: '無効',
   loading: '読込中',
-  api: 'API',
-  api_transform: 'API変換'
+  api: 'API連携',
+  api_get: 'GET',
+  api_post: 'POST'
 };
 
 // ========================================
@@ -77,6 +164,12 @@ function extractMappingDataFromHTML() {
     const dataType = el.dataset.figmaContentDataType || 'string';
     const nodeId = el.dataset.figmaNode || '';
 
+    // API属性を抽出
+    const apiEndpoint = el.dataset.apiEndpoint || '';
+    const apiResponseField = el.dataset.apiResponseField || '';
+    const apiRequestBody = el.dataset.apiRequestBody || '';
+    const apiContract = el.dataset.apiContract || '';
+
     // ラベル生成: notes > value > テキストコンテンツ
     let label = notes || value || el.textContent?.trim().substring(0, 30) || contentId;
     if (label.length > 40) label = label.substring(0, 37) + '...';
@@ -91,53 +184,45 @@ function extractMappingDataFromHTML() {
       label: label,
       nodeId: nodeId,
       value: value,
-      notes: notes
+      notes: notes,
+      // API情報
+      apiEndpoint: apiEndpoint,
+      apiResponseField: apiResponseField,
+      apiRequestBody: apiRequestBody,
+      apiContract: apiContract,
+      hasApi: !!(apiEndpoint || apiResponseField || apiRequestBody)
+    };
+  });
+
+  // data-api-endpoint を持つが data-figma-content-id がない要素も検索
+  document.querySelectorAll('[data-api-endpoint]:not([data-figma-content-id])').forEach(el => {
+    const apiEndpoint = el.dataset.apiEndpoint || '';
+    const apiResponseField = el.dataset.apiResponseField || '';
+    const apiRequestBody = el.dataset.apiRequestBody || '';
+    const apiContract = el.dataset.apiContract || '';
+    const nodeId = el.dataset.figmaNode || '';
+
+    // ユニークキー生成
+    const key = `data-api-endpoint="${apiEndpoint}"_${nodeId || Math.random().toString(36).substr(2, 9)}`;
+
+    let label = el.textContent?.trim().substring(0, 30) || apiEndpoint;
+    if (label.length > 40) label = label.substring(0, 37) + '...';
+
+    mappingData[key] = {
+      type: apiEndpoint.startsWith('POST') ? 'api_post' : 'api_get',
+      contentType: 'api',
+      label: label,
+      nodeId: nodeId,
+      apiEndpoint: apiEndpoint,
+      apiResponseField: apiResponseField,
+      apiRequestBody: apiRequestBody,
+      apiContract: apiContract,
+      hasApi: true
     };
   });
 
   return mappingData;
 }
-
-// ========================================
-// HTMLからAPIマッピングデータを自動抽出
-// ========================================
-
-function extractApiMappingDataFromHTML() {
-  const apiData = {};
-
-  // data-api-field を持つ全要素を検索
-  document.querySelectorAll('[data-api-field]').forEach(el => {
-    const apiField = el.dataset.apiField;
-    const apiBinding = el.dataset.apiBinding || '';
-    const apiTransform = el.dataset.apiTransform || '';
-    const nodeId = el.dataset.figmaNode || '';
-
-    // ラベル生成
-    let label = apiField;
-    if (label.length > 40) label = label.substring(0, 37) + '...';
-
-    // タイプ決定: transformがあればapi_transform、なければapi
-    const type = apiTransform ? 'api_transform' : 'api';
-
-    // キーとして要素を識別
-    const key = `api-${apiField}-${nodeId || Math.random().toString(36).substr(2, 9)}`;
-
-    apiData[key] = {
-      type: type,
-      field: apiField,
-      binding: apiBinding,
-      transform: apiTransform,
-      label: label,
-      nodeId: nodeId,
-      element: el
-    };
-  });
-
-  return apiData;
-}
-
-// グローバル変数としてAPIデータも保持
-let API_MAPPING_DATA = {};
 
 // グローバル変数として保持（初期化時に設定）
 let MAPPING_DATA = {};
@@ -168,6 +253,347 @@ function createTooltip() {
   return tooltip;
 }
 
+// JSONプレビューパネルを作成（凡例の下に配置）
+function createJsonPreviewPanel(legend) {
+  const panel = document.createElement('div');
+  panel.id = 'json-preview-panel';
+  panel.style.cssText = `
+    position: fixed;
+    right: 10px;
+    z-index: 10001;
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    font-family: "SF Mono", "Monaco", "Consolas", monospace;
+    font-size: 12px;
+    overflow: auto;
+    display: none;
+    width: fit-content;
+  `;
+  document.body.appendChild(panel);
+
+  // 凡例の下に配置し、画面内に収まるようサイズを調整
+  panel.updatePosition = function() {
+    if (legend) {
+      const legendRect = legend.getBoundingClientRect();
+      const top = legendRect.bottom + 10;
+      const availableHeight = window.innerHeight - top - 20;
+      const availableWidth = window.innerWidth - 30;  // 右に20px、左に10pxマージン
+      this.style.top = top + 'px';
+      this.style.maxHeight = Math.max(200, availableHeight) + 'px';
+      this.style.maxWidth = availableWidth + 'px';
+    }
+  };
+
+  return panel;
+}
+
+// JSONをハイライト付きでHTML化
+function renderJsonWithHighlight(obj, highlightPath, indent = 0) {
+  const spaces = '  '.repeat(indent);
+  const pathParts = highlightPath ? parseFieldPath(highlightPath) : null;
+
+  if (obj === null) return `<span style="color: #569cd6;">null</span>`;
+  if (typeof obj === 'boolean') return `<span style="color: #569cd6;">${obj}</span>`;
+  if (typeof obj === 'number') return `<span style="color: #b5cea8;">${obj}</span>`;
+  if (typeof obj === 'string') {
+    const escaped = obj.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const truncated = escaped.length > 50 ? escaped.substring(0, 47) + '...' : escaped;
+    return `<span style="color: #ce9178;">"${truncated}"</span>`;
+  }
+
+  if (Array.isArray(obj)) {
+    if (obj.length === 0) return `<span style="color: #d4d4d4;">[]</span>`;
+    let html = `<span style="color: #d4d4d4;">[</span>\n`;
+    obj.forEach((item, i) => {
+      const isTarget = pathParts && pathParts[0] && (
+        pathParts[0].index === i ||
+        (pathParts[0].filter && item[pathParts[0].filter.key] === pathParts[0].filter.value)
+      );
+      const childPath = isTarget && pathParts.length > 1 ? pathParts.slice(1).map(p => p.key || `[${p.index}]`).join('.') : null;
+      const itemHtml = renderJsonWithHighlight(item, childPath, indent + 1);
+      const highlight = isTarget ? 'background: rgba(255, 213, 0, 0.15); display: inline;' : '';
+      html += `${spaces}  <span style="${highlight}">${itemHtml}</span>${i < obj.length - 1 ? ',' : ''}\n`;
+    });
+    html += `${spaces}<span style="color: #d4d4d4;">]</span>`;
+    return html;
+  }
+
+  if (typeof obj === 'object') {
+    const keys = Object.keys(obj);
+    if (keys.length === 0) return `<span style="color: #d4d4d4;">{}</span>`;
+    let html = `<span style="color: #d4d4d4;">{</span>\n`;
+    keys.forEach((key, i) => {
+      const isTargetKey = pathParts && pathParts[0] && pathParts[0].key === key;
+      const isExactMatch = isTargetKey && pathParts.length === 1;
+      const childPath = isTargetKey && pathParts.length > 1 ? pathParts.slice(1).map(p => p.key || `[${p.index}]`).join('.') : null;
+
+      const keyStyle = isExactMatch
+        ? 'color: #ffd500; font-weight: bold; background: rgba(255, 213, 0, 0.3); padding: 1px 3px; border-radius: 3px;'
+        : 'color: #9cdcfe;';
+      const valueHtml = renderJsonWithHighlight(obj[key], childPath, indent + 1);
+      const valueStyle = isExactMatch ? 'background: rgba(255, 213, 0, 0.2); padding: 1px 3px; border-radius: 3px;' : '';
+
+      html += `${spaces}  <span style="${keyStyle}">"${key}"</span><span style="color: #d4d4d4;">: </span><span style="${valueStyle}">${valueHtml}</span>${i < keys.length - 1 ? ',' : ''}\n`;
+    });
+    html += `${spaces}<span style="color: #d4d4d4;">}</span>`;
+    return html;
+  }
+
+  return String(obj);
+}
+
+// フィールドパスをパース (例: "step_inquiry_candidates[0].text", "ask_ai_messages[role=ai].content")
+function parseFieldPath(path) {
+  const parts = [];
+  const regex = /([^\[\].]+)|\[(\d+)\]|\[(\w+)=(\w+)\]/g;
+  let match;
+
+  while ((match = regex.exec(path)) !== null) {
+    if (match[1]) {
+      parts.push({ key: match[1] });
+    } else if (match[2] !== undefined) {
+      parts.push({ index: parseInt(match[2], 10) });
+    } else if (match[3] && match[4]) {
+      parts.push({ filter: { key: match[3], value: match[4] } });
+    }
+  }
+
+  return parts;
+}
+
+// JSON内で値を検索し、マッチするパスを返す（自動検出用）
+function findValueInJson(obj, searchValue, currentPath = '') {
+  if (!searchValue || searchValue.length < 3) return [];  // 短すぎる値は除外
+
+  const matches = [];
+  const normalizedSearch = String(searchValue).trim().toLowerCase();
+
+  function search(obj, path) {
+    if (obj === null || obj === undefined) return;
+
+    if (typeof obj === 'string') {
+      const normalizedObj = obj.toLowerCase();
+      // 部分一致または完全一致
+      if (normalizedObj.includes(normalizedSearch) || normalizedSearch.includes(normalizedObj.substring(0, 20))) {
+        matches.push({ path, value: obj, exact: normalizedObj === normalizedSearch });
+      }
+    } else if (typeof obj === 'number' || typeof obj === 'boolean') {
+      if (String(obj).toLowerCase() === normalizedSearch) {
+        matches.push({ path, value: obj, exact: true });
+      }
+    } else if (Array.isArray(obj)) {
+      obj.forEach((item, i) => {
+        search(item, path ? `${path}[${i}]` : `[${i}]`);
+      });
+    } else if (typeof obj === 'object') {
+      Object.keys(obj).forEach(key => {
+        search(obj[key], path ? `${path}.${key}` : key);
+      });
+    }
+  }
+
+  search(obj, currentPath);
+
+  // 完全一致を優先、それ以外は最初のマッチ
+  matches.sort((a, b) => (b.exact ? 1 : 0) - (a.exact ? 1 : 0));
+  return matches;
+}
+
+// 自動検出したパスをハイライト用に変換
+function getAutoDetectedPath(json, elementValue, elementText) {
+  // 優先順位: data-figma-content-value > textContent
+  const searchValues = [elementValue, elementText].filter(v => v && v.trim().length >= 3);
+
+  for (const searchValue of searchValues) {
+    const matches = findValueInJson(json, searchValue);
+    if (matches.length > 0) {
+      return matches[0].path;
+    }
+  }
+  return null;
+}
+
+// パスベースのJSONハイライト（再帰版）
+function renderJsonWithHighlightByPath(obj, highlightPath) {
+  if (!highlightPath) {
+    return renderJsonSimple(obj, 0);
+  }
+
+  // ハイライト対象のパスセットを作成（親パスも含む）
+  const highlightPaths = new Set();
+  highlightPaths.add(highlightPath);
+
+  // 親パスも追加 (例: "ask_ai_messages[0].content" -> "ask_ai_messages[0]", "ask_ai_messages")
+  let parentPath = highlightPath;
+  while (parentPath.includes('.') || parentPath.includes('[')) {
+    if (parentPath.lastIndexOf('.') > parentPath.lastIndexOf(']')) {
+      parentPath = parentPath.substring(0, parentPath.lastIndexOf('.'));
+    } else if (parentPath.includes('[')) {
+      parentPath = parentPath.substring(0, parentPath.lastIndexOf('['));
+    } else {
+      break;
+    }
+    if (parentPath) highlightPaths.add(parentPath);
+  }
+
+  return renderJsonRecursive(obj, '', highlightPath, highlightPaths, 0);
+}
+
+// シンプルなJSON表示（ハイライトなし）
+function renderJsonSimple(obj, indent) {
+  const spaces = '  '.repeat(indent);
+
+  if (obj === null) return `<span style="color: #569cd6;">null</span>`;
+  if (typeof obj === 'boolean') return `<span style="color: #569cd6;">${obj}</span>`;
+  if (typeof obj === 'number') return `<span style="color: #b5cea8;">${obj}</span>`;
+  if (typeof obj === 'string') {
+    const escaped = obj.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const truncated = escaped.length > 40 ? escaped.substring(0, 37) + '...' : escaped;
+    return `<span style="color: #ce9178;">"${truncated}"</span>`;
+  }
+
+  if (Array.isArray(obj)) {
+    if (obj.length === 0) return '<span style="color: #d4d4d4;">[]</span>';
+    let html = '<span style="color: #d4d4d4;">[</span>\n';
+    obj.forEach((item, i) => {
+      html += `${spaces}  ${renderJsonSimple(item, indent + 1)}${i < obj.length - 1 ? ',' : ''}\n`;
+    });
+    html += `${spaces}<span style="color: #d4d4d4;">]</span>`;
+    return html;
+  }
+
+  if (typeof obj === 'object') {
+    const keys = Object.keys(obj);
+    if (keys.length === 0) return '<span style="color: #d4d4d4;">{}</span>';
+    let html = '<span style="color: #d4d4d4;">{</span>\n';
+    keys.forEach((key, i) => {
+      html += `${spaces}  <span style="color: #9cdcfe;">"${key}"</span>: ${renderJsonSimple(obj[key], indent + 1)}${i < keys.length - 1 ? ',' : ''}\n`;
+    });
+    html += `${spaces}<span style="color: #d4d4d4;">}</span>`;
+    return html;
+  }
+
+  return String(obj);
+}
+
+// 再帰的にJSONをレンダリング（ハイライト付き）
+function renderJsonRecursive(obj, currentPath, targetPath, highlightPaths, indent) {
+  const spaces = '  '.repeat(indent);
+  const isTarget = currentPath === targetPath;
+  const isOnPath = highlightPaths.has(currentPath);
+
+  if (obj === null) return `<span style="color: #569cd6;">null</span>`;
+  if (typeof obj === 'boolean') return `<span style="color: #569cd6;">${obj}</span>`;
+  if (typeof obj === 'number') return `<span style="color: #b5cea8;">${obj}</span>`;
+  if (typeof obj === 'string') {
+    const escaped = obj.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const truncated = escaped.length > 40 ? escaped.substring(0, 37) + '...' : escaped;
+    if (isTarget) {
+      return `<span style="color: #ffd500; background: rgba(255, 213, 0, 0.3); padding: 1px 4px; border-radius: 3px; font-weight: bold;">"${truncated}"</span>`;
+    }
+    return `<span style="color: #ce9178;">"${truncated}"</span>`;
+  }
+
+  if (Array.isArray(obj)) {
+    if (obj.length === 0) return '<span style="color: #d4d4d4;">[]</span>';
+    let html = '<span style="color: #d4d4d4;">[</span>\n';
+    obj.forEach((item, i) => {
+      const itemPath = currentPath ? `${currentPath}[${i}]` : `[${i}]`;
+      const itemIsOnPath = highlightPaths.has(itemPath) || targetPath.startsWith(itemPath + '.') || targetPath.startsWith(itemPath + '[');
+      const itemBg = itemIsOnPath ? ' style="background: rgba(255, 213, 0, 0.08);"' : '';
+      html += `${spaces}  <span${itemBg}>${renderJsonRecursive(item, itemPath, targetPath, highlightPaths, indent + 1)}</span>${i < obj.length - 1 ? ',' : ''}\n`;
+    });
+    html += `${spaces}<span style="color: #d4d4d4;">]</span>`;
+    return html;
+  }
+
+  if (typeof obj === 'object') {
+    const keys = Object.keys(obj);
+    if (keys.length === 0) return '<span style="color: #d4d4d4;">{}</span>';
+    let html = '<span style="color: #d4d4d4;">{</span>\n';
+    keys.forEach((key, i) => {
+      const keyPath = currentPath ? `${currentPath}.${key}` : key;
+      const keyIsTarget = keyPath === targetPath;
+      const keyIsOnPath = highlightPaths.has(keyPath) || targetPath.startsWith(keyPath + '.') || targetPath.startsWith(keyPath + '[');
+
+      let keyStyle = 'color: #9cdcfe;';
+      if (keyIsTarget) {
+        keyStyle = 'color: #ffd500; font-weight: bold; background: rgba(255, 213, 0, 0.3); padding: 1px 4px; border-radius: 3px;';
+      } else if (keyIsOnPath) {
+        keyStyle = 'color: #4fc3f7;';
+      }
+
+      const valuePart = renderJsonRecursive(obj[key], keyPath, targetPath, highlightPaths, indent + 1);
+      html += `${spaces}  <span style="${keyStyle}">"${key}"</span>: ${valuePart}${i < keys.length - 1 ? ',' : ''}\n`;
+    });
+    html += `${spaces}<span style="color: #d4d4d4;">}</span>`;
+    return html;
+  }
+
+  return String(obj);
+}
+
+// JSONプレビューを更新（自動検出対応）
+function updateJsonPreview(panel, contractFile, responseField, element = null) {
+  if (!contractFile) {
+    panel.style.display = 'none';
+    return;
+  }
+
+  // 未登録Contractの場合は警告表示
+  if (!CONTRACT_DATA[contractFile]) {
+    panel.innerHTML = `
+      <div style="color: #ff5722; font-size: 12px; font-weight: bold; margin-bottom: 8px;">
+        ⚠️ 未登録Contract
+      </div>
+      <div style="color: #ffab91; font-size: 11px; margin-bottom: 8px;">
+        <code style="background: #3e2723; padding: 2px 6px; border-radius: 4px;">${contractFile}</code>
+      </div>
+      <div style="color: #808080; font-size: 10px; border-top: 1px solid #333; padding-top: 8px;">
+        CONTRACT_DATA に追加してください：
+        <pre style="margin: 4px 0 0 0; color: #a5d6a7; font-size: 9px;">'${contractFile}': {
+  endpoint: 'GET /...',
+  json: { /* sample */ }
+}</pre>
+      </div>
+    `;
+    panel.style.display = 'block';
+    return;
+  }
+
+  const contract = CONTRACT_DATA[contractFile];
+
+  // 自動検出: 要素の値からJSONパスを検出
+  let detectedPath = responseField;
+  let isAutoDetected = false;
+
+  if (element) {
+    const elementValue = element.dataset.figmaContentValue || '';
+    const elementText = element.textContent?.trim() || '';
+    const autoPath = getAutoDetectedPath(contract.json, elementValue, elementText);
+
+    if (autoPath) {
+      detectedPath = autoPath;
+      isAutoDetected = !responseField || responseField !== autoPath;
+    }
+  }
+
+  const jsonHtml = renderJsonWithHighlightByPath(contract.json, detectedPath);
+
+  panel.innerHTML = `
+    <div style="color: #808080; font-size: 10px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #333;">
+      <span style="color: #4fc3f7;">📄 ${contractFile}</span>
+      ${detectedPath ? `<br><span style="color: ${isAutoDetected ? '#69f0ae' : '#ffd500'};">${isAutoDetected ? '🔍 自動検出: ' : '→ '}${detectedPath}</span>` : ''}
+      ${responseField && isAutoDetected ? `<br><span style="color: #888; font-size: 9px;">指定: ${responseField}</span>` : ''}
+    </div>
+    <pre style="margin: 0; line-height: 1.5; color: #d4d4d4;">${jsonHtml}</pre>
+  `;
+  panel.style.display = 'block';
+}
+
 // マッピング情報を取得（data-figma-content-id から）
 function getMappingInfo(element) {
   const contentId = element.dataset.figmaContentId;
@@ -176,26 +602,6 @@ function getMappingInfo(element) {
     if (MAPPING_DATA[key]) {
       return { attr: key, ...MAPPING_DATA[key] };
     }
-  }
-  return null;
-}
-
-// API マッピング情報を取得（data-api-field から）
-function getApiMappingInfo(element) {
-  const apiField = element.dataset.apiField;
-  if (apiField) {
-    const apiBinding = element.dataset.apiBinding || '';
-    const apiTransform = element.dataset.apiTransform || '';
-    const nodeId = element.dataset.figmaNode || '';
-    const type = apiTransform ? 'api_transform' : 'api';
-
-    return {
-      type: type,
-      field: apiField,
-      binding: apiBinding,
-      transform: apiTransform,
-      nodeId: nodeId
-    };
   }
   return null;
 }
@@ -274,8 +680,8 @@ function detectActiveStates(element) {
 // ツールチップ描画
 // ========================================
 
-// データタイプ用ツールチップ（API情報を内包）
-function renderTooltipContent(info, apiInfo = null) {
+// データタイプ用ツールチップ
+function renderTooltipContent(info) {
   const colors = TYPE_COLORS[info.type] || TYPE_COLORS.static;
   const typeLabel = TYPE_LABELS[info.type] || info.type;
 
@@ -322,126 +728,64 @@ function renderTooltipContent(info, apiInfo = null) {
     `;
   }
 
-  // API情報（data-api-* 属性から取得）
-  if (apiInfo) {
-    html += `
-      <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
-        <div style="font-weight: bold; color: #1b5e20; margin-bottom: 4px;">API Field:</div>
-        <code style="display: block; background: #e8f5e9; padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: 12px; color: #1b5e20;">${apiInfo.field}</code>
-      </div>
-    `;
-
-    if (apiInfo.binding) {
-      html += `
-        <div style="margin-top: 8px;">
-          <div style="font-weight: bold; color: #1565c0; margin-bottom: 4px;">Binding:</div>
-          <code style="display: block; background: #e3f2fd; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 11px; color: #1565c0;">${apiInfo.binding}</code>
-        </div>
-      `;
-    }
-
-    if (apiInfo.transform) {
-      html += `
-        <div style="margin-top: 8px;">
-          <div style="font-weight: bold; color: #f57f17; margin-bottom: 4px;">Transform:</div>
-          <code style="display: block; background: #fff8e1; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 11px; color: #f57f17;">${apiInfo.transform}</code>
-        </div>
-      `;
-    }
-  } else if (info.endpoint) {
-    // 旧形式のendpoint情報
-    html += `
-      <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
-        <div style="font-weight: bold; color: #333; margin-bottom: 4px;">Endpoint:</div>
-        <code style="display: block; background: #e8f4fd; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 11px; color: #0066cc;">${info.endpoint}</code>
-      </div>
-    `;
-  } else if ((info.type === 'dynamic' || info.type === 'dynamic_list') && !apiInfo) {
-    html += `<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee; color: #999; font-style: italic;">API未確定</div>`;
-  }
-
-  if (info.apiField && !apiInfo) {
-    html += `
-      <div style="margin-top: 8px;">
-        <div style="font-weight: bold; color: #333; margin-bottom: 4px;">API Field:</div>
-        <code style="display: block; background: #f5f5f5; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">${info.apiField}</code>
-      </div>
-    `;
-  }
-
-  return html;
-}
-
-// API マッピング用ツールチップ
-function renderApiTooltipContent(apiInfo, mappingInfo = null) {
-  let html = '';
-
-  // Figmaマッピング情報がある場合は先に表示
-  if (mappingInfo) {
-    const mappingColors = TYPE_COLORS[mappingInfo.type] || TYPE_COLORS.static;
-    const mappingTypeLabel = TYPE_LABELS[mappingInfo.type] || mappingInfo.type;
-    html += `
-      <div style="margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #ddd;">
-        <div style="font-size: 10px; color: #888; margin-bottom: 4px;">データタイプ</div>
-        <span style="display: inline-block; padding: 2px 8px; border-radius: 4px; background: ${mappingColors.bg}; color: ${mappingColors.text}; border: 1px solid ${mappingColors.border}; font-weight: bold; font-size: 11px;">${mappingTypeLabel}</span>
-        <span style="margin-left: 8px; color: #666; font-size: 11px;">${mappingInfo.label}</span>
-      </div>
-    `;
-  }
-
   // API情報
-  const colors = TYPE_COLORS[apiInfo.type] || TYPE_COLORS.api;
-  const typeLabel = TYPE_LABELS[apiInfo.type] || apiInfo.type;
-
-  html += `
-    <div style="margin-bottom: 8px;">
-      <div style="font-size: 10px; color: #888; margin-bottom: 4px;">APIマッピング</div>
-      <span style="display: inline-block; padding: 2px 8px; border-radius: 4px; background: ${colors.bg}; color: ${colors.text}; border: 1px solid ${colors.border}; font-weight: bold;">${typeLabel}</span>
-    </div>
-  `;
-
-  // APIフィールド
-  html += `
-    <div style="margin-bottom: 8px;">
-      <div style="font-weight: bold; color: #333; margin-bottom: 4px;">Field:</div>
-      <code style="display: block; background: #e8f5e9; padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: 12px; color: #1b5e20;">${apiInfo.field}</code>
-    </div>
-  `;
-
-  // バインディング
-  if (apiInfo.binding) {
+  if (info.apiEndpoint) {
+    const isPost = info.apiEndpoint.startsWith('POST');
+    const apiColors = isPost ? TYPE_COLORS.api_post : TYPE_COLORS.api_get;
     html += `
-      <div style="margin-bottom: 8px;">
-        <div style="font-weight: bold; color: #333; margin-bottom: 4px;">Binding:</div>
-        <code style="display: block; background: #e3f2fd; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 11px; color: #1565c0;">${apiInfo.binding}</code>
+      <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+          <span style="font-weight: bold; color: #333;">API:</span>
+          <span style="padding: 2px 6px; border-radius: 4px; background: ${apiColors.bg}; color: ${apiColors.text}; border: 1px solid ${apiColors.border}; font-size: 10px; font-weight: bold;">
+            ${isPost ? 'POST' : 'GET'}
+          </span>
+        </div>
+        <code style="display: block; background: #f8f9fa; padding: 6px 8px; border-radius: 4px; font-family: monospace; font-size: 11px; color: #333; border-left: 3px solid ${apiColors.border};">${info.apiEndpoint}</code>
       </div>
     `;
-  }
 
-  // 変換関数
-  if (apiInfo.transform) {
-    html += `
-      <div style="margin-bottom: 8px;">
-        <div style="font-weight: bold; color: #333; margin-bottom: 4px;">Transform:</div>
-        <code style="display: block; background: #fff8e1; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 11px; color: #f57f17;">${apiInfo.transform}</code>
-      </div>
-    `;
-  }
+    // レスポンスフィールド (GET)
+    if (info.apiResponseField) {
+      html += `
+        <div style="margin-top: 8px;">
+          <div style="font-weight: bold; color: #333; margin-bottom: 4px; font-size: 11px;">Response Field:</div>
+          <code style="display: block; background: #e3f2fd; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 11px; color: #0d47a1;">${info.apiResponseField}</code>
+        </div>
+      `;
+    }
 
-  // ノードID
-  if (apiInfo.nodeId) {
-    html += `
-      <div style="font-size: 11px; color: #888;">
-        node: ${apiInfo.nodeId}
-      </div>
-    `;
+    // リクエストボディ (POST)
+    if (info.apiRequestBody) {
+      let formattedBody = info.apiRequestBody;
+      try {
+        formattedBody = JSON.stringify(JSON.parse(info.apiRequestBody), null, 2);
+      } catch (e) {}
+      html += `
+        <div style="margin-top: 8px;">
+          <div style="font-weight: bold; color: #333; margin-bottom: 4px; font-size: 11px;">Request Body:</div>
+          <pre style="display: block; background: #fff3e0; padding: 6px 8px; border-radius: 4px; font-family: monospace; font-size: 10px; color: #e65100; margin: 0; white-space: pre-wrap; word-break: break-all;">${formattedBody}</pre>
+        </div>
+      `;
+    }
+
+    // 契約ファイル
+    if (info.apiContract) {
+      html += `
+        <div style="margin-top: 8px;">
+          <div style="font-weight: bold; color: #333; margin-bottom: 4px; font-size: 11px;">Contract:</div>
+          <code style="display: block; background: #e8f5e9; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 10px; color: #1b5e20;">📄 ${info.apiContract}</code>
+        </div>
+      `;
+    }
+  } else if (info.type === 'dynamic' || info.type === 'dynamic_list') {
+    html += `<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee; color: #999; font-style: italic;">⚠️ API未確定</div>`;
   }
 
   return html;
 }
 
 // インタラクション用ツールチップ（データタイプ情報も含む）
-function renderInteractionTooltipContent(info, mappingInfo = null) {
+function renderInteractionTooltipContent(info, mappingInfo = null, element = null) {
   let html = '';
 
   // マッピング情報がある場合は先に表示
@@ -509,6 +853,59 @@ function renderInteractionTooltipContent(info, mappingInfo = null) {
     `;
   }
 
+  // API情報（要素から直接取得、またはmappingInfoから）
+  const apiEndpoint = element?.dataset.apiEndpoint || mappingInfo?.apiEndpoint;
+  const apiResponseField = element?.dataset.apiResponseField || mappingInfo?.apiResponseField;
+  const apiRequestBody = element?.dataset.apiRequestBody || mappingInfo?.apiRequestBody;
+  const apiContract = element?.dataset.apiContract || mappingInfo?.apiContract;
+
+  if (apiEndpoint) {
+    const isPost = apiEndpoint.startsWith('POST');
+    const apiColors = isPost ? TYPE_COLORS.api_post : TYPE_COLORS.api_get;
+    html += `
+      <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+          <span style="font-weight: bold; color: #333;">API:</span>
+          <span style="padding: 2px 6px; border-radius: 4px; background: ${apiColors.bg}; color: ${apiColors.text}; border: 1px solid ${apiColors.border}; font-size: 10px; font-weight: bold;">
+            ${isPost ? 'POST' : 'GET'}
+          </span>
+        </div>
+        <code style="display: block; background: #f8f9fa; padding: 6px 8px; border-radius: 4px; font-family: monospace; font-size: 11px; color: #333; border-left: 3px solid ${apiColors.border};">${apiEndpoint}</code>
+      </div>
+    `;
+
+    if (apiResponseField) {
+      html += `
+        <div style="margin-top: 8px;">
+          <div style="font-weight: bold; color: #333; margin-bottom: 4px; font-size: 11px;">Response Field:</div>
+          <code style="display: block; background: #e3f2fd; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 11px; color: #0d47a1;">${apiResponseField}</code>
+        </div>
+      `;
+    }
+
+    if (apiRequestBody) {
+      let formattedBody = apiRequestBody;
+      try {
+        formattedBody = JSON.stringify(JSON.parse(apiRequestBody), null, 2);
+      } catch (e) {}
+      html += `
+        <div style="margin-top: 8px;">
+          <div style="font-weight: bold; color: #333; margin-bottom: 4px; font-size: 11px;">Request Body:</div>
+          <pre style="display: block; background: #fff3e0; padding: 6px 8px; border-radius: 4px; font-family: monospace; font-size: 10px; color: #e65100; margin: 0; white-space: pre-wrap; word-break: break-all;">${formattedBody}</pre>
+        </div>
+      `;
+    }
+
+    if (apiContract) {
+      html += `
+        <div style="margin-top: 8px;">
+          <div style="font-weight: bold; color: #333; margin-bottom: 4px; font-size: 11px;">Contract:</div>
+          <code style="display: block; background: #e8f5e9; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 10px; color: #1b5e20;">📄 ${apiContract}</code>
+        </div>
+      `;
+    }
+  }
+
   return html;
 }
 
@@ -518,12 +915,10 @@ function renderInteractionTooltipContent(info, mappingInfo = null) {
 function initMappingOverlay() {
   // HTMLからマッピングデータを抽出
   MAPPING_DATA = extractMappingDataFromHTML();
-  API_MAPPING_DATA = extractApiMappingDataFromHTML();
   const mappingCount = Object.keys(MAPPING_DATA).length;
-  const apiCount = Object.keys(API_MAPPING_DATA).length;
-  const totalCount = mappingCount + apiCount;
 
   const tooltip = createTooltip();
+  let jsonPreviewPanel = null;  // legend作成後に初期化
   let isEnabled = true;
   let activeFilters = new Set();
   let currentHoveredElement = null;
@@ -532,7 +927,7 @@ function initMappingOverlay() {
   // トグルボタン
   const toggleBtn = document.createElement('button');
   toggleBtn.id = 'mapping-toggle';
-  toggleBtn.innerHTML = `Mapping (${totalCount})`;
+  toggleBtn.innerHTML = `Mapping (${mappingCount})`;
   toggleBtn.style.cssText = `
     position: fixed; top: 10px; right: 10px; z-index: 10001;
     padding: 8px 16px; background: #0070e0; color: white; border: none;
@@ -566,6 +961,9 @@ function initMappingOverlay() {
     }
   });
 
+  // API連携要素のカウント
+  const apiCount = Object.values(MAPPING_DATA).filter(info => info.hasApi).length;
+
   legend.innerHTML = `
     <div style="font-weight: bold; margin-bottom: 8px;">
       凡例
@@ -575,6 +973,13 @@ function initMappingOverlay() {
       <div style="font-size: 10px; color: #666; margin-bottom: 4px;">データタイプ</div>
       <div style="display: flex; flex-wrap: wrap; gap: 4px;">
         ${dataTypeBadges}
+      </div>
+    </div>
+    <div style="margin-bottom: 8px;">
+      <div style="font-size: 10px; color: #666; margin-bottom: 4px;">API連携 (${apiCount})</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+        ${createFilterBadge('api_get', 'GET', TYPE_COLORS.api_get)}
+        ${createFilterBadge('api_post', 'POST', TYPE_COLORS.api_post)}
       </div>
     </div>
     <div style="margin-bottom: 8px;">
@@ -601,6 +1006,49 @@ function initMappingOverlay() {
   `;
   document.body.appendChild(legend);
 
+  // JSONプレビューパネル（凡例の下に配置）
+  jsonPreviewPanel = createJsonPreviewPanel(legend);
+
+  // ========================================
+  // Contract未登録チェック
+  // ========================================
+
+  const missingContracts = new Map();  // contract名 → 使用している要素数
+  document.querySelectorAll('[data-api-contract]').forEach(el => {
+    const contract = el.dataset.apiContract;
+    if (contract && !CONTRACT_DATA[contract]) {
+      missingContracts.set(contract, (missingContracts.get(contract) || 0) + 1);
+    }
+  });
+
+  if (missingContracts.size > 0) {
+    // 凡例に警告セクションを追加
+    const warningSection = document.createElement('div');
+    warningSection.style.cssText = `
+      margin-top: 8px; padding-top: 8px; border-top: 1px solid #ffcdd2;
+      background: #fff3e0; margin: 8px -12px -12px -12px; padding: 8px 12px;
+      border-radius: 0 0 8px 8px;
+    `;
+    warningSection.innerHTML = `
+      <div style="font-size: 10px; color: #e65100; font-weight: bold; margin-bottom: 4px;">
+        ⚠️ 未登録Contract (${missingContracts.size})
+      </div>
+      <div style="font-size: 9px; color: #bf360c; max-height: 80px; overflow-y: auto;">
+        ${Array.from(missingContracts.entries()).map(([name, count]) =>
+          `<div style="margin-bottom: 2px;">• ${name} <span style="color: #999;">(${count})</span></div>`
+        ).join('')}
+      </div>
+    `;
+    legend.appendChild(warningSection);
+
+    // コンソールにも警告
+    console.warn('⚠️ 未登録のContract files:', Array.from(missingContracts.keys()));
+    console.warn('CONTRACT_DATA に追加してください:');
+    missingContracts.forEach((count, name) => {
+      console.warn(`  '${name}': { endpoint: '...', json: {...} }`);
+    });
+  }
+
   // ========================================
   // フィルタリング機能
   // ========================================
@@ -608,16 +1056,22 @@ function initMappingOverlay() {
   function elementMatchesFilter(el) {
     const mappingInfo = getMappingInfo(el);
     const interactionInfo = getInteractionInfo(el);
-    const apiInfo = getApiMappingInfo(el);
 
     if (mappingInfo && activeFilters.has(mappingInfo.type)) return true;
     if (interactionInfo && activeFilters.has(interactionInfo.type)) return true;
-    if (apiInfo && activeFilters.has(apiInfo.type)) return true;
+
+    // API フィルター
+    if (mappingInfo && mappingInfo.hasApi) {
+      const isPost = mappingInfo.apiEndpoint?.startsWith('POST');
+      if (activeFilters.has('api_get') && !isPost) return true;
+      if (activeFilters.has('api_post') && isPost) return true;
+    }
+
     return false;
   }
 
   function hasMatchingDescendant(el) {
-    const descendants = el.querySelectorAll('[data-mapping-enabled], [data-interaction-enabled], [data-api-enabled]');
+    const descendants = el.querySelectorAll('[data-mapping-enabled], [data-interaction-enabled]');
     for (const desc of descendants) {
       if (elementMatchesFilter(desc)) return true;
     }
@@ -627,7 +1081,7 @@ function initMappingOverlay() {
   function applyFilters() {
     const filterCount = document.getElementById('filter-count');
     const filterReset = document.getElementById('filter-reset');
-    const allElements = document.querySelectorAll('[data-mapping-enabled], [data-interaction-enabled], [data-api-enabled]');
+    const allElements = document.querySelectorAll('[data-mapping-enabled], [data-interaction-enabled]');
     let matchedCount = 0;
 
     if (activeFilters.size === 0) {
@@ -647,7 +1101,7 @@ function initMappingOverlay() {
           matchedCount++;
           let parent = el.parentElement;
           while (parent) {
-            if (parent.dataset.mappingEnabled || parent.dataset.interactionEnabled || parent.dataset.apiEnabled) {
+            if (parent.dataset.mappingEnabled || parent.dataset.interactionEnabled) {
               parentOfMatched.add(parent);
             }
             parent = parent.parentElement;
@@ -714,10 +1168,11 @@ function initMappingOverlay() {
   toggleBtn.addEventListener('click', () => {
     isEnabled = !isEnabled;
     toggleBtn.style.background = isEnabled ? '#0070e0' : '#999';
-    toggleBtn.innerHTML = isEnabled ? `Mapping (${totalCount})` : 'OFF';
+    toggleBtn.innerHTML = isEnabled ? `Mapping (${mappingCount})` : 'OFF';
     legend.style.display = isEnabled ? 'block' : 'none';
     if (!isEnabled) {
       tooltip.style.display = 'none';
+      jsonPreviewPanel.style.display = 'none';
       removeHighlights();
       activeFilters.clear();
     } else {
@@ -747,27 +1202,9 @@ function initMappingOverlay() {
       const interactionInfo = getInteractionInfo(el);
       if (interactionInfo) {
         const colors = TYPE_COLORS[interactionInfo.type] || TYPE_COLORS.navigate;
-        if (el.dataset.mappingEnabled) {
-          el.style.boxShadow = `inset 0 0 0 3px ${colors.border}`;
-        } else {
-          el.style.outline = `3px solid ${colors.border}`;
-          el.style.outlineOffset = '-1px';
-        }
+        el.style.outline = `3px solid ${colors.border}`;
+        el.style.outlineOffset = '2px';
         el.dataset.interactionEnabled = 'true';
-      }
-    });
-
-    // APIマッピング要素のハイライト（既存のmappingがない要素のみ）
-    document.querySelectorAll('[data-api-field]').forEach(el => {
-      const apiInfo = getApiMappingInfo(el);
-      if (apiInfo) {
-        // 既存のmappingやinteractionがない場合のみ動的スタイルでハイライト
-        if (!el.dataset.mappingEnabled && !el.dataset.interactionEnabled) {
-          const colors = TYPE_COLORS.dynamic;
-          el.style.outline = `2px dashed ${colors.border}`;
-          el.style.outlineOffset = '2px';
-        }
-        el.dataset.apiEnabled = 'true';
       }
     });
   }
@@ -783,12 +1220,6 @@ function initMappingOverlay() {
       el.style.outlineOffset = '';
       el.style.boxShadow = '';
       delete el.dataset.interactionEnabled;
-    });
-    document.querySelectorAll('[data-api-enabled]').forEach(el => {
-      el.style.outline = '';
-      el.style.outlineOffset = '';
-      el.style.boxShadow = '';
-      delete el.dataset.apiEnabled;
     });
   }
 
@@ -809,17 +1240,12 @@ function initMappingOverlay() {
   function updateTooltipContent(target) {
     const hasInteraction = target.dataset.interactionEnabled;
     const mappingInfo = getMappingInfo(target);
-    const apiInfo = getApiMappingInfo(target);
 
     if (hasInteraction) {
       const interactionInfo = getInteractionInfo(target);
-      if (interactionInfo) tooltip.innerHTML = renderInteractionTooltipContent(interactionInfo, mappingInfo);
+      if (interactionInfo) tooltip.innerHTML = renderInteractionTooltipContent(interactionInfo, mappingInfo, target);
     } else if (mappingInfo) {
-      // API情報がある場合は動的タイプのツールチップ内に表示
-      tooltip.innerHTML = renderTooltipContent(mappingInfo, apiInfo);
-    } else if (apiInfo) {
-      // mappingInfoがない場合でもAPI情報のみ表示
-      tooltip.innerHTML = renderApiTooltipContent(apiInfo, null);
+      tooltip.innerHTML = renderTooltipContent(mappingInfo);
     }
   }
 
@@ -828,11 +1254,31 @@ function initMappingOverlay() {
     if (!isEnabled) return;
     let target = e.target;
     while (target && target !== document.body) {
-      if (target.dataset.interactionEnabled || target.dataset.mappingEnabled || target.dataset.apiEnabled) {
+      if (target.dataset.interactionEnabled || target.dataset.mappingEnabled) {
         currentHoveredElement = target;
         updateTooltipContent(target);
         tooltip.style.display = 'block';
         updateTooltipPosition(target);
+
+        // GET APIのJSONプレビュー表示（未登録Contractの警告も含む）
+        const apiEndpoint = target.dataset.apiEndpoint;
+        const apiContract = target.dataset.apiContract;
+        const apiResponseField = target.dataset.apiResponseField;
+
+        if (apiContract) {
+          // Contractがある場合は常にプレビュー/警告を表示
+          if (apiEndpoint && apiEndpoint.startsWith('GET')) {
+            updateJsonPreview(jsonPreviewPanel, apiContract, apiResponseField, target);
+          } else if (!CONTRACT_DATA[apiContract]) {
+            // POST等でも未登録なら警告表示
+            updateJsonPreview(jsonPreviewPanel, apiContract, null, target);
+          } else {
+            jsonPreviewPanel.style.display = 'none';
+          }
+          jsonPreviewPanel.updatePosition();
+        } else {
+          jsonPreviewPanel.style.display = 'none';
+        }
 
         if (stateUpdateInterval) cancelAnimationFrame(stateUpdateInterval);
         function updateLoop() {
@@ -851,10 +1297,11 @@ function initMappingOverlay() {
   document.addEventListener('mouseout', (e) => {
     let target = e.target;
     while (target && target !== document.body) {
-      if (target.dataset.mappingEnabled || target.dataset.interactionEnabled || target.dataset.apiEnabled) {
+      if (target.dataset.mappingEnabled || target.dataset.interactionEnabled) {
         if (stateUpdateInterval) { cancelAnimationFrame(stateUpdateInterval); stateUpdateInterval = null; }
         currentHoveredElement = null;
         tooltip.style.display = 'none';
+        jsonPreviewPanel.style.display = 'none';
         return;
       }
       target = target.parentElement;
@@ -866,10 +1313,9 @@ function initMappingOverlay() {
 
   // 初期化
   highlightElements();
-  console.log(`Mapping Overlay initialized. ${totalCount} elements detected (Figma: ${mappingCount}, API: ${apiCount}).`);
+  console.log(`Mapping Overlay initialized. ${mappingCount} elements detected.`);
   console.log('- データタイプ: 破線枠');
   console.log('- インタラクション: 実線枠');
-  console.log('- APIマッピング: 動的タイプ内に表示');
   console.log('- 凡例クリックでフィルタリング');
 }
 

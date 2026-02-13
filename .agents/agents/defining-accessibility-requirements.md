@@ -17,7 +17,9 @@ WCAG 2.1 Level AA 準拠を目標に、アクセシビリティ要件を整理�
 
 ```
 .outputs/{screen-id}/
-├── spec.md             # ← このエージェントが「アクセシビリティ」セクションを更新
+├── spec.md             # 概要仕様書
+├── spec-visual.md      # ビジュアル仕様書
+├── spec-behavior.md    # ← このエージェントが「アクセシビリティ」セクションを更新
 ├── index.html
 └── assets/
 ```
@@ -33,6 +35,18 @@ WCAG 2.1 Level AA 準拠を目標に、アクセシビリティ要件を整理�
 - 実装コードの生成（HTML/ARIA実装）
 - 特定のa11yライブラリの提案
 - 他のセクションの変更
+
+## データソースラベル（必須）
+
+**各項目には必ずソースラベルを付与すること。**
+
+| ラベル | 使用場面 |
+|--------|----------|
+| `[HTML]` | 既存HTMLのセマンティクス、aria属性から取得 |
+| `[推奨]` | WCAG基準に基づく推奨（大部分がこれ） |
+| `[要確認]` | 具体的な実装方法の推測 |
+
+**注意**: このセクションの内容は大部分が `[推奨]` となります。セクション冒頭にその旨を明記してください。
 
 ## 対象範囲
 
@@ -62,17 +76,17 @@ Accessibility Requirements Progress:
 
 ---
 
-### Step 0: spec.md の存在確認
+### Step 0: spec-behavior.md の存在確認
 
 ```bash
-ls .outputs/{screen-id}/spec.md
+ls .outputs/{screen-id}/spec-behavior.md
 ```
 
 ### Step 1-7: アクセシビリティ情報の収集
 
 詳細は [defining-accessibility-requirements SKILL.md](../skills/defining-accessibility-requirements/SKILL.md) を参照。
 
-### Step 8: spec.md の「アクセシビリティ」セクションを更新
+### Step 8: spec-behavior.md の「アクセシビリティ」セクションを更新
 
 1. セクションを特定（`## アクセシビリティ`）
 2. ステータスを「完了 ✓」に更新
@@ -99,7 +113,7 @@ Figma URL: https://figma.com/design/XXXXX/Project?node-id=1234-5678
 @defining-accessibility-requirements
 
 講座一覧画面のアクセシビリティ要件を定義してください。
-spec.md は .outputs/course-list/ にあります。
+spec-behavior.md は .outputs/course-list/ にあります。
 ```
 
 ---
@@ -120,7 +134,7 @@ spec.md は .outputs/course-list/ にあります。
 
 **更新したセクションに署名コメントを含めること。**
 
-### spec.md の「アクセシビリティ」セクション
+### spec-behavior.md の「アクセシビリティ」セクション
 
 セクション見出しの直後に署名を追加：
 

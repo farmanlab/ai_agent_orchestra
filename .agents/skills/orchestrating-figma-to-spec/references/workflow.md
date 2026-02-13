@@ -75,6 +75,67 @@ mkdir -p .outputs/{screen-id}/comparison
 
 ---
 
+## Phase 1.5: スタイル精度検証（自動）
+
+HTML生成後、Figmaの正式値との整合性を検証します。
+
+### Step 1.5.1: Figma Design Contextの取得
+
+```bash
+mcp__figma__get_design_context(fileKey, nodeId)
+```
+
+取得した値から以下のスタイルプロパティを抽出：
+
+### Step 1.5.2: 検証項目
+
+| プロパティ | 検証内容 | 許容誤差 |
+|-----------|----------|----------|
+| font-size | テキストサイズ（px） | 0px |
+| font-weight | フォント太さ（400, 700等） | 完全一致 |
+| padding | 上下左右の余白（px） | 0px |
+| margin | 上下左右の間隔（px） | 0px |
+| gap | Flexbox/Gridのgap（px） | 0px |
+| width/height | 固定サイズ要素（px） | 0px |
+| min-width/min-height | 最小サイズ（px） | 0px |
+| border-width | ボーダー太さ（px） | 0px |
+| border-radius | 角丸（px） | 0px |
+| colors | HEXカラーコード | 完全一致 |
+
+**⚠️ 検証対象外**:
+- 小数点以下の値（整数に丸めてOK）
+- line-height（Tailwindのleading-*で近似OK）
+
+### Step 1.5.3: 検証実行
+
+```markdown
+## Phase 1.5 スタイル検証結果
+
+| プロパティ | Figma値 | HTML値 | 状態 |
+|-----------|---------|--------|:----:|
+| Navigation height | 56px | h-14 (56px) | ✅ |
+| Navigation padding-x | 12px | px-3 (12px) | ✅ |
+| Button min-height | 48px | min-h-[48px] | ✅ |
+| ... | ... | ... | ... |
+
+**結果**: 全プロパティが一致 → Phase 2へ
+```
+
+### Step 1.5.4: 不一致時の自動修正
+
+不一致があった場合、HTMLを自動修正：
+
+```bash
+# 例: Navigation gapが不足している場合
+Edit:
+  old_string: 'class="flex items-center justify-center h-14'
+  new_string: 'class="flex items-center justify-center gap-1 h-14'
+```
+
+**自動修正後、Step 1.5.3 を再実行**（最大2回）
+
+---
+
 ## Phase 2: HTML検証・修正ループ
 
 ### Step 2.1: comparing-figma-html サブエージェント起動
@@ -140,35 +201,60 @@ comparing-figma-html の結果をユーザーに報告し、承認を得る:
 
 ## Phase 3: 仕様書初期化
 
-### Step 3.1: spec.md の初期化
+### Step 3.1: 3ファイル構成の仕様書初期化
 
-テンプレートから spec.md を生成：
+テンプレートから 3つの仕様書ファイルを生成：
 
 ```bash
 Read: .agents/templates/screen-spec.md
+Read: .agents/templates/screen-spec-visual.md
+Read: .agents/templates/screen-spec-behavior.md
 ```
 
-以下の変数を置換：
+以下の変数を各ファイルで置換：
 - `{{SCREEN_NAME}}`: 画面名
 - `{{SCREEN_ID}}`: 画面ID
 - `{{FIGMA_URL}}`: Figma URL
+- `{{HTML_FILE}}`: HTMLファイル名
 - `{{ROOT_NODE_ID}}`: ルートノードID
 - `{{DATE}}`: 現在日時
+- `{{DESCRIPTION}}`: 画面の説明
+
+### 出力ファイル
+
+| ファイル | テンプレート | 対象読者 |
+|----------|-------------|----------|
+| spec.md | screen-spec.md | PM、全員 |
+| spec-visual.md | screen-spec-visual.md | デザイナー、開発者 |
+| spec-behavior.md | screen-spec-behavior.md | 開発者、QA |
 
 ---
 
 ## Phase 4: 仕様書セクション生成
 
-各サブエージェントを順次起動してspec.mdを更新。
+各サブエージェントを順次起動して仕様書を更新。
+
+### 出力先マッピング
+
+| サブエージェント | 出力先ファイル | セクション |
+|-----------------|---------------|-----------|
+| documenting-ui-states | spec-visual.md | UI状態 |
+| extracting-design-tokens | spec-visual.md | デザイントークン |
+| extracting-interactions | spec-behavior.md | インタラクション |
+| defining-form-specs | spec-behavior.md | フォーム仕様 |
+| mapping-html-to-api | spec-behavior.md | APIマッピング |
+| defining-accessibility-requirements | spec-behavior.md | アクセシビリティ |
+| documenting-screen-flows | spec.md | 画面フロー |
 
 ### Step 4.1: UI状態 (documenting-ui-states)
 
 **実行条件**: 常に実行
+**出力先**: spec-visual.md
 
 ```xml
 <invoke name="Task">
   <parameter name="subagent_type">documenting-ui-states</parameter>
-  <parameter name="prompt">Figma URL: {url}, 画面ID: {screen-id}, 出力先: .outputs/{screen-id}/spec.md</parameter>
+  <parameter name="prompt">Figma URL: {url}, 画面ID: {screen-id}, 出力先: .outputs/{screen-id}/spec-visual.md</parameter>
   <parameter name="description">UI状態の文書化</parameter>
 </invoke>
 ```
@@ -176,23 +262,25 @@ Read: .agents/templates/screen-spec.md
 ### Step 4.2: インタラクション (extracting-interactions)
 
 **実行条件**: 常に実行
+**出力先**: spec-behavior.md
 
 ```xml
 <invoke name="Task">
   <parameter name="subagent_type">extracting-interactions</parameter>
-  <parameter name="prompt">Figma URL: {url}, 画面ID: {screen-id}, 出力先: .outputs/{screen-id}/spec.md</parameter>
+  <parameter name="prompt">Figma URL: {url}, 画面ID: {screen-id}, 出力先: .outputs/{screen-id}/spec-behavior.md</parameter>
   <parameter name="description">インタラクション抽出</parameter>
 </invoke>
 ```
 
 ### Step 4.3: フォーム仕様 (defining-form-specs)
 
-**実行条件**: spec.md「コンテンツ分析」に入力フィールドがある場合
+**実行条件**: spec-visual.md「コンテンツ分析」に入力フィールドがある場合
+**出力先**: spec-behavior.md
 
 ```xml
 <invoke name="Task">
   <parameter name="subagent_type">defining-form-specs</parameter>
-  <parameter name="prompt">Figma URL: {url}, 画面ID: {screen-id}, 出力先: .outputs/{screen-id}/spec.md</parameter>
+  <parameter name="prompt">Figma URL: {url}, 画面ID: {screen-id}, 出力先: .outputs/{screen-id}/spec-behavior.md</parameter>
   <parameter name="description">フォーム仕様定義</parameter>
 </invoke>
 ```
@@ -200,11 +288,12 @@ Read: .agents/templates/screen-spec.md
 ### Step 4.4: APIマッピング (mapping-html-to-api)
 
 **実行条件**: OpenAPI仕様書が提供された場合のみ
+**出力先**: spec-behavior.md
 
 ```xml
 <invoke name="Task">
   <parameter name="subagent_type">mapping-html-to-api</parameter>
-  <parameter name="prompt">Figma URL: {url}, OpenAPI: {openapi-path}, 出力先: .outputs/{screen-id}/spec.md</parameter>
+  <parameter name="prompt">Figma URL: {url}, OpenAPI: {openapi-path}, 出力先: .outputs/{screen-id}/spec-behavior.md</parameter>
   <parameter name="description">APIマッピング</parameter>
 </invoke>
 ```
@@ -214,11 +303,12 @@ Read: .agents/templates/screen-spec.md
 ### Step 4.5: デザイントークン (extracting-design-tokens)
 
 **実行条件**: 常に実行
+**出力先**: spec-visual.md
 
 ```xml
 <invoke name="Task">
   <parameter name="subagent_type">extracting-design-tokens</parameter>
-  <parameter name="prompt">Figma URL: {url}, 画面ID: {screen-id}, 出力先: .outputs/{screen-id}/spec.md</parameter>
+  <parameter name="prompt">Figma URL: {url}, 画面ID: {screen-id}, 出力先: .outputs/{screen-id}/spec-visual.md</parameter>
   <parameter name="description">デザイントークン抽出</parameter>
 </invoke>
 ```
@@ -226,11 +316,12 @@ Read: .agents/templates/screen-spec.md
 ### Step 4.6: アクセシビリティ (defining-accessibility-requirements)
 
 **実行条件**: 常に実行
+**出力先**: spec-behavior.md
 
 ```xml
 <invoke name="Task">
   <parameter name="subagent_type">defining-accessibility-requirements</parameter>
-  <parameter name="prompt">Figma URL: {url}, 画面ID: {screen-id}, 出力先: .outputs/{screen-id}/spec.md</parameter>
+  <parameter name="prompt">Figma URL: {url}, 画面ID: {screen-id}, 出力先: .outputs/{screen-id}/spec-behavior.md</parameter>
   <parameter name="description">アクセシビリティ要件定義</parameter>
 </invoke>
 ```
@@ -238,6 +329,7 @@ Read: .agents/templates/screen-spec.md
 ### Step 4.7: 画面フロー (documenting-screen-flows)
 
 **実行条件**: 複数画面間の遷移がある場合（ユーザーに確認）
+**出力先**: spec.md
 
 ```xml
 <invoke name="Task">
@@ -250,11 +342,12 @@ Read: .agents/templates/screen-spec.md
 ### Step 4.8: APIバインディング (binding-figma-content-to-api)
 
 **実行条件**: OpenAPI提供 AND mapping-html-to-api 実行済み
+**出力先**: spec-behavior.md
 
 ```xml
 <invoke name="Task">
   <parameter name="subagent_type">binding-figma-content-to-api</parameter>
-  <parameter name="prompt">spec.md: .outputs/{screen-id}/spec.md, OpenAPI: {openapi-path}</parameter>
+  <parameter name="prompt">spec-behavior.md: .outputs/{screen-id}/spec-behavior.md, OpenAPI: {openapi-path}</parameter>
   <parameter name="description">APIバインディング設計</parameter>
 </invoke>
 ```
@@ -268,7 +361,9 @@ Read: .agents/templates/screen-spec.md
 **必須ファイルチェックリスト**:
 ```
 - [ ] index.html が存在
-- [ ] spec.md が存在
+- [ ] spec.md が存在（概要仕様）
+- [ ] spec-visual.md が存在（ビジュアル仕様）
+- [ ] spec-behavior.md が存在（動作仕様）
 - [ ] mapping-overlay.js が存在
 - [ ] comparison/figma.png が存在
 - [ ] comparison/html.png が存在
@@ -282,11 +377,19 @@ Read: .agents/templates/screen-spec.md
 |-------------|--------|
 | comparison/* | comparing-figma-html エージェントを再実行 |
 | assets/* | downloading-figma-assets スキルを使用 |
-| spec.md | 各セクション生成エージェントを再実行 |
+| spec.md | documenting-screen-flows エージェントを再実行 |
+| spec-visual.md | documenting-ui-states, extracting-design-tokens を再実行 |
+| spec-behavior.md | extracting-interactions, defining-accessibility-requirements を再実行 |
 
 ### Step 5.2: セクション完了確認
 
-各セクションが「完了 ✓」または「該当なし」になっているか確認。
+各ファイルのセクションが「完了 ✓」または「該当なし」になっているか確認。
+
+| ファイル | 確認セクション |
+|----------|---------------|
+| spec.md | 概要、画面フロー |
+| spec-visual.md | 構造・スタイル、コンテンツ分析、UI状態、デザイントークン |
+| spec-behavior.md | インタラクション、フォーム仕様、APIマッピング、アクセシビリティ |
 
 ---
 
@@ -299,18 +402,22 @@ Read: .agents/templates/screen-spec.md
 
 ### 生成ファイル
 
-| ファイル | パス |
-|----------|------|
-| index.html | `.outputs/{screen-id}/index.html` |
-| spec.md | `.outputs/{screen-id}/spec.md` |
-| mapping-overlay.js | `.outputs/{screen-id}/mapping-overlay.js` |
-| comparison/ | `.outputs/{screen-id}/comparison/` |
+| ファイル | パス | 対象読者 |
+|----------|------|----------|
+| index.html | `.outputs/{screen-id}/index.html` | 開発者 |
+| spec.md | `.outputs/{screen-id}/spec.md` | PM、全員 |
+| spec-visual.md | `.outputs/{screen-id}/spec-visual.md` | デザイナー、開発者 |
+| spec-behavior.md | `.outputs/{screen-id}/spec-behavior.md` | 開発者、QA |
+| mapping-overlay.js | `.outputs/{screen-id}/mapping-overlay.js` | 開発者 |
+| comparison/ | `.outputs/{screen-id}/comparison/` | 全員 |
 
 ### 次のステップ
 
-1. `open .outputs/{screen-id}/spec.md` で仕様書を確認
-2. `[要確認]` ラベルの項目を関係者と確認
-3. 実装チームに仕様書を共有
+1. 概要確認: `open .outputs/{screen-id}/spec.md`
+2. ビジュアル確認: `open .outputs/{screen-id}/spec-visual.md`
+3. 動作確認: `open .outputs/{screen-id}/spec-behavior.md`
+4. `[要確認]` ラベルの項目を関係者と確認
+5. 各ステークホルダーに適切なファイルを共有
 ```
 
 ---
@@ -333,7 +440,9 @@ Read: .agents/templates/screen-spec.md
 ```
 .outputs/{screen-id}/
 ├── index.html              # [必須] 生成HTML
-├── spec.md                 # [必須] 画面仕様書
+├── spec.md                 # [必須] 概要仕様書（PM/全員向け）
+├── spec-visual.md          # [必須] ビジュアル仕様書（デザイナー/開発者向け）
+├── spec-behavior.md        # [必須] 動作仕様書（開発者/QA向け）
 ├── mapping-overlay.js      # [必須] マッピング可視化
 ├── assets/                 # [必須] アセットフォルダ
 │   ├── *.svg               # アイコン
@@ -345,15 +454,54 @@ Read: .agents/templates/screen-spec.md
     └── README.md           # 比較レポート
 ```
 
+### 仕様書ファイルの役割分担
+
+| ファイル | 対象読者 | 含まれるセクション |
+|----------|----------|-------------------|
+| spec.md | PM、全員 | 概要、画面フロー、生成ファイル一覧、変更履歴 |
+| spec-visual.md | デザイナー、開発者 | 構造・スタイル、コンテンツ分析、UI状態、デザイントークン |
+| spec-behavior.md | 開発者、QA | インタラクション、フォーム仕様、APIマッピング、アクセシビリティ |
+
 ---
 
 ## データソースラベル
 
-仕様書内の各項目に付与するソースラベル:
+**重要**: 仕様書内の各項目には必ずソースラベルを付与し、情報の根拠を明示すること。
 
-| ラベル | 意味 | 信頼度 |
-|--------|------|--------|
-| `[Figma]` | Figmaデザインから直接取得 | ✅ 確実 |
-| `[API]` | OpenAPI仕様書から取得 | ✅ 確実 |
-| `[推奨]` | ベストプラクティスからの提案 | ⚠️ レビュー推奨 |
-| `[要確認]` | 別途確認が必要な仮定 | ❌ 要確認 |
+### ラベル定義
+
+| ラベル | 意味 | 信頼度 | 使用場面 |
+|--------|------|--------|----------|
+| `[Figma]` | Figmaデザインから直接取得 | ✅ 確実 | get_design_context、get_variable_defs、get_screenshotで取得した値 |
+| `[HTML]` | 生成HTMLのdata属性・構造から取得 | ✅ 確実 | HTMLのdata-figma-*属性、DOM構造から確認できる値 |
+| `[API]` | OpenAPI仕様書から取得 | ✅ 確実 | エンドポイント、レスポンス型、フィールド名 |
+| `[推奨]` | ベストプラクティスからの提案 | ⚠️ レビュー推奨 | WCAG基準、一般的なUXパターン、hover/active等の状態 |
+| `[要確認]` | エージェントの推測・仮定 | ❌ 要確認 | Figmaに定義がない状態、遷移先、ビジネスロジック |
+
+### ラベル付与のガイドライン
+
+**必ず `[Figma]` または `[HTML]` を使用する項目:**
+- 色、フォントサイズ、スペーシング等のデザイントークン
+- ノードID、レイアウト構造
+- テキストコンテンツ、ボタンラベル
+
+**`[推奨]` を使用する項目:**
+- hover、active、focus等のインタラクション状態（Figmaに定義がない場合）
+- アクセシビリティ要件（WCAG基準に基づく）
+- アニメーション・トランジション（Figmaで明示されていない場合）
+
+**`[要確認]` を使用する項目:**
+- 画面遷移先（Figmaのプロトタイプから読み取れない場合）
+- disabled、error、loading等の状態（Figmaに定義がない場合）
+- APIエンドポイント（OpenAPIが未提供の場合）
+- 最小/最大値等の制約（Figmaで明示されていない場合）
+
+### spec.mdへの記載例
+
+```markdown
+| 状態 | スタイル | ソース |
+|------|----------|--------|
+| default | 背景 #0070E0 | `[Figma]` |
+| hover | 背景 #005BB5 | `[推奨]` |
+| disabled | opacity 0.5 | `[要確認]` デザイン未定義 |
+```

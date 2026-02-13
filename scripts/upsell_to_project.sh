@@ -362,7 +362,7 @@ fi
 
 if [ -f "$SYNC_SCRIPT" ]; then
     echo ""
-    echo -n ".claude, .cursor, .github への同期を実行しますか? (Y/n): "
+    echo -n ".claude, .github への同期を実行しますか? (Y/n): "
     read -r sync_confirm < /dev/tty
 
     case $sync_confirm in
@@ -384,5 +384,5 @@ if [ -f "$SYNC_SCRIPT" ]; then
 else
     echo ""
     echo -e "${YELLOW}注意: sync.sh が見つかりませんでした${NC}"
-    echo ".claude, .cursor, .github への同期が必要な場合は手動で行ってください。"
+    echo ".claude, .github への同期が必要な場合は手動で行ってください。"
 fi

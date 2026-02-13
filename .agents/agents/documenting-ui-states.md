@@ -19,7 +19,9 @@ FigmaデザインからUI状態バリエーション（default, empty, error, lo
 
 ```
 .outputs/{screen-id}/
-├── spec.md             # ← このエージェントが「UI状態」セクションを更新
+├── spec.md             # 概要仕様書
+├── spec-visual.md      # ← このエージェントが「UI状態」セクションを更新
+├── spec-behavior.md    # 動作仕様書
 ├── index.html          # 参照用HTML
 └── assets/
 ```
@@ -34,6 +36,26 @@ FigmaデザインからUI状態バリエーション（default, empty, error, lo
 - 実装コードの生成
 - 他のセクションの変更
 - 単独ファイル（ui_states.md）の生成
+
+## データソースラベル（必須）
+
+**各項目には必ずソースラベルを付与すること。**
+
+| ラベル | 使用場面 |
+|--------|----------|
+| `[Figma]` | Figmaで定義されている状態（default等） |
+| `[HTML]` | HTMLのdata-figma-states属性から取得 |
+| `[推奨]` | hover/active等、一般的なUXパターンから提案 |
+| `[要確認]` | Figmaに定義がない状態（error、loading等） |
+
+**例:**
+```markdown
+| 状態 | スタイル | ソース |
+|------|----------|--------|
+| default | 背景 #0070E0 | `[Figma]` |
+| hover | 背景 #005BB5 | `[推奨]` |
+| disabled | opacity 0.5 | `[要確認]` |
+```
 
 ## Workflow
 
@@ -53,14 +75,14 @@ UI States Documentation Progress:
 
 ---
 
-### Step 0: spec.md の存在確認
+### Step 0: spec-visual.md の存在確認
 
 ```bash
 # 確認
-ls .outputs/{screen-id}/spec.md
+ls .outputs/{screen-id}/spec-visual.md
 
 # なければテンプレートから初期化
-cp .agents/templates/screen-spec.md .outputs/{screen-id}/spec.md
+cp .agents/templates/screen-spec-visual.md .outputs/{screen-id}/spec-visual.md
 ```
 
 ---
@@ -71,7 +93,7 @@ cp .agents/templates/screen-spec.md .outputs/{screen-id}/spec.md
 
 ---
 
-### Step 7: spec.md の「UI状態」セクションを更新
+### Step 7: spec-visual.md の「UI状態」セクションを更新
 
 1. セクションを特定（`## UI状態`）
 2. ステータスを「完了 ✓」に更新
@@ -98,7 +120,7 @@ Figma URL: https://figma.com/design/XXXXX/Project?node-id=1234-5678
 @documenting-ui-states
 
 先ほど生成した講座一覧画面の状態バリエーションを整理してください。
-spec.md は .outputs/course-list/ にあります。
+spec-visual.md は .outputs/course-list/ にあります。
 ```
 
 ---
@@ -107,7 +129,7 @@ spec.md は .outputs/course-list/ にあります。
 
 **更新したセクションに署名コメントを含めること。**
 
-### spec.md の「UI状態」セクション
+### spec-visual.md の「UI状態」セクション
 
 セクション見出しの直後に署名を追加：
 

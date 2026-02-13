@@ -14,6 +14,8 @@ HTML要素とAPIエンドポイントのマッピングを行う詳細な手順�
 7. API呼び出しタイミングを決定
 8. エラーハンドリングを定義
 9. spec.md の「APIマッピング」セクションを更新
+10. HTMLにdata-api-*属性を追加
+11. マッピングオーバーレイ生成（任意）
 ```
 
 ---
@@ -109,3 +111,71 @@ Read: openapi/index.yaml
 3. 内容を挿入
 4. 完了チェックリストを更新
 5. 変更履歴に追記
+
+---
+
+## Step 10: HTMLにdata-api-*属性を追加
+
+動的要素に以下の属性を追加：
+
+```html
+<div data-figma-content-id="user-name"
+     data-figma-content-classification="dynamic"
+     data-api-endpoint="GET /api/users/me"
+     data-api-response-field="name"
+     data-api-contract="get_user.md">
+  ユーザー名
+</div>
+```
+
+| 属性 | 用途 | 必須 |
+|------|------|:----:|
+| `data-api-endpoint` | APIエンドポイント | ✓ |
+| `data-api-response-field` | レスポンスフィールドパス | △ |
+| `data-api-request-body` | リクエストボディ | △ |
+| `data-api-contract` | 契約ファイル名 | ✓ |
+
+---
+
+## Step 11: マッピングオーバーレイ生成（任意）
+
+ユーザーが可視化を要求した場合のみ実行。
+
+### 11.1 テンプレートをコピー
+
+```bash
+cp ../../templates/mapping-overlay.js .agents/tmp/{screen-id}/
+```
+
+### 11.2 CONTRACT_DATA にAPIサンプルJSONを追加
+
+```javascript
+const CONTRACT_DATA = {
+  'get_user.md': {
+    endpoint: 'GET /api/users/me',
+    json: {
+      "id": "user-123",
+      "name": "山田太郎",
+      "email": "yamada@example.com"
+    }
+  }
+};
+```
+
+### 11.3 HTMLにスクリプトを追加
+
+```html
+<script src="mapping-overlay.js"></script>
+```
+
+### オーバーレイ機能
+
+| 機能 | 説明 |
+|------|------|
+| データタイプ可視化 | 静的/動的/リスト等の色分け |
+| API可視化 | GET/POST/LOCAL の色分け |
+| JSONプレビュー | ホバー時にJSONとフィールドハイライト |
+| ドラッグ移動 | パネル位置を自由に移動 |
+| ホールドボタン | ピン留めでコンテンツ維持 |
+| フィルタリング | 凡例クリックでタイプ別フィルター |
+| Mappingトグル | 全機能のオン/オフ切り替え |

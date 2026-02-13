@@ -320,6 +320,17 @@ spec.md に既存の受け入れ要件がある場合：
 
 このスキルは「受け入れ要件」セクションのみを更新します。
 
+## 推奨フロー
+
+このスキルは `/refining-screen-specs` の後に実行することを推奨します：
+
+```
+1. /refining-screen-specs    ← 先に実行（仕様書から詳細追加）
+2. /generating-acceptance-criteria  ← 後に実行（受け入れ要件生成）
+```
+
+**理由**: spec.md にビジネスロジック、APIマッピング、コンポーネント仕様などが追加された状態で要件を生成する方が、より網羅的な受け入れ要件が生成できます。
+
 ## 参照
 
 - **[workflow.md](references/workflow.md)**: 詳細なワークフロー
@@ -327,3 +338,4 @@ spec.md に既存の受け入れ要件がある場合：
 - **[section-template.md](references/section-template.md)**: セクション出力テンプレート
 - **[examples.md](references/examples.md)**: 具体例
 - **[managing-screen-specs](../managing-screen-specs/SKILL.md)**: 仕様書管理スキル
+- **[refining-screen-specs](../refining-screen-specs/SKILL.md)**: 画面仕様精緻化スキル（先に実行推奨）

@@ -9,7 +9,6 @@
 # source:
 #   all     - すべてのエージェントから逆sync（デフォルト）
 #   claude  - Claude Code (.claude/) から逆sync
-#   cursor  - Cursor (.cursor/) から逆sync
 #   copilot - GitHub Copilot (.github/) から逆sync
 #
 # オプション:
@@ -49,7 +48,7 @@ for arg in "$@"; do
             DRY_RUN=true
             shift
             ;;
-        claude|cursor|copilot|all)
+        claude|copilot|all)
             SOURCE="$arg"
             shift
             ;;
@@ -59,7 +58,6 @@ for arg in "$@"; do
             echo "Sources:"
             echo "  all     - Reverse sync from all agents (default)"
             echo "  claude  - Reverse sync from Claude Code (.claude/)"
-            echo "  cursor  - Reverse sync from Cursor (.cursor/)"
             echo "  copilot - Reverse sync from GitHub Copilot (.github/)"
             echo ""
             echo "Options:"
@@ -105,14 +103,6 @@ case $SOURCE in
             log_warning "No .claude/ directory found - skipping"
         fi
 
-        # Cursor から逆sync
-        if [ -d "$REPO_ROOT/.cursor" ]; then
-            bash "$SCRIPT_DIR/from-cursor.sh"
-            echo ""
-        else
-            log_warning "No .cursor/ directory found - skipping"
-        fi
-
         # Copilot から逆sync
         if [ -d "$REPO_ROOT/.github" ]; then
             bash "$SCRIPT_DIR/from-copilot.sh"
@@ -126,14 +116,6 @@ case $SOURCE in
             bash "$SCRIPT_DIR/from-claude.sh"
         else
             log_error "No .claude/ directory found"
-            exit 1
-        fi
-        ;;
-    cursor)
-        if [ -d "$REPO_ROOT/.cursor" ]; then
-            bash "$SCRIPT_DIR/from-cursor.sh"
-        else
-            log_error "No .cursor/ directory found"
             exit 1
         fi
         ;;

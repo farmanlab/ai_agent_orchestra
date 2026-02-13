@@ -218,9 +218,29 @@ HTMLの構造とスタイルを確認。
 
 mapping-overlay.js が有効な状態だと、UIにオーバーレイが表示され、正確な比較ができません。
 
+**方法1: Puppeteerスクリプトで自動無効化（推奨）**
+
+```javascript
+// スクリーンショット取得前にDOMから要素を削除
+await page.evaluate(() => {
+  // トグルボタン、凡例、ツールチップを非表示
+  ['#mapping-toggle', '#mapping-legend', '#mapping-tooltip'].forEach(id => {
+    const el = document.querySelector(id);
+    if (el) el.style.display = 'none';
+  });
+  // 全要素のoutline/boxShadowを削除
+  document.querySelectorAll('[data-mapping-enabled], [data-interaction-enabled], [data-api-enabled]').forEach(el => {
+    el.style.outline = '';
+    el.style.outlineOffset = '';
+    el.style.boxShadow = '';
+  });
+});
+```
+
+**方法2: sedコマンドで一時的にコメントアウト**
+
 ```bash
 # 0. mapping-overlay.js を無効化（スクリーンショット前に必須）
-# HTMLファイル内の mapping-overlay.js の読み込みをコメントアウト
 sed -i '' 's|<script src="mapping-overlay.js"></script>|<!-- <script src="mapping-overlay.js"></script> -->|g' [HTMLファイルパス]
 
 # 1. HTMLスクリーンショット取得
@@ -237,9 +257,10 @@ sed -i '' 's|<!-- <script src="mapping-overlay.js"></script> -->|<script src="ma
 ```
 
 **なぜ無効化が必要か**:
-- mapping-overlay.js はデバッグ用のオーバーレイUI（ボタン、ツールチップ）を表示する
+- mapping-overlay.js はデバッグ用のオーバーレイUI（ボタン、凡例、ツールチップ、要素ハイライト）を表示する
 - これらがスクリーンショットに含まれると、Figmaとの比較で大量の偽差分が発生する
-- 比較後は必ず再有効化して、開発時の利便性を維持する
+- **方法1**は元ファイルを変更しないため、より安全
+- 比較後は必ず再有効化して、開発時の利便性を維持する（方法2の場合）
 
 **保存されるファイル一覧**:
 

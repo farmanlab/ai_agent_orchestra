@@ -29,13 +29,11 @@ AI Agent Configuration Sync Script
 Usage: $0 [OPTIONS] COMMAND
 
 Commands:
-  all             Sync to all agents (Claude, Cursor, Copilot)
+  all             Sync to all agents (Claude, Copilot)
   claude          Sync to Claude Code only
-  cursor          Sync to Cursor only
   copilot         Sync to GitHub Copilot only
   reverse         Reverse sync from other agents to .agents/
   reverse-claude  Reverse sync from Claude Code to .agents/
-  reverse-cursor  Reverse sync from Cursor to .agents/
   reverse-copilot Reverse sync from GitHub Copilot to .agents/
   validate        Validate .agents/ directory structure and content
   check-size      Check prompt file sizes and token counts
@@ -132,9 +130,6 @@ init_dirs() {
     mkdir -p "$REPO_ROOT/.claude"/{rules,agents,commands}
     log_success "Created .claude/ directory structure"
 
-    mkdir -p "$REPO_ROOT/.cursor"/{rules,agents}
-    log_success "Created .cursor/ directory structure"
-
     mkdir -p "$REPO_ROOT/.github"/{instructions,prompts}
     log_success "Created .github/ directory structure"
 
@@ -150,8 +145,6 @@ clean_generated() {
         [ -d "$REPO_ROOT/.claude/rules" ] && echo "  .claude/rules/"
         [ -d "$REPO_ROOT/.claude/agents" ] && echo "  .claude/agents/"
         [ -d "$REPO_ROOT/.claude/commands" ] && echo "  .claude/commands/"
-        [ -d "$REPO_ROOT/.cursor/rules" ] && echo "  .cursor/rules/"
-        [ -d "$REPO_ROOT/.cursor/agents" ] && echo "  .cursor/agents/"
         [ -d "$REPO_ROOT/.github/instructions" ] && echo "  .github/instructions/"
         [ -d "$REPO_ROOT/.github/prompts" ] && echo "  .github/prompts/"
         [ -f "$REPO_ROOT/AGENTS.md" ] && echo "  AGENTS.md"
@@ -160,7 +153,6 @@ clean_generated() {
     fi
 
     rm -rf "$REPO_ROOT/.claude/rules" "$REPO_ROOT/.claude/agents" "$REPO_ROOT/.claude/commands"
-    rm -rf "$REPO_ROOT/.cursor/rules" "$REPO_ROOT/.cursor/agents"
     rm -rf "$REPO_ROOT/.github/instructions" "$REPO_ROOT/.github/prompts"
     rm -f "$REPO_ROOT/CLAUDE.md" "$REPO_ROOT/AGENTS.md"
 
@@ -214,52 +206,6 @@ detect_orphaned_files() {
             dirname=$(basename "$dir")
             if [ ! -d "$AGENTS_DIR/skills/$dirname" ]; then
                 ORPHANED_FILES+=("$dir")
-            fi
-        done
-    fi
-
-    # Cursor: rules (.mdc extension)
-    if [ -d "$REPO_ROOT/.cursor/rules" ]; then
-        for file in "$REPO_ROOT/.cursor/rules"/*.mdc; do
-            [ -e "$file" ] || continue
-            filename=$(basename "$file" .mdc)
-            if [ ! -f "$AGENTS_DIR/rules/${filename}.md" ]; then
-                ORPHANED_FILES+=("$file")
-            fi
-        done
-    fi
-
-    # Cursor: agents
-    if [ -d "$REPO_ROOT/.cursor/agents" ]; then
-        for file in "$REPO_ROOT/.cursor/agents"/*.md; do
-            [ -e "$file" ] || continue
-            filename=$(basename "$file")
-            if [ ! -f "$AGENTS_DIR/agents/$filename" ]; then
-                ORPHANED_FILES+=("$file")
-            fi
-        done
-    fi
-
-    # Cursor: skills (directories) - Cursor は .claude/ から読み込むため .cursor/skills/ は不要
-    # .agents/ または .claude/ に存在するものは削除対象
-    if [ -d "$REPO_ROOT/.cursor/skills" ] && [ ! -L "$REPO_ROOT/.cursor/skills" ]; then
-        for item in "$REPO_ROOT/.cursor/skills"/*; do
-            [ -e "$item" ] || continue
-            item_name=$(basename "$item")
-            if [ -d "$AGENTS_DIR/skills/$item_name" ] || [ -d "$REPO_ROOT/.claude/skills/$item_name" ]; then
-                ORPHANED_FILES+=("$item")
-            fi
-        done
-    fi
-
-    # Cursor: commands - Cursor は .claude/ から読み込むため .cursor/commands/ は不要
-    # .agents/ または .claude/ に存在するものは削除対象
-    if [ -d "$REPO_ROOT/.cursor/commands" ]; then
-        for file in "$REPO_ROOT/.cursor/commands"/*; do
-            [ -e "$file" ] || continue
-            filename=$(basename "$file")
-            if [ -f "$AGENTS_DIR/commands/$filename" ] || [ -f "$REPO_ROOT/.claude/commands/$filename" ]; then
-                ORPHANED_FILES+=("$file")
             fi
         done
     fi
@@ -335,14 +281,6 @@ cleanup_orphaned_files() {
             done
             log_success "Deleted ${#ORPHANED_FILES[@]} orphaned file(s)"
 
-            # 空になったフォルダを削除
-            for dir in "$REPO_ROOT/.cursor/skills" "$REPO_ROOT/.cursor/commands"; do
-                if [ -d "$dir" ] && [ -z "$(ls -A "$dir" 2>/dev/null)" ]; then
-                    rmdir "$dir"
-                    relative_path="${dir#$REPO_ROOT/}"
-                    log_verbose "Removed empty folder: $relative_path"
-                fi
-            done
             ;;
         *)
             log_info "Skipped deletion of orphaned files"
@@ -384,13 +322,11 @@ prune_file() {
     case "$file_type" in
         rules)
             targets+=("$REPO_ROOT/.claude/rules/$filename")
-            targets+=("$REPO_ROOT/.cursor/rules/$filename")
             # Copilot: rules は .github/instructions/*.instructions.md にマッピング
             targets+=("$REPO_ROOT/.github/instructions/${name_without_ext}.instructions.md")
             ;;
         agents)
             targets+=("$REPO_ROOT/.claude/agents/$filename")
-            targets+=("$REPO_ROOT/.cursor/agents/$filename")
             # Copilot: agents は .github/agents/*.agents.md にマッピング
             targets+=("$REPO_ROOT/.github/agents/${name_without_ext}.agents.md")
             ;;
@@ -399,12 +335,10 @@ prune_file() {
             local skill_name=$(echo "$target_path" | cut -d'/' -f2)
             targets+=("$REPO_ROOT/.claude/skills/$skill_name")
             targets+=("$REPO_ROOT/.github/skills/$skill_name")
-            # Note: Cursor は .claude/ から直接読み込むため cursor/skills は不要
             ;;
         commands)
             targets+=("$REPO_ROOT/.claude/commands/$filename")
             targets+=("$REPO_ROOT/.github/prompts/$filename")
-            # Note: Cursor は .claude/ から直接読み込むため cursor/commands は不要
             ;;
         *)
             log_warning "Unknown file type: $file_type"
@@ -457,7 +391,7 @@ if [ -d "$AGENTS_DIR" ]; then
     "$AGENTS_DIR/sync/sync.sh" all
 
     # Add generated files to commit
-    git add .claude/ .cursor/ .github/ CLAUDE.md AGENTS.md 2>/dev/null || true
+    git add .claude/ .github/ CLAUDE.md AGENTS.md 2>/dev/null || true
 fi
 EOF
 
@@ -473,12 +407,6 @@ create_skills_symlinks() {
     if [ ! -L "$REPO_ROOT/.claude/skills" ]; then
         ln -sf ../$AGENTS_NAME/skills "$REPO_ROOT/.claude/skills"
         log_verbose "Created .claude/skills symlink"
-    fi
-
-    # Cursor
-    if [ ! -L "$REPO_ROOT/.cursor/skills" ]; then
-        ln -sf ../$AGENTS_NAME/skills "$REPO_ROOT/.cursor/skills"
-        log_verbose "Created .cursor/skills symlink"
     fi
 }
 
@@ -576,64 +504,6 @@ sync_to_claude() {
     log_success "Claude Code sync complete"
 }
 
-# Cursor への同期
-sync_to_cursor() {
-    log_info "Syncing to Cursor..."
-
-    if [ "$DRY_RUN" = true ]; then
-        log_warning "DRY RUN: Would execute to-cursor.sh"
-        return
-    fi
-
-    # Note: .cursor/skills/ と .cursor/commands/ のクリーンアップは
-    # cleanup_orphaned_files() で確認付きで行う
-
-    if [ ! -f "$SCRIPT_DIR/to-cursor.sh" ]; then
-        log_error "to-cursor.sh not found"
-        return 1
-    fi
-
-    chmod +x "$SCRIPT_DIR/to-cursor.sh"
-
-    if [ "$VERBOSE" = true ]; then
-        "$SCRIPT_DIR/to-cursor.sh"
-    else
-        "$SCRIPT_DIR/to-cursor.sh" > /dev/null 2>&1
-    fi
-
-    # Note: skills と commands は Cursor が .claude/ から直接読み込むため sync 不要
-    # agents symlinks (file-level) - agents は引き続き必要
-    if [ -L "$REPO_ROOT/.cursor/agents" ]; then
-        log_verbose ".cursor/agents is a directory symlink to $AGENTS_NAME/agents — skipping individual symlinks"
-    else
-        mkdir -p "$REPO_ROOT/.cursor/agents"
-        for agent_file in "$AGENTS_DIR/agents"/*.md; do
-            if [ -f "$agent_file" ]; then
-                filename=$(basename "$agent_file")
-                target="$REPO_ROOT/.cursor/agents/$filename"
-                # 壊れたシンボリックリンクを削除
-                if [ -L "$target" ] && [ ! -e "$target" ]; then
-                    rm "$target"
-                    log_verbose "Removed broken symlink: $target"
-                fi
-                if [ ! -L "$target" ]; then
-                    ln -sf "../../$AGENTS_NAME/agents/$filename" "$target"
-                    log_verbose "Created .cursor/agents/$filename symlink"
-                fi
-            fi
-        done
-    fi
-
-    # Plugin components: agents (Cursor は .claude/ から skills/commands を読むため agents のみ)
-    if [ -L "$REPO_ROOT/.cursor/agents" ]; then
-        log_verbose "Skipping plugin agents for .cursor/ (directory symlink)"
-    else
-        sync_plugin_components "$REPO_ROOT/.cursor/agents" "agents"
-    fi
-
-    log_success "Cursor sync complete"
-}
-
 # プラグイン同期
 sync_plugins() {
     log_info "Syncing Claude Code plugins..."
@@ -655,7 +525,7 @@ sync_plugins() {
 }
 
 # プラグインコンポーネントのシンボリックリンク作成ヘルパー
-# $1: 対象ディレクトリ (例: .claude, .cursor, .github)
+# $1: 対象ディレクトリ (例: .claude, .github)
 # $2: コンポーネントタイプ (skills, agents, commands)
 # $3: リンク作成関数名またはサフィックス変換パターン
 sync_plugin_components() {
@@ -828,14 +698,6 @@ sync_all() {
         echo ""
     fi
 
-    if is_agent_enabled cursor; then
-        sync_to_cursor
-        echo ""
-    else
-        log_info "Cursor sync skipped (disabled in config.yaml)"
-        echo ""
-    fi
-
     if is_agent_enabled copilot; then
         sync_to_copilot
     else
@@ -903,7 +765,7 @@ while [[ $# -gt 0 ]]; do
         -h|--help)
             show_help
             ;;
-        all|claude|cursor|copilot|plugins|reverse|reverse-claude|reverse-cursor|reverse-copilot|validate|check-size|check-quality|init|install-hooks|clean)
+        all|claude|copilot|plugins|reverse|reverse-claude|reverse-copilot|validate|check-size|check-quality|init|install-hooks|clean)
             COMMAND=$1
             shift
             ;;
@@ -929,10 +791,6 @@ case $COMMAND in
         sync_to_claude
         cleanup_orphaned_files
         ;;
-    cursor)
-        sync_to_cursor
-        cleanup_orphaned_files
-        ;;
     copilot)
         sync_to_copilot
         cleanup_orphaned_files
@@ -945,9 +803,6 @@ case $COMMAND in
         ;;
     reverse-claude)
         "$SCRIPT_DIR/reverse-sync.sh" claude
-        ;;
-    reverse-cursor)
-        "$SCRIPT_DIR/reverse-sync.sh" cursor
         ;;
     reverse-copilot)
         "$SCRIPT_DIR/reverse-sync.sh" copilot

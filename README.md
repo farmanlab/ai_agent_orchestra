@@ -2,11 +2,11 @@
 
 <img width="567" height="309" alt="ai_agent_orchestra" src="https://github.com/user-attachments/assets/f10a36d9-faa2-4114-9c40-4508ebb10884" />
 
-**Claude Code, Cursor, GitHub Copilot の AI エージェント設定を単一ソースから管理**
+**Claude Code, GitHub Copilot の AI エージェント設定を単一ソースから管理**
 
 ## 概要
 
-このリポジトリは、複数の AI コーディングエージェント（Claude Code, Cursor, GitHub Copilot）の設定を統一的に管理するためのシステムを提供します。
+このリポジトリは、複数の AI コーディングエージェント（Claude Code, GitHub Copilot）の設定を統一的に管理するためのシステムを提供します。
 
 ### 主な特徴
 
@@ -20,10 +20,7 @@
 | エージェント | Rules | Skills | Subagents | Commands |
 |-------------|-------|--------|-----------|----------|
 | **Claude Code** | ✅ .claude/rules/*.md | ✅ .claude/skills/* | ✅ .claude/agents/*.md | ✅ .claude/commands/ |
-| **Cursor** | ✅ .cursor/rules/*/RULE.md | ✅ .cursor/skills/* | ✅ .cursor/agents/*.md | ✅ .cursor/commands/ |
 | **GitHub Copilot** | ✅ .github/copilot-instructions.md | ✅ .github/skills/* | ✅ .github/agents/*.agents.md | ✅ .github/prompts/ |
-
-> **Note**: Cursor の RULE.md は `description`, `alwaysApply`, `globs` (カンマ区切り) のみをサポート
 
 ## クイックスタート
 
@@ -36,7 +33,6 @@ npx github:farmanlab/ai_agent_orchestra init
 # 対話式プロンプトでフォルダ名とエージェントを選択
 # ? Unified folder name (.agents): .agents
 # ? Enable Claude Code? (Y/n): Y
-# ? Enable Cursor? (Y/n): Y
 # ? Enable GitHub Copilot? (Y/n): Y
 
 # 同期実行
@@ -70,7 +66,7 @@ cd ai_agent_orchestra
 ```bash
 cp -r /path/to/ai_agent_orchestra/.agents .
 .agents/scripts/sync/sync.sh all
-git add .agents/ .claude/ .cursor/ .github/ CLAUDE.md AGENTS.md
+git add .agents/ .claude/ .github/ CLAUDE.md AGENTS.md
 git commit -m "Add AI agent configuration"
 ```
 
@@ -173,7 +169,7 @@ EOF
 # 同期
 .agents/scripts/sync/sync.sh all
 
-# 使用方法：Claude Code や Cursor で
+# 使用方法：Claude Code で
 # /my-command [引数]
 ```
 
@@ -201,7 +197,6 @@ EOF
 └── sync/                        # 同期スクリプト
     ├── sync.sh                  # メインスクリプト
     ├── to-claude.sh
-    ├── to-cursor.sh
     └── to-copilot.sh
 
 # 生成されるファイル（自動生成、編集不要）
@@ -210,11 +205,6 @@ EOF
 CLAUDE.md                        # Claude + Copilot 共通 (-> AGENTS.md)
 AGENTS.md                        # Copilot エージェント定義
 .claude/                         # Claude Code 用
-  ├── rules/
-  ├── skills/                    # → .agents/skills/* (symlinks)
-  ├── agents/                    # → .agents/agents/* (symlinks)
-  └── commands/                  # Slash Commands
-.cursor/                         # Cursor 用
   ├── rules/
   ├── skills/                    # → .agents/skills/* (symlinks)
   ├── agents/                    # → .agents/agents/* (symlinks)
@@ -241,7 +231,6 @@ aao init --dir .agent --agents claude,copilot  # フラグ指定
 aao update                   # sync スクリプトを最新版に更新
 aao sync                     # 全エージェントに同期
 aao sync claude              # Claude Code のみ
-aao sync cursor              # Cursor のみ
 aao sync copilot             # GitHub Copilot のみ
 aao reverse                  # 逆同期（全エージェントから）
 aao reverse claude           # Claude Code から逆同期
@@ -280,7 +269,6 @@ chmod +x .agents/scripts/sync/*.sh
 ### 変更が反映されない
 
 - **Claude Code**: 新しいセッションを開始
-- **Cursor**: アプリケーションを再起動
 - **GitHub Copilot**: VS Code をリロード
 
 ## ライセンス
@@ -290,5 +278,4 @@ MIT License
 ## 関連リンク
 
 - [Claude Code Documentation](https://code.claude.com/docs)
-- [Cursor Documentation](https://docs.cursor.com)
 - [GitHub Copilot Documentation](https://docs.github.com/copilot)

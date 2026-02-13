@@ -30,8 +30,8 @@
 ### npx で導入（推奨）
 
 ```bash
-# プロジェクトルートで初期化
-npx ai-agent-orchestra init
+# プロジェクトルートで初期化（npm publish 不要、GitHub から直接実行）
+npx github:farmanlab/ai_agent_orchestra init
 
 # 対話式プロンプトでフォルダ名とエージェントを選択
 # ? Unified folder name (.agents): .agents
@@ -40,19 +40,19 @@ npx ai-agent-orchestra init
 # ? Enable GitHub Copilot? (Y/n): Y
 
 # 同期実行
-npx ai-agent-orchestra sync
+npx github:farmanlab/ai_agent_orchestra sync
 ```
 
 CLI フラグでも指定可能:
 
 ```bash
-npx ai-agent-orchestra init --dir .agent --agents claude,copilot
+npx github:farmanlab/ai_agent_orchestra init --dir .agent --agents claude,copilot
 ```
 
 短縮コマンド `aao` も使えます（グローバルインストール時）:
 
 ```bash
-npm install -g ai-agent-orchestra
+npm install -g github:farmanlab/ai_agent_orchestra
 aao init
 aao sync
 ```
@@ -233,7 +233,7 @@ AGENTS.md                        # Copilot エージェント定義
 
 ## コマンドリファレンス
 
-### CLI (`aao` / `npx ai-agent-orchestra`)
+### CLI (`aao` / `npx github:farmanlab/ai_agent_orchestra`)
 
 ```bash
 aao init                     # 対話式で初期化

@@ -238,37 +238,16 @@ allowed-tools: [Tool1, Tool2, ...]  # Claude Code用（オプション）
 - 🟡 中: 構造不備、曖昧な表現、progressive disclosure 未活用
 - 🟢 低: アクション指向性の低さ、軽微な改善提案
 
-#### 最新ドキュメント参照による詳細チェック
+#### 詳細な品質チェック（プラグイン）
 
-`prompt-quality-checker` エージェントを使用すると、実行時に公式ドキュメントを参照し、最新の基準で検証します：
+より詳細な14観点での品質検証は `prompt-engineering` プラグインを使用してください：
 
-**エージェント実行時の動作**:
-1. **公式ドキュメント取得**: Cursor、GitHub Copilot、Claude の最新ドキュメントを自動取得
-2. **基準値更新**: 行数制限、トークン制限などの最新値を抽出
-3. **変更検出**: 前回から基準が変わっていれば報告
-4. **最新基準で検証**: 取得した最新情報に基づいて品質チェック
-
-**参照する公式ドキュメント**:
-- Cursor: https://cursor.com/docs/context/rules
-- GitHub Copilot: https://docs.github.com/copilot/customizing-copilot/adding-custom-instructions-for-github-copilot
-- Claude: https://support.claude.com/en/articles/7996856-what-is-the-maximum-prompt-length
-
-**利点**:
-- 常に最新のベストプラクティスに準拠
-- 公式推奨値の変更を自動検出
-- 取得失敗時はフォールバック値で継続
-
-**使用方法**:
 ```bash
-# Claude Code でエージェントを起動
-# ターミナルで: "prompt-quality-checker エージェントを使用してプロンプト品質をチェックして"
+claude --plugin-dir plugins/prompt-engineering
+# @prompt-quality-checker で品質チェック実行
 ```
 
-エージェントは自動的に：
-1. 公式ドキュメントを取得
-2. 最新基準を抽出
-3. `.agents/` 配下のファイルを検証
-4. 詳細レポートを生成
+詳しくは [plugins/prompt-engineering/README.md](../plugins/prompt-engineering/README.md) を参照。
 
 ### Git Hooks 設定（推奨）
 

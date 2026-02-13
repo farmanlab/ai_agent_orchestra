@@ -48,11 +48,11 @@ AI エージェントのプロンプトファイル（rules, skills, agents, com
 
 ```bash
 # リポジトリをクローン
-git clone https://github.com/your-org/ai-agent-orchestra.git
-cd ai-agent-orchestra
+git clone https://github.com/farmanlab/ai_agent_orchestra.git
+cd ai_agent_orchestra
 
 # CLIツールもグローバルインストールする場合
-npm install -g .
+npm install -g github:farmanlab/ai_agent_orchestra
 ```
 
 ## 使い方

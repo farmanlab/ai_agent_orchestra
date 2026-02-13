@@ -43,6 +43,17 @@ AI エージェントのプロンプトファイル（rules, skills, agents, com
 | `writing-agents.md` | Agents 記載ルール |
 | `writing-commands.md` | Commands 記載ルール |
 
+## インストール
+
+```bash
+# リポジトリをクローン
+git clone https://github.com/your-org/ai-agent-orchestra.git
+cd ai-agent-orchestra
+
+# CLIツールもグローバルインストールする場合
+npm install -g .
+```
+
 ## 使い方
 
 ```bash

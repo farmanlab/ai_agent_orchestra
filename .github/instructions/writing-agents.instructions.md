@@ -76,6 +76,24 @@ description: Reviews code for architecture, quality, and security issues. Use wh
 - **[skill-name](../skills/skill-name/SKILL.md)**: 機能説明
 ```
 
+## ファイルパス参照ルール
+
+エージェントファイル内でファイルを参照する場合は**必ず相対パスを使用**:
+
+```yaml
+# Good - 相対パス
+../skills/skill-name/SKILL.md
+../../templates/template.md
+
+# Bad - 絶対パス
+~/.agents/skills/skill-name/SKILL.md
+/Users/username/.agents/agents/...
+```
+
+**理由:**
+- 異なる環境（他のユーザー、CI/CD）でも動作する
+- リポジトリのポータビリティを保つ
+
 ## プロセス記述
 
 ```markdown

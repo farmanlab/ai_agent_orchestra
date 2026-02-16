@@ -27,7 +27,7 @@ log_info() { echo -e "${BLUE}ℹ${NC} $1" >&2; }
 log_success() { echo -e "${GREEN}✓${NC} $1" >&2; }
 log_warning() { echo -e "${YELLOW}⚠${NC} $1" >&2; }
 log_error() { echo -e "${RED}✗${NC} $1" >&2; }
-log_verbose() { [ "$VERBOSE" = true ] && echo -e "${BLUE}  →${NC} $1" >&2; }
+log_verbose() { [ "$VERBOSE" = true ] && echo -e "${BLUE}  →${NC} $1" >&2 || true; }
 
 # ヘルプ
 show_help() {
@@ -69,7 +69,7 @@ get_enabled_plugins() {
     local settings_file="$1"
     if [ ! -f "$settings_file" ]; then
         log_verbose "Settings file not found: $settings_file"
-        return
+        return 0
     fi
 
     jq -r '.enabledPlugins // {} | to_entries[] | select(.value == true) | .key' "$settings_file" 2>/dev/null
@@ -81,7 +81,7 @@ get_install_path() {
     local plugin_id="$1"
     if [ ! -f "$INSTALLED_PLUGINS_JSON" ]; then
         log_verbose "installed_plugins.json not found"
-        return
+        return 0
     fi
 
     # 最新のインストールパスを取得（配列の最後のエントリ）
@@ -139,7 +139,7 @@ create_link_or_copy() {
         else
             log_info "DRY RUN: Would symlink $target → $source"
         fi
-        return
+        return 0
     fi
 
     # 既存のシンボリックリンクを削除

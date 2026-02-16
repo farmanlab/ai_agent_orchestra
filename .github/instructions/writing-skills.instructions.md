@@ -237,6 +237,26 @@ description: Processes Excel files and generates reports. Use when analyzing spr
 
 **注意:** この構文はClaude Code固有。他エージェントでは通常のリンクを使用。
 
+## ファイルパス参照ルール
+
+スキルファイル内でファイルを参照する場合は**必ず相対パスを使用**:
+
+```yaml
+# Good - 相対パス
+@references/patterns.md
+../../templates/mapping-overlay.js
+./assets/template.md
+
+# Bad - 絶対パス
+~/.agents/templates/mapping-overlay.js
+/Users/username/.agents/skills/...
+```
+
+**理由:**
+- 異なる環境（他のユーザー、CI/CD）でも動作する
+- リポジトリのポータビリティを保つ
+- `~` やユーザー名を含むパスは環境依存になる
+
 ## Progressive Disclosure
 
 **参照の深さは1階層まで**:

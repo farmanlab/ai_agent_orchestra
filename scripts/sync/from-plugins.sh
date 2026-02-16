@@ -19,7 +19,7 @@ NC='\033[0m'
 # オプション
 VERBOSE=false
 DRY_RUN=false
-COPY_MODE=true
+COPY_MODE=false
 SCOPE="all"  # project|user|all
 
 # ログ関数
@@ -27,7 +27,7 @@ log_info() { echo -e "${BLUE}ℹ${NC} $1" >&2; }
 log_success() { echo -e "${GREEN}✓${NC} $1" >&2; }
 log_warning() { echo -e "${YELLOW}⚠${NC} $1" >&2; }
 log_error() { echo -e "${RED}✗${NC} $1" >&2; }
-log_verbose() { [ "$VERBOSE" = true ] && echo -e "${BLUE}  →${NC} $1" >&2; }
+log_verbose() { [ "$VERBOSE" = true ] && echo -e "${BLUE}  →${NC} $1" >&2 || true; }
 
 # ヘルプ
 show_help() {
@@ -39,8 +39,7 @@ Usage: $0 [OPTIONS]
 Options:
   --scope <project|user|all>  Scope to process (default: all)
   --dry-run                   Show what would be done without making changes
-  --copy                      Copy files instead of creating symlinks (default)
-  --symlink                   Create symlinks instead of copying
+  --copy                      Copy files instead of creating symlinks
   --verbose                   Show detailed output
   -h, --help                  Show this help message
 
@@ -70,7 +69,7 @@ get_enabled_plugins() {
     local settings_file="$1"
     if [ ! -f "$settings_file" ]; then
         log_verbose "Settings file not found: $settings_file"
-        return
+        return 0
     fi
 
     jq -r '.enabledPlugins // {} | to_entries[] | select(.value == true) | .key' "$settings_file" 2>/dev/null
@@ -82,7 +81,7 @@ get_install_path() {
     local plugin_id="$1"
     if [ ! -f "$INSTALLED_PLUGINS_JSON" ]; then
         log_verbose "installed_plugins.json not found"
-        return
+        return 0
     fi
 
     # 最新のインストールパスを取得（配列の最後のエントリ）
@@ -140,7 +139,7 @@ create_link_or_copy() {
         else
             log_info "DRY RUN: Would symlink $target → $source"
         fi
-        return
+        return 0
     fi
 
     # 既存のシンボリックリンクを削除
@@ -149,11 +148,6 @@ create_link_or_copy() {
     fi
 
     if [ "$COPY_MODE" = true ]; then
-        # コピー前に既存ディレクトリを削除（古いファイルが残らないように）
-        if [ -d "$target" ]; then
-            rm -rf "$target"
-            log_verbose "Removed existing directory before copy: $target"
-        fi
         cp -R "$source" "$target"
         log_verbose "Copied: $source → $target"
     else
@@ -368,10 +362,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --copy)
             COPY_MODE=true
-            shift
-            ;;
-        --symlink)
-            COPY_MODE=false
             shift
             ;;
         --verbose)

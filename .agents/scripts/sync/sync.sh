@@ -506,6 +506,12 @@ sync_to_claude() {
 
 # プラグイン同期
 sync_plugins() {
+    local settings_file="$REPO_ROOT/.claude/settings.json"
+    if [ ! -f "$settings_file" ]; then
+        log_verbose "No .claude/settings.json — skipping plugin sync"
+        return 0
+    fi
+
     log_info "Syncing Claude Code plugins..."
 
     local plugin_script="$SCRIPT_DIR/from-plugins.sh"
